@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Random Link Page 1</title>
+</head>
+<body>
+<h1>Welcome to Page 1</h1>
+<a id="random-link" href=""></a>
+
+<script>
+    // Generate a random string for the link
+    function generateRandomString(length) {
+        const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+        let result = '';
+        for (let i = 0; i < length; i++) {
+            result += characters.charAt(Math.floor(Math.random() * characters.length));
+        }
+        return result;
+    }
+
+    // Generate the random URL for the second page
+    const randomPath = generateRandomString(10); // 10-character random string
+    const randomURL = `${randomPath}.html`;
+
+    // Set the link's href and display text
+    const linkElement = document.getElementById('random-link');
+    linkElement.href = randomURL;
+    linkElement.textContent = 'Go to random page 2';
+</script>
+</body>
+</html>
+
+<!-- Second Page -->
+<!-- Save this as a separate file named "<random-string>.html" where <random-string> matches the generated link above -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Random Link Page 2</title>
+</head>
+<body>
+<h1>Welcome to Page 2</h1>
+<a id="random-link-back" href=""></a>
+
+<script>
+    // Generate another random string for the link back
+    const backRandomPath = generateRandomString(10); // 10-character random string
+    const backRandomURL = `${backRandomPath}.html`;
+
+    // Set the link's href and display text
+    const backLinkElement = document.getElementById('random-link-back');
+    backLinkElement.href = backRandomURL;
+    backLinkElement.textContent = 'Go to another random page';
+</script>
+</body>
+</html>
