@@ -4,33 +4,38 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Welcome</title>
-  <style>
-    body {
-      font-family: sans-serif;
-      margin: 0;
-      padding: 2rem;
-      background-color: #f9f9f9;
-      color: #333;
-    }
-    h1 {
-      margin-bottom: 1rem;
-    }
-    ul {
-      list-style: none;
-      padding: 0;
-    }
-    li {
-      margin: 1rem 0;
-    }
-    a {
-      color: #007acc;
-      text-decoration: none;
-      font-size: 1.25rem;
-    }
-    a:hover {
-      text-decoration: underline;
-    }
-  </style>
+<style>
+  /* 1️⃣  Site‑wide colour palette */
+  :root{
+    --bg: #000;   /* pure black background   */
+    --fg: #fff;   /* main (formerly black) text */
+    --link: #4da6ff;   /* bright blue link on black */
+    --link-hover: #82c7ff;
+  }
+
+  /* 2️⃣  Apply the palette */
+  body{
+    background: var(--bg);
+    color: var(--fg);
+    font-family: sans-serif;
+    margin: 0;
+    padding: 2rem;
+  }
+
+  h1{ margin-bottom: 1rem; }
+
+  ul{ list-style:none; padding:0; }
+
+  li{ margin:1rem 0; }
+
+  a{
+    color: var(--link);
+    text-decoration:none;
+    font-size:1.25rem;
+  }
+  a:hover{ text-decoration:underline; color:var(--link-hover); }
+</style>
+
 </head>
 <body>
   <h1>Welcome to My Website</h1>
