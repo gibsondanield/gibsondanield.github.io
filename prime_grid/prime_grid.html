@@ -4,598 +4,714 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Prime Factorization Grid</title>
-    <script src="primality.min.js"></script>
+    <script>
+    /* primality v1.6.1 - inlined to avoid MIME type issues */
+    (function(){function a(b,c,d){var e=a.resolve(b);if(null==e){d=d||b,c=c||"root";var f=Error('Failed to require "'+d+'" from "'+c+'"');throw f.path=d,f.parent=c,f.require=!0,f}var g=a.modules[e];if(!g._resolving&&!g.exports){var h={};h.exports={},h.client=h.component=!0,g._resolving=!0,g.call(this,h.exports,a.relative(e),h),delete g._resolving,g.exports=h.exports}return g.exports}a.modules={},a.aliases={},a.resolve=function(b){"/"===b.charAt(0)&&(b=b.slice(1));for(var c=[b,b+".js",b+".json",b+"/index.js",b+"/index.json"],d=0;d<c.length;d++){var b=c[d];if(a.modules.hasOwnProperty(b))return b;if(a.aliases.hasOwnProperty(b))return a.aliases[b]}},a.normalize=function(a,b){var c=[];if("."!=b.charAt(0))return b;a=a.split("/"),b=b.split("/");for(var d=0;d<b.length;++d)".."==b[d]?a.pop():"."!=b[d]&&""!=b[d]&&c.push(b[d]);return a.concat(c).join("/")},a.register=function(b,c){a.modules[b]=c},a.alias=function(b,c){if(!a.modules.hasOwnProperty(b))throw Error('Failed to alias "'+b+'", it does not exist');a.aliases[c]=b},a.relative=function(b){function c(a,b){for(var c=a.length;c--;)if(a[c]===b)return c;return-1}function d(c){var e=d.resolve(c);return a(e,b,c)}var e=a.normalize(b,"..");return d.resolve=function(d){var f=d.charAt(0);if("/"==f)return d.slice(1);if("."==f)return a.normalize(e,d);var g=b.split("/"),h=c(g,"deps")+1;return h||(h=0),d=g.slice(0,h+1).join("/")+"/deps/"+d},d.exists=function(b){return a.modules.hasOwnProperty(d.resolve(b))},d},a.register("KenanY-factorial/index.js",function(a,b,c){function d(a){return 0===a?1:a*d(a-1)}c.exports=d}),a.register("component-global/index.js",function(a,b,c){c.exports=function(){return this}()}),a.register("KenanY-is-finite/index.js",function(a,b,c){var d=b("global"),e=d.isFinite,f=d.isNaN;c.exports=function(a){return e(a)&&!f(parseFloat(a))}}),a.register("KenanY-is-nan/index.js",function(a,b,c){function d(a){return"number"==typeof a||g.call(a)==e}var e="[object Number]",f=Object.prototype,g=f.toString;c.exports=function(a){return d(a)&&a!=+a}}),a.register("yields-isArray/index.js",function(a,b,c){var d=Array.isArray,e=Object.prototype.toString;c.exports=d||function(a){return!!a&&"[object Array]"==e.call(a)}}),a.register("Nami-Doc-contains/index.js",function(a,b,c){c.exports=function(a,b){if("string"===typeof a)return!!~a.indexOf(b);for(var c=0,d=a.length>>>0;c<d;)if(b===a[c++])return!0;return!1}}),a.register("primality/primality.js",function(a,b,c){function d(a){if(0===a)return 0;if(a%1||a*a<2)return 1;if(0===a%2)return 2;if(0===a%3)return 3;if(0===a%5)return 5;for(var b=Math.sqrt(a),c=7;c<=b;c+=30){if(0===a%c)return c;if(0===a%(c+4))return c+4;if(0===a%(c+6))return c+6;if(0===a%(c+10))return c+10;if(0===a%(c+12))return c+12;if(0===a%(c+16))return c+16;if(0===a%(c+22))return c+22;if(0===a%(c+24))return c+24}return a}function e(a){return m.isNaN(a)||!m.isFinite(a)||a%1||a<2?!1:a!==d(a)?!1:!0}function f(a,b,c){return Math.abs(a-b)!==c?!1:q([a,b])}function g(a,b){return f(a,b,2)}function h(a,b){return f(a,b,4)}function i(a,b){return f(a,b,6)}function j(a){return m.contains(o,a)?!0:0===(l(a-1)+1)%Math.pow(a,2)}function k(a){return m.contains(p,a)?!0:0===(Math.pow(2,a-1)-1)%Math.pow(a,2)}var l=b("factorial"),m={};try{m.contains=b("lodash.contains"),m.isArray=b("lodash.isarray"),m.isFinite=b("lodash.isfinite"),m.isNaN=b("lodash.isnan")}catch(n){m.contains=b("contains"),m.isArray=b("isArray"),m.isFinite=b("is-finite"),m.isNaN=b("is-nan")}var o=[5,13,563],p=[1093,3511],q=function(a){if(null===a||""===a)return null;if(m.isArray(a)){for(var b=a.length;b--;)if(!e(a[b]))return!1;return!0}return e(a)};q.VERSION="1.6.1",q.areTwinPrimes=g,q.areCousinPrimes=h,q.areSexyPrimes=i,q.isWilsonPrime=j,q.isWieferichPrime=k,(c.exports=q).primality=q}),a.alias("KenanY-factorial/index.js","primality/deps/factorial/index.js"),a.alias("KenanY-factorial/index.js","primality/deps/factorial/index.js"),a.alias("KenanY-factorial/index.js","factorial/index.js"),a.alias("KenanY-factorial/index.js","KenanY-factorial/index.js"),a.alias("KenanY-is-finite/index.js","primality/deps/is-finite/index.js"),a.alias("KenanY-is-finite/index.js","is-finite/index.js"),a.alias("component-global/index.js","KenanY-is-finite/deps/global/index.js"),a.alias("KenanY-is-nan/index.js","primality/deps/is-nan/index.js"),a.alias("KenanY-is-nan/index.js","is-nan/index.js"),a.alias("yields-isArray/index.js","primality/deps/isArray/index.js"),a.alias("yields-isArray/index.js","isArray/index.js"),a.alias("Nami-Doc-contains/index.js","primality/deps/contains/index.js"),a.alias("Nami-Doc-contains/index.js","contains/index.js"),a.alias("primality/primality.js","primality/index.js");var b={"boolean":!1,"function":!0,object:!0,number:!1,string:!1,undefined:!1},c=b[typeof window]&&window||this,d=b[typeof exports]&&exports,e=b[typeof module]&&module&&module.exports==d&&module,f=b[typeof global]&&global;!f||f.global!==f&&f.window!==f||(c=f);var g=a("primality");"function"==typeof define&&"object"==typeof define.amd&&define.amd?(c.primality=g,define(function(){return g})):d&&!d.nodeType?e?(e.exports=g).primality=g:d.primality=g:c.primality=g}).call(this);
+    </script>
     <style>
+        * {
+            box-sizing: border-box;
+        }
         body {
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+            background-color: #f0f0f0;
             display: flex;
             flex-direction: column;
-            justify-content: center;
-            align-items: center;
             height: 100vh;
-            margin: 0;
-            background-color: #f0f0f0;
         }
-        .controls {
-            margin-bottom: 20px;
+        .topbar {
+            background-color: #e8e8e8;
+            padding: 12px 20px;
+            border-bottom: 1px solid #999;
+            display: flex;
+            align-items: center;
+            gap: 25px;
+            flex-wrap: wrap;
+        }
+        .control-section {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .control-section label {
+            font-size: 13px;
+            font-weight: 500;
+            white-space: nowrap;
+        }
+        .control-section input[type="range"] {
+            width: 150px;
+            margin: 0 5px;
+        }
+        .control-section span {
+            font-size: 12px;
+            color: #666;
+            min-width: 40px;
+        }
+        .radio-group {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin: 0;
+            padding: 0;
+        }
+        .radio-item {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .radio-item input[type="radio"] {
+            cursor: pointer;
+            margin: 0;
+        }
+        .radio-item label {
+            cursor: pointer;
+            font-size: 12px;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .color-swatch {
+            width: 12px;
+            height: 12px;
+            border: 1px solid #333;
+            display: inline-block;
+        }
+        .button {
+            padding: 6px 12px;
+            font-size: 13px;
+            background-color: #d0d0d0;
+            border: 1px solid #999;
+            cursor: pointer;
+            border-radius: 3px;
+            white-space: nowrap;
+        }
+        .button:hover {
+            background-color: #c0c0c0;
+        }
+        .main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
         }
         .coordinates {
-            font-size: 1.5em;
-            margin-bottom: 20px;
-            text-align: left;
-            width: 100%;
-            max-width: 400px;
+            padding: 10px 20px;
+            background-color: #ddd;
+            font-size: 12px;
+            height: auto;
+            min-height: 40px;
+            font-family: monospace;
         }
-        .grid-container {
+        .viewport {
+            flex: 1;
+            overflow: hidden;
             position: relative;
+            background-color: #fff;
+            cursor: grab;
         }
-        .center-arrow {
+        .viewport.dragging {
+            cursor: grabbing;
+        }
+        .grid-wrapper {
             position: absolute;
-            top: -30px;
-            width: 0;
-            height: 0;
-            border-left: 10px solid transparent;
-            border-right: 10px solid transparent;
-            border-top: 20px solid #333;
-            transform: translateX(-50%);
+            transform-origin: 0 0;
         }
         .grid {
-            display: grid;
-            grid-template-columns: repeat(var(--columns, 30), 20px);
-            grid-template-rows: repeat(var(--rows, 30), 20px);
-            gap: 1px;
+            position: relative;
+            width: 100%;
+            height: 100%;
         }
         .cell {
-            width: 20px;
-            height: 20px;
-            border: 2px solid black;
-        }
-        .cell.turned-off {
-            opacity: 0.2;
-            filter: grayscale(100%);
+            position: absolute;
+            border: 1px solid #ddd;
+            box-sizing: border-box;
         }
     </style>
 </head>
 <body>
-<div class="controls">
-    <label for="columns">Number of columns:</label>
-    <input type="range" id="columns" min="6" max="210" value="60" step="6">
-    <span id="columnsValue">60</span>
-    <br>
-    <label for="rows">Number of rows:</label>
-    <input type="range" id="rows" min="1" max="200" value="105" step="1">
-    <span id="rowsValue">100</span>
-    <br>
-    <button id="updateGrid">Update Grid</button>
-    <br>
-    <button id="toggleRange">Toggle Range</button>
-    <br>
-    <label for="compositeColorScheme">Composite Color Scheme:</label>
-    <select id="compositeColorScheme">
-        <option value="white">White</option>
-        <option value="235">2, 3, 5 RGB</option>
-        <option value="modular" selected>Modular</option>
-        <option value="factorCount">Number of Prime Factors</option>
-        <option value="lowestFactor">Lowest Prime Factor</option>
-        <option value="highestFactor">Highest Prime Factor</option>
-    </select>
-    <br>
-    <label for="primeColorScheme">Prime Color Scheme:</label>
-    <select id="primeColorScheme">
-        <option value="black" selected>Black</option>
-        <option value="ramanujan">Ramanujan Primes</option>
-        <option value="fermat">Fermat Primes</option>
-    </select>
-</div>
-<div class="coordinates" id="coordinates">Coordinates:<br>Factors:</div>
-<div class="grid-container">
-    <div class="center-arrow" id="centerArrow"></div>
-    <div class="grid" id="grid"></div>
-</div>
-<script>
-    const grid = document.getElementById('grid');
-    const coordinatesDisplay = document.getElementById('coordinates');
-    const columnsInput = document.getElementById('columns');
-    const rowsInput = document.getElementById('rows');
-    const columnsValueDisplay = document.getElementById('columnsValue');
-    const rowsValueDisplay = document.getElementById('rowsValue');
-    const updateGridButton = document.getElementById('updateGrid');
-    const toggleRangeButton = document.getElementById('toggleRange');
-    const compositeColorSchemeSelect = document.getElementById('compositeColorScheme');
-    const primeColorSchemeSelect = document.getElementById('primeColorScheme');
-    const centerArrow = document.getElementById('centerArrow');
-    let rows = parseInt(rowsInput.value) || 100;
-    let cols = parseInt(columnsInput.value) || 60;
-    let rangeToggled = true;
-    let currentCompositeColorScheme = compositeColorSchemeSelect.value;
-    let currentPrimeColorScheme = primeColorSchemeSelect.value;
+    <div class="topbar">
+        <div class="control-section">
+            <label for="rows">Rows on screen:</label>
+            <input type="range" id="rows" min="1" max="200" value="30" step="1">
+            <span id="rowsValue">30</span>
+        </div>
+        <fieldset class="control-section radio-group">
+            <legend style="font-size: 12px; padding: 0; margin: 0; font-weight: 500;">Composite:</legend>
+            <div class="radio-item">
+                <input type="radio" id="comp-white" name="composite" value="white">
+                <label for="comp-white"><span class="color-swatch" style="background-color: rgba(255,255,255,0.5);"></span>White</label>
+            </div>
+            <div class="radio-item">
+                <input type="radio" id="comp-235" name="composite" value="235">
+                <label for="comp-235"><span class="color-swatch" style="background-color: rgba(128,128,128,0.5);"></span>2,3,5 RGB</label>
+            </div>
+            <div class="radio-item">
+                <input type="radio" id="comp-modular" name="composite" value="modular" checked>
+                <label for="comp-modular"><span class="color-swatch" style="background-color: rgba(200,100,50,0.5);"></span>Modular</label>
+            </div>
+            <div class="radio-item">
+                <input type="radio" id="comp-factorCount" name="composite" value="factorCount">
+                <label for="comp-factorCount"><span class="color-swatch" style="background-color: rgba(100,150,200,0.5);"></span>Factor Count</label>
+            </div>
+            <div class="radio-item">
+                <input type="radio" id="comp-lowestFactor" name="composite" value="lowestFactor">
+                <label for="comp-lowestFactor"><span class="color-swatch" style="background-color: rgba(150,200,100,0.5);"></span>Lowest</label>
+            </div>
+            <div class="radio-item">
+                <input type="radio" id="comp-highestFactor" name="composite" value="highestFactor">
+                <label for="comp-highestFactor"><span class="color-swatch" style="background-color: rgba(200,150,100,0.5);"></span>Highest</label>
+            </div>
+        </fieldset>
+        <fieldset class="control-section radio-group">
+            <legend style="font-size: 12px; padding: 0; margin: 0; font-weight: 500;">Special Primes:</legend>
+            <div class="radio-item">
+                <input type="checkbox" id="prime-ramanujan" value="ramanujan">
+                <label for="prime-ramanujan"><span class="color-swatch" style="background-color: rgba(139,0,0,1);"></span>Ramanujan</label>
+            </div>
+            <div class="radio-item">
+                <input type="checkbox" id="prime-fermat" value="fermat">
+                <label for="prime-fermat"><span class="color-swatch" style="background-color: rgba(0,0,139,1);"></span>Fermat</label>
+            </div>
+            <div class="radio-item">
+                <input type="checkbox" id="prime-mersenne" value="mersenne">
+                <label for="prime-mersenne"><span class="color-swatch" style="background-color: rgba(139,69,0,1);"></span>Mersenne</label>
+            </div>
+            <div class="radio-item">
+                <input type="checkbox" id="prime-twin" value="twin">
+                <label for="prime-twin"><span class="color-swatch" style="background-color: rgba(0,100,0,1);"></span>Twin</label>
+            </div>
+            <div class="radio-item">
+                <input type="checkbox" id="prime-cousin" value="cousin">
+                <label for="prime-cousin"><span class="color-swatch" style="background-color: rgba(139,69,69,1);"></span>Cousin</label>
+            </div>
+            <div class="radio-item">
+                <input type="checkbox" id="prime-sexy" value="sexy">
+                <label for="prime-sexy"><span class="color-swatch" style="background-color: rgba(75,0,130,1);"></span>Sexy</label>
+            </div>
+            <div class="radio-item">
+                <input type="checkbox" id="prime-sophie" value="sophie">
+                <label for="prime-sophie"><span class="color-swatch" style="background-color: rgba(0,128,128,1);"></span>Sophie Germain</label>
+            </div>
+        </fieldset>
+        <button id="recenterBtn" class="button">Recenter</button>
+        <button id="resetBtn" class="button">Reset</button>
+    </div>
+    <div class="main">
+        <div class="coordinates" id="coordinates">Hover over cells or scroll to zoom</div>
+        <div class="viewport" id="viewport">
+            <div class="grid-wrapper" id="gridWrapper">
+                <div class="grid" id="grid"></div>
+            </div>
+        </div>
+    </div>
 
-    // Update columns value display when slider changes
-    columnsInput.addEventListener('input', () => {
-        cols = parseInt(columnsInput.value);
-        columnsValueDisplay.textContent = cols;
-        generateGrid();
-    });
+    <script>
+        const grid = document.getElementById('grid');
+        const gridWrapper = document.getElementById('gridWrapper');
+        const viewport = document.getElementById('viewport');
+        const coordinatesDisplay = document.getElementById('coordinates');
+        const rowsInput = document.getElementById('rows');
+        const rowsValueDisplay = document.getElementById('rowsValue');
+        const recenterBtn = document.getElementById('recenterBtn');
+        const resetBtn = document.getElementById('resetBtn');
 
-    // Update rows value display when slider changes
-    rowsInput.addEventListener('input', () => {
-        rows = parseInt(rowsInput.value);
-        rowsValueDisplay.textContent = rows;
-        generateGrid();
-    });
+        let baseRowsOnScreen = parseInt(rowsInput.value) || 30;
+        let rowsOnScreen = baseRowsOnScreen;
+        let currentCompositeColorScheme = 'modular';
+        let activePrimeTypes = new Set();
+        let cellWidth = 0;
+        let cellHeight = 0;
+        let columnsOnScreen = 0;
+        let animationFrameId = null;
+        let flashFrameCount = 0;
 
-    // Assign a unique color to each prime number
-    const primeColors = {};
-    let primeCounter = 0;
-    function getPrimeColorModular(prime) {
-        if (!primeColors[prime]) {
-            const r = (primeCounter * 37) % 255;
-            const g = (primeCounter * 67) % 255;
-            const b = (primeCounter * 97) % 255;
-            primeColors[prime] = `rgba(${r}, ${g}, ${b}, 0.1)`;
-            primeCounter++;
-        }
-        return primeColors[prime];
-    }
+        // Pan and zoom state
+        let zoomLevel = 1;
+        let offsetX = 0;
+        let offsetY = 0;
+        let isDragging = false;
+        let dragStartX = 0;
+        let dragStartY = 0;
+        let dragStartOffsetX = 0;
+        let dragStartOffsetY = 0;
 
-    const primeColors235 = {};
-    function getPrimeColor235(prime) {
-        if (!primeColors235[prime]) {
-            const r = (prime % 2) != 0 ? 255 : 0;
-            const b = (prime % 3) != 0 ? 255 : 0;
-            const g = (prime % 5) != 0 ? 255 : 0;
-            primeColors235[prime] = `rgba(${r}, ${g}, ${b}, 0.1)`;
+        // Calculate cell dimensions based on viewport size
+        function calculateCellDimensions() {
+            const viewportWidth = viewport.clientWidth;
+            const viewportHeight = viewport.clientHeight;
 
-        }
-        return primeColors235[prime];
-    }
+            // Square cells: height determines size
+            cellHeight = viewportHeight / rowsOnScreen;
+            cellWidth = cellHeight;
 
-    // Function to get color based on number of prime factors
-    function getColorByFactorCount(factor) {
-        const hue = (factor * 60) % 360;
-        return `rgba(${hue}, 100%, 50%, 0.1)`;
-    }
+            // Calculate how many columns fit
+            columnsOnScreen = Math.floor(viewportWidth / cellWidth);
 
-    // Function to get color based on lowest prime factor
-    function getColorByLowestFactor(factor) {
-        // Use the lowest prime factor to determine color
-        const factors = primeFactorization(factor);
-        if (factors.length === 0) return 'rgba(255, 255, 255, 0.1)';
-
-        const lowestFactor = factors[0];
-        const r = (lowestFactor * 37) % 255;
-        const g = (lowestFactor * 67) % 255;
-        const b = (lowestFactor * 97) % 255;
-        return `rgba(${r}, ${g}, ${b}, 0.1)`;
-    }
-
-    // Function to get color based on highest prime factor
-    function getColorByHighestFactor(factor) {
-        // Use the highest prime factor to determine color
-        const factors = primeFactorization(factor);
-        if (factors.length === 0) return 'rgba(255, 255, 255, 0.1)';
-
-        const highestFactor = factors[factors.length - 1];
-        const r = (highestFactor * 37) % 255;
-        const g = (highestFactor * 67) % 255;
-        const b = (highestFactor * 97) % 255;
-        return `rgba(${r}, ${g}, ${b}, 0.1)`;
-    }
-
-    // Prime color scheme functions
-    function isRamanujanPrime(n) {
-        // A simplified check for Ramanujan primes
-        // First, check if n is prime using the primality library
-        if (!primality(n)) return false;
-
-        // Known small Ramanujan primes
-        if (n <= 11) return n === 2 || n === 3 || n === 5 || n === 7 || n === 11;
-
-        // For simplicity, we'll consider primes > 11 that are 1 or 5 mod 6 as Ramanujan primes
-        // This is already verified to be prime above, so we just check the modulo condition
-        return n % 6 === 1 || n % 6 === 5;
-    }
-
-    function isFermatPrime(n) {
-        // Fermat primes are of the form 2^(2^k) + 1 where k >= 0
-        // Known Fermat primes: 3, 5, 17, 257, 65537
-        return n === 3 || n === 5 || n === 17 || n === 257 || n === 65537;
-    }
-
-    const compositeColorFunctions = new Map([
-        ['white', () => 'rgba(255, 255, 255, 0.1)'],
-        ['235', getPrimeColor235],
-        ['modular', getPrimeColorModular],
-        ['factorCount', getColorByFactorCount],
-        ['lowestFactor', getColorByLowestFactor],
-        ['highestFactor', getColorByHighestFactor]
-    ]);
-
-    const primeColorFunctions = new Map([
-        ['black', () => 'rgba(0, 0, 0, 1)'],
-        ['ramanujan', (n) => isRamanujanPrime(n) ? 'rgba(255, 0, 0, 1)' : 'rgba(0, 0, 0, 1)'],
-        ['fermat', (n) => isFermatPrime(n) ? 'rgba(0, 0, 255, 1)' : 'rgba(0, 0, 0, 1)']
-    ]);
-
-    // Find prime factorization of a number - optimized version
-    function primeFactorization(n) {
-        if (n <= 1) return [];
-
-        const factors = [];
-        // Check for 2 as a factor
-        while (n % 2 === 0) {
-            factors.push(2);
-            n /= 2;
+            return { cellWidth, cellHeight };
         }
 
-        // Check for 3 as a factor
-        while (n % 3 === 0) {
-            factors.push(3);
-            n /= 3;
+        // Calculate visible grid bounds
+        function getVisibleGridBounds() {
+            const viewportWidth = viewport.clientWidth;
+            const viewportHeight = viewport.clientHeight;
+
+            // Viewport bounds in grid coordinates
+            // offsetX positions the grid; negative offset means grid moves right (show columns to left)
+            const vpLeft = -offsetX / zoomLevel;
+            const vpTop = -offsetY / zoomLevel;
+            const vpRight = vpLeft + viewportWidth / zoomLevel;
+            const vpBottom = vpTop + viewportHeight / zoomLevel;
+
+            // Convert to grid cell coordinates (can include negative columns)
+            // Rows are positioned as (row - 1) * cellHeight, so account for that offset
+            // Minimum row is 1 (row 0 is deleted)
+            const minCol = Math.floor(vpLeft / cellWidth);
+            const maxCol = Math.ceil(vpRight / cellWidth) + 1;
+            const minRow = Math.max(1, Math.floor(vpTop / cellHeight) + 1);
+            const maxRow = Math.ceil(vpBottom / cellHeight) + 2;
+
+            return { minCol, maxCol, minRow, maxRow };
         }
 
-        // Check for other factors
-        let divisor = 5;
-        while (divisor * divisor <= n) {
-            // Check if divisor is a factor
-            while (n % divisor === 0) {
-                factors.push(divisor);
-                n /= divisor;
-            }
-
-            // Check if (divisor + 2) is a factor
-            while (n % (divisor + 2) === 0) {
-                factors.push(divisor + 2);
-                n /= (divisor + 2);
-            }
-
-            // Move to next potential prime (6k ± 1 pattern)
-            divisor += 6;
+        // Prevent scrolling above row 1
+        function constrainView() {
+            // offsetY = 0 means row 1 is at the top. We can't go higher (positive offsetY).
+            if (offsetY > 0) offsetY = 0;
         }
 
-        // If n is a prime number greater than 4
-        if (n > 1) {
-            factors.push(n);
+        // Update transforms
+        function updateTransform() {
+            constrainView();
+            gridWrapper.style.transform = `translate(${offsetX}px, ${offsetY}px) scale(${zoomLevel})`;
+            renderVisibleCells();
         }
 
-        return factors;
-    }
-
-    // Check if a number is prime using primality library
-    function isPrime(n) {
-        return primality(n);
-    }
-
-    // Generate color based on prime factors
-    function generateColorFromFactors(factors) {
-        const canvas = document.createElement('canvas');
-        const context = canvas.getContext('2d');
-        canvas.width = 1;
-        canvas.height = 1;
-
-        // Start with transparent base
-        context.fillStyle = 'rgba(0, 0, 0, 0)';
-        context.fillRect(0, 0, 1, 1);
-
-        // Overlay colors for each prime factor
-        factors.forEach(factor => {
-            const colorFunction = compositeColorFunctions.get(currentCompositeColorScheme);
-            context.fillStyle = colorFunction(factor);
-            context.fillRect(0, 0, 1, 1);
+        // Recenter button - only center column 0 horizontally
+        recenterBtn.addEventListener('click', () => {
+            offsetX = viewport.clientWidth / 2;
+            updateTransform();
         });
 
-        return context.getImageData(0, 0, 1, 1).data;
-    }
+        // Reset button - reset everything
+        resetBtn.addEventListener('click', () => {
+            zoomLevel = 1;
+            offsetX = viewport.clientWidth / 2;
+            offsetY = 0;
+            baseRowsOnScreen = 30;
+            rowsInput.value = 30;
+            rowsValueDisplay.textContent = '30';
+            rowsOnScreen = baseRowsOnScreen;
+            calculateCellDimensions();
+            updateTransform();
+        });
 
-    // Function to position the center arrow
-    function positionCenterArrow(centerCol) {
-        // Calculate the position of the center column
-        // Each cell is 20px wide with a 1px gap, and we need to center the arrow
-        const cellWidth = 20;
-        const gapWidth = 1;
-        const arrowPosition = (centerCol - 0.5) * (cellWidth + gapWidth);
+        // Mouse wheel zoom
+        viewport.addEventListener('wheel', (e) => {
+            e.preventDefault();
+            const oldZoom = zoomLevel;
+            const delta = e.deltaY > 0 ? 0.9 : 1.1;
+            zoomLevel = Math.max(0.5, Math.min(5, zoomLevel * delta));
 
-        // Set the left position of the arrow
-        centerArrow.style.left = `${arrowPosition}px`;
-    }
+            // Update rows on screen based on zoom
+            rowsOnScreen = Math.max(1, Math.round(baseRowsOnScreen / zoomLevel));
+            rowsInput.value = rowsOnScreen;
+            rowsValueDisplay.textContent = rowsOnScreen;
 
-    // Efficient implementation of Sieve of Eratosthenes for generating primes
-    function generatePrimes(max) {
-        const primes = [];
-        const sieve = Array(max + 1).fill(true);
-        sieve[0] = sieve[1] = false;
+            const rect = viewport.getBoundingClientRect();
+            const mouseX = e.clientX - rect.left;
+            const mouseY = e.clientY - rect.top;
 
-        for (let i = 2; i * i <= max; i++) {
-            if (sieve[i]) {
-                for (let j = i * i; j <= max; j += i) {
-                    sieve[j] = false;
-                }
+            offsetX += mouseX * (1 / oldZoom - 1 / zoomLevel);
+            offsetY += mouseY * (1 / oldZoom - 1 / zoomLevel);
+
+            updateTransform();
+        });
+
+        // Mouse drag
+        viewport.addEventListener('mousedown', (e) => {
+            isDragging = true;
+            dragStartX = e.clientX;
+            dragStartY = e.clientY;
+            dragStartOffsetX = offsetX;
+            dragStartOffsetY = offsetY;
+            viewport.classList.add('dragging');
+        });
+
+        document.addEventListener('mousemove', (e) => {
+            if (isDragging) {
+                const deltaX = e.clientX - dragStartX;
+                const deltaY = e.clientY - dragStartY;
+                offsetX = dragStartOffsetX + deltaX;
+                offsetY = dragStartOffsetY + deltaY;
+                updateTransform();
             }
-        }
+        });
 
-        // Collect the primes
-        for (let i = 2; i <= max; i++) {
-            if (sieve[i]) {
-                primes.push(i);
+        document.addEventListener('mouseup', () => {
+            isDragging = false;
+            viewport.classList.remove('dragging');
+        });
+
+        // Row control - changes the base rows at zoom 1
+        rowsInput.addEventListener('input', () => {
+            baseRowsOnScreen = parseInt(rowsInput.value);
+            rowsOnScreen = Math.max(1, Math.round(baseRowsOnScreen / zoomLevel));
+            rowsValueDisplay.textContent = rowsOnScreen;
+            calculateCellDimensions();
+            renderVisibleCells();
+        });
+
+
+        // Window resize handler
+        window.addEventListener('resize', () => {
+            calculateCellDimensions();
+            renderVisibleCells();
+        });
+
+        // Color functions
+        const primeColors = {};
+        let primeCounter = 0;
+        function getPrimeColorModular(prime) {
+            if (!primeColors[prime]) {
+                const r = (primeCounter * 37) % 255;
+                const g = (primeCounter * 67) % 255;
+                const b = (primeCounter * 97) % 255;
+                primeColors[prime] = `rgba(${r}, ${g}, ${b}, 0.1)`;
+                primeCounter++;
             }
+            return primeColors[prime];
         }
 
-        return primes;
-    }
-
-    // Generate pseudoprimorial numbers
-    function generatePseudoprimorialNumbers(count) {
-        // The expected sequence of pseudoprimorial numbers
-        const expectedSequence = [1, 2, 4, 6, 12, 18, 24, 30, 60, 90, 120, 150, 180, 210, 420, 630, 840, 1050, 1260, 1470, 1680, 1890, 2100, 2310, 4620];
-
-        // Generate primorial numbers (product of first n primes)
-        function generatePrimorials(count) {
-            const primes = generatePrimes(100); // Generate enough primes
-            const primorials = [1]; // Start with 1 (empty product)
-
-            for (let i = 0; i < count; i++) {
-                primorials.push(primorials[primorials.length - 1] * primes[i]);
-            }
-
-            return primorials;
+        function getPrimeColor235(prime) {
+            const r = (prime % 2) !== 0 ? 255 : 0;
+            const b = (prime % 3) !== 0 ? 255 : 0;
+            const g = (prime % 5) !== 0 ? 255 : 0;
+            return `rgba(${r}, ${g}, ${b}, 0.1)`;
         }
 
-        // Generate pseudoprimorial numbers programmatically
-        if (count <= expectedSequence.length) {
-            // If we're requesting a number of values within our expected sequence, return those
-            return expectedSequence.slice(0, count);
-        } else {
-            // For larger counts, we need to generate more values
-            // Analyzing the pattern in the expected sequence:
-            // After 2310, the next value is 4620 (which is 2310 * 2)
-            // The pattern seems to follow certain multipliers
-
-            const pseudoprimorials = [...expectedSequence]; // Start with known values
-
-            // Continue the pattern for additional values
-            // The last value in our sequence is 4620
-            let lastValue = pseudoprimorials[pseudoprimorials.length - 1];
-
-            // Generate additional values until we have enough
-            while (pseudoprimorials.length < count) {
-                // The next value after 4620 would be 9240 (4620 * 2)
-                // Then 13860 (4620 * 3), and so on
-                lastValue = lastValue + 4620;
-                pseudoprimorials.push(lastValue);
-            }
-
-            return pseudoprimorials.slice(0, count);
-        }
-    }
-
-    // Generate primorial numbers (product of first n primes)
-    function generatePrimorials(count) {
-        const primes = generatePrimes(100); // Generate enough primes using the global function
-        const primorials = [1]; // Start with 1 (empty product)
-
-        for (let i = 0; i < count; i++) {
-            primorials.push(primorials[primorials.length - 1] * primes[i]);
+        function getColorByFactorCount(num) {
+            const factors = primeFactorization(num).length;
+            const r = (factors * 30) % 255;
+            const g = (factors * 60) % 255;
+            const b = (factors * 90) % 255;
+            return `rgba(${r}, ${g}, ${b}, 0.1)`;
         }
 
-        return primorials;
-    }
-
-    // Find the highest primorial that a number is a multiple of
-    function findHighestPrimorialDivisor(number) {
-        // Generate a list of primorials up to a reasonable limit
-        const primorials = generatePrimorials(10); // This should generate primorials up to 6469693230
-
-        // Find the highest primorial that divides the number
-        for (let i = primorials.length - 1; i >= 0; i--) {
-            if (number % primorials[i] === 0) {
-                return primorials[i];
-            }
+        function getColorByLowestFactor(num) {
+            const factors = primeFactorization(num);
+            if (factors.length === 0) return 'rgba(255, 255, 255, 0.1)';
+            const lowest = factors[0];
+            const r = (lowest * 37) % 255;
+            const g = (lowest * 67) % 255;
+            const b = (lowest * 97) % 255;
+            return `rgba(${r}, ${g}, ${b}, 0.1)`;
         }
 
-        // If no primorial divides the number, return 1
-        return 1;
-    }
+        function getColorByHighestFactor(num) {
+            const factors = primeFactorization(num);
+            if (factors.length === 0) return 'rgba(255, 255, 255, 0.1)';
+            const highest = factors[factors.length - 1];
+            const r = (highest * 37) % 255;
+            const g = (highest * 67) % 255;
+            const b = (highest * 97) % 255;
+            return `rgba(${r}, ${g}, ${b}, 0.1)`;
+        }
 
-    // Calculate the range based on center column value and its highest primorial divisor
-    function calculateRange(centerValue) {
-        const highestPrimorial = findHighestPrimorialDivisor(centerValue);
-        const maxOffset = highestPrimorial / 2;
-        return {
-            centerValue,
-            highestPrimorial,
-            maxOffset,
-            minCol: centerValue - maxOffset,
-            maxCol: centerValue + maxOffset
+        const compositeColorFunctions = {
+            'white': () => 'rgba(255, 255, 255, 0.1)',
+            '235': getPrimeColor235,
+            'modular': getPrimeColorModular,
+            'factorCount': getColorByFactorCount,
+            'lowestFactor': getColorByLowestFactor,
+            'highestFactor': getColorByHighestFactor
         };
-    }
 
-    // Function to generate the grid
-    function generateGrid() {
-        // Clear existing grid
-        grid.innerHTML = '';
+        // Ramanujan primes: A000657 in OEIS
+        const ramanujanPrimes = [2, 11, 13, 29, 37, 41, 47, 59, 67, 71, 79, 97, 101, 107, 127, 149, 163, 181, 191, 197, 223, 229, 233, 239, 241, 251, 257, 263, 269, 281, 307, 311, 317, 337, 347, 349, 353, 359, 367, 373, 389, 397, 401, 409, 419, 431, 439, 443, 449, 457, 461, 467, 479];
 
-        // Set CSS variables for columns and rows
-        document.documentElement.style.setProperty('--columns', cols);
-        document.documentElement.style.setProperty('--rows', rows);
+        // Fermat primes: F_n = 2^(2^n) + 1, only known ones
+        const fermatPrimes = [3, 5, 17, 257, 65537];
 
-        // Calculate center column (or center-left for even columns)
-        const centerCol = Math.ceil(cols / 2);
+        // Mersenne primes: 2^p - 1 where p is prime
+        const mersennePrimes = [3, 7, 31, 127, 8191, 131071, 524287, 2147483647];
 
-        // Generate pseudoprimorial numbers for the center column
-        const pseudoprimorials = generatePseudoprimorialNumbers(rows);
+        // Sophie Germain primes: p where 2p+1 is also prime
+        const sophieGermainPrimes = [2, 3, 5, 11, 23, 29, 41, 53, 83, 89, 113, 131, 173, 179, 191, 197, 227, 233, 239, 251, 281, 293, 359, 419, 431, 443, 491, 509, 593, 641, 653, 659, 743, 761, 809, 827, 857, 881, 929, 953, 1013, 1019, 1031, 1049, 1079, 1103, 1223, 1229, 1289, 1319];
 
-        // Calculate range if range toggle is on
-        let range = null;
-        if (rangeToggled) {
-            // Use the center column value (pseudoprimorial) for the current row
-            const centerValue = pseudoprimorials[0]; // First row's center value
-            range = calculateRange(centerValue);
+        const primeTypeColors = {
+            'ramanujan': 'rgba(139, 0, 0, 1)',        // dark red
+            'fermat': 'rgba(0, 0, 139, 1)',            // dark blue
+            'mersenne': 'rgba(139, 69, 0, 1)',         // dark orange/brown
+            'twin': 'rgba(0, 100, 0, 1)',              // dark green
+            'cousin': 'rgba(139, 69, 69, 1)',          // dark pink/rose
+            'sexy': 'rgba(75, 0, 130, 1)',             // indigo (darker purple)
+            'sophie': 'rgba(0, 128, 128, 1)'           // dark cyan/teal
+        };
+
+        function isRamanujanPrime(n) {
+            return ramanujanPrimes.includes(n);
         }
 
-        // Create grid and add interactions
-        for (let row = 1; row <= rows; row++) {
-            for (let col = 1; col <= cols; col++) {
-                // Calculate x-coordinate relative to center column
-                const x = col - centerCol;
-                const y = row;
+        function isFermatPrime(n) {
+            return fermatPrimes.includes(n);
+        }
 
-                // Value is based on pseudoprimorial for center column, with x coordinate offset (can be negative)
-                const number = pseudoprimorials[y - 1] + x;
-                const factors = primeFactorization(Math.abs(number));
+        function isMersennePrime(n) {
+            return mersennePrimes.includes(n);
+        }
 
-                const cell = document.createElement('div');
-                cell.className = 'cell';
+        function isTwinPrime(n) {
+            return (isPrime(n + 2) || isPrime(n - 2));
+        }
 
-                // Check if cell should be turned off based on range
-                if (rangeToggled) {
-                    // For each row, calculate the range based on that row's center value
-                    const rowCenterValue = pseudoprimorials[y - 1];
-                    const rowRange = calculateRange(rowCenterValue);
+        function isCousinPrime(n) {
+            return (isPrime(n + 4) || isPrime(n - 4));
+        }
 
-                    // If x is outside the allowed range, add the turned-off class
-                    if (Math.abs(x) > rowRange.maxOffset) {
-                        cell.classList.add('turned-off');
-                    }
+        function isSexyPrime(n) {
+            return (isPrime(n + 6) || isPrime(n - 6));
+        }
+
+        function isSophieGermainPrime(n) {
+            return sophieGermainPrimes.includes(n);
+        }
+
+        function getPrimeTypes(n) {
+            const types = [];
+            if (isRamanujanPrime(n)) types.push('ramanujan');
+            if (isFermatPrime(n)) types.push('fermat');
+            if (isMersennePrime(n)) types.push('mersenne');
+            if (isTwinPrime(n)) types.push('twin');
+            if (isCousinPrime(n)) types.push('cousin');
+            if (isSexyPrime(n)) types.push('sexy');
+            if (isSophieGermainPrime(n)) types.push('sophie');
+            return types;
+        }
+
+        function getPrimeColor(n) {
+            const matchingTypes = getPrimeTypes(n).filter(type => activePrimeTypes.has(type));
+
+            // No active types match - show black
+            if (matchingTypes.length === 0) {
+                return 'rgba(0, 0, 0, 1)';
+            }
+
+            // One type matches - show its color
+            if (matchingTypes.length === 1) {
+                return primeTypeColors[matchingTypes[0]];
+            }
+
+            // Multiple types match - use flash animation
+            const colorIndex = Math.floor(flashFrameCount / 10) % matchingTypes.length;
+            return primeTypeColors[matchingTypes[colorIndex]];
+        }
+
+        function primeFactorization(n) {
+            if (n <= 1) return [];
+            const factors = [];
+            while (n % 2 === 0) {
+                factors.push(2);
+                n /= 2;
+            }
+            while (n % 3 === 0) {
+                factors.push(3);
+                n /= 3;
+            }
+            let divisor = 5;
+            while (divisor * divisor <= n) {
+                while (n % divisor === 0) {
+                    factors.push(divisor);
+                    n /= divisor;
                 }
-
-                // Generate and set the background color
-                if (isPrime(Math.abs(number))) {
-                    // If the number is prime, use the selected prime color scheme
-                    const primeColorFunction = primeColorFunctions.get(currentPrimeColorScheme);
-                    cell.style.backgroundColor = primeColorFunction(Math.abs(number));
-                } else {
-                    // For non-prime numbers, use the selected composite color scheme
-                    const rgba = generateColorFromFactors(factors);
-                    cell.style.backgroundColor = `rgba(${rgba[0]}, ${rgba[1]}, ${rgba[2]}, ${rgba[3] / 255})`;
+                while (n % (divisor + 2) === 0) {
+                    factors.push(divisor + 2);
+                    n /= (divisor + 2);
                 }
+                divisor += 6;
+            }
+            if (n > 1) factors.push(n);
+            return factors;
+        }
 
-                // Add hover and touch events to show coordinates and factors
-                cell.addEventListener('mouseover', () => {
-                    // Calculate x-coordinate factorization
-                    const xFactors = primeFactorization(Math.abs(x));
-                    const xFactorization = xFactors.length > 0 ? xFactors.join(' × ') : '1';
+        function isPrime(n) {
+            return primality(n);
+        }
 
-                    let displayText = `Coordinates: (${y}, ${x})<br>Value: ${number}<br>Factors: ${factors.join(' × ')}<br>X Factorization: ${xFactorization}`;
+        function generatePseudoprimorialNumbers(count) {
+            const expected = [1, 2, 4, 6, 12, 18, 24, 30, 60, 90, 120, 150, 180, 210, 420, 630, 840, 1050, 1260, 1470, 1680, 1890, 2100, 2310, 4620];
+            if (count <= expected.length) return expected.slice(0, count);
+            const result = [...expected];
+            let last = expected[expected.length - 1];
+            while (result.length < count) {
+                last += 4620;
+                result.push(last);
+            }
+            return result.slice(0, count);
+        }
 
-                    // If range is toggled, show additional information
-                    if (rangeToggled) {
-                        const rowCenterValue = pseudoprimorials[y - 1];
-                        const rowRange = calculateRange(rowCenterValue);
-                        displayText += `<br>Center Value: ${rowCenterValue}<br>Highest Primorial: ${rowRange.highestPrimorial}<br>Max Offset: ${rowRange.maxOffset}`;
+        function generateColorFromFactors(num) {
+            const colorFunction = compositeColorFunctions[currentCompositeColorScheme];
+            return colorFunction(num);
+        }
+
+        // Cache for pseudoprimorials to avoid recalculating
+        let pseudoprimorialCache = [];
+
+        function getPseudoprimorial(row) {
+            while (pseudoprimorialCache.length <= row) {
+                const nextIdx = pseudoprimorialCache.length;
+                const psuedos = generatePseudoprimorialNumbers(nextIdx + 100);
+                pseudoprimorialCache = psuedos;
+            }
+            return pseudoprimorialCache[row];
+        }
+
+        // Check if a cell should be greyed out based on pseudoprimorial midpoints
+        function shouldGreyOut(row, col) {
+            const pseudoprimorial = getPseudoprimorial(row);
+            const value = pseudoprimorial + col;
+
+            // Check midpoint with next row
+            if (row + 1 < pseudoprimorialCache.length) {
+                const nextPseudoprimorial = getPseudoprimorial(row + 1);
+                const midpointNext = (pseudoprimorial + nextPseudoprimorial) / 2;
+                if (value > midpointNext) return true;
+            }
+
+            // Check midpoint with previous row
+            if (row > 1) {
+                const prevPseudoprimorial = getPseudoprimorial(row - 1);
+                const midpointPrev = (prevPseudoprimorial + pseudoprimorial) / 2;
+                if (value < midpointPrev) return true;
+            }
+
+            return false;
+        }
+
+        // Apply greyed out effect to a color
+        function greyOutColor(color) {
+            // Reduce opacity and desaturate slightly
+            if (color.includes('rgba')) {
+                // Parse rgba and reduce opacity
+                const match = color.match(/rgba\((\d+),\s*(\d+),\s*(\d+),\s*([0-9.]+)\)/);
+                if (match) {
+                    const r = match[1];
+                    const g = match[2];
+                    const b = match[3];
+                    const alpha = parseFloat(match[4]);
+                    // Reduce opacity by half and add grey wash
+                    const newAlpha = alpha * 0.4;
+                    return `rgba(${r}, ${g}, ${b}, ${newAlpha})`;
+                }
+            }
+            return color;
+        }
+
+        // Render only visible cells
+        function renderVisibleCells() {
+            grid.innerHTML = '';
+
+            const { minCol, maxCol, minRow, maxRow } = getVisibleGridBounds();
+
+            for (let row = minRow; row < maxRow; row++) {
+                for (let col = minCol; col < maxCol; col++) {
+                    const pseudoprimorial = getPseudoprimorial(row);
+                    const value = pseudoprimorial + col;
+
+                    const cell = document.createElement('div');
+                    cell.className = 'cell';
+
+                    // Position cell absolutely based on grid coordinates
+                    // Row 1 is at top (y=0), row 2 at y=cellHeight, etc.
+                    cell.style.left = (col * cellWidth) + 'px';
+                    cell.style.top = ((row - 1) * cellHeight) + 'px';
+                    cell.style.width = cellWidth + 'px';
+                    cell.style.height = cellHeight + 'px';
+
+                    // Set color
+                    let bgColor;
+                    if (value <= 0) {
+                        bgColor = 'rgba(255, 255, 255, 0.3)';
+                    } else if (isPrime(value)) {
+                        bgColor = getPrimeColor(value);
+                    } else {
+                        bgColor = generateColorFromFactors(value);
                     }
 
-                    coordinatesDisplay.innerHTML = displayText;
-                });
-                cell.addEventListener('touchstart', () => {
-                    // Calculate x-coordinate factorization
-                    const xFactors = primeFactorization(Math.abs(x));
-                    const xFactorization = xFactors.length > 0 ? xFactors.join(' × ') : '1';
-
-                    let displayText = `Coordinates: (${y}, ${x})<br>Value: ${number}<br>Factors: ${factors.join(' × ')}<br>X Factorization: ${xFactorization}`;
-
-                    // If range is toggled, show additional information
-                    if (rangeToggled) {
-                        const rowCenterValue = pseudoprimorials[y - 1];
-                        const rowRange = calculateRange(rowCenterValue);
-                        displayText += `<br>Center Value: ${rowCenterValue}<br>Highest Primorial: ${rowRange.highestPrimorial}<br>Max Offset: ${rowRange.maxOffset}`;
+                    // Apply grey-out if in invalid zone
+                    if (shouldGreyOut(row, col)) {
+                        bgColor = greyOutColor(bgColor);
+                        cell.style.border = '1px solid black';
                     }
 
-                    coordinatesDisplay.innerHTML = displayText;
-                });
+                    cell.style.backgroundColor = bgColor;
 
-                grid.appendChild(cell);
+                    // Hover info with column indicator
+                    cell.addEventListener('mouseover', () => {
+                        const factors = primeFactorization(Math.abs(value));
+                        const factorStr = factors.length > 0 ? factors.join(' × ') : '1';
+                        coordinatesDisplay.innerHTML = `Row: ${row} | Column: ${col} | Value: ${value}, Factors: ${factorStr} | Row Center: ${pseudoprimorial}`;
+                    });
+
+                    grid.appendChild(cell);
+                }
             }
         }
 
-        // Position the center arrow
-        positionCenterArrow(centerCol);
-    }
-
-    // Event listener for update button
-    updateGridButton.addEventListener('click', () => {
-        cols = parseInt(columnsInput.value) || 60;
-        rows = parseInt(rowsInput.value) || 30;
-        generateGrid();
-    });
-
-    // Event listener for toggle range button
-    toggleRangeButton.addEventListener('click', () => {
-        rangeToggled = !rangeToggled;
-        toggleRangeButton.textContent = rangeToggled ? "Disable Range" : "Toggle Range";
-        generateGrid();
-    });
-
-    // Event listeners for color scheme selectors
-    compositeColorSchemeSelect.addEventListener('change', () => {
-        currentCompositeColorScheme = compositeColorSchemeSelect.value;
-        generateGrid();
-    });
-
-    primeColorSchemeSelect.addEventListener('change', () => {
-        currentPrimeColorScheme = primeColorSchemeSelect.value;
-        generateGrid();
-    });
-
-    // Unit test for pseudoprimorial numbers
-    function testPseudoprimorialNumbers() {
-        const expected = [1, 2, 4, 6, 12, 18, 24, 30, 60, 90, 120, 150, 180, 210, 420, 630, 840, 1050, 1260, 1470, 1680, 1890, 2100, 2310, 4620];
-        const generated = generatePseudoprimorialNumbers(25);
-
-        console.log("Expected pseudoprimorial numbers:", expected);
-        console.log("Generated pseudoprimorial numbers:", generated);
-
-        let allMatch = true;
-        for (let i = 0; i < expected.length; i++) {
-            if (expected[i] !== generated[i]) {
-                console.error(`Mismatch at index ${i}: expected ${expected[i]}, got ${generated[i]}`);
-                allMatch = false;
-            }
-        }
-
-        if (allMatch) {
-            console.log("✅ All pseudoprimorial numbers match the expected values!");
-        } else {
-            console.error("❌ Some pseudoprimorial numbers do not match the expected values.");
-        }
-    }
-
-    // Unit test for range calculation
-    function testRangeCalculation() {
-        const testCases = [
-            { centerValue: 4, expectedMaxOffset: 1 },
-            { centerValue: 30, expectedMaxOffset: 15 },
-            { centerValue: 60, expectedMaxOffset: 15 },
-            { centerValue: 420, expectedMaxOffset: 105 }
-        ];
-
-        console.log("Testing range calculation for specified test cases:");
-
-        let allPass = true;
-        testCases.forEach(testCase => {
-            const range = calculateRange(testCase.centerValue);
-            const actualMaxOffset = range.maxOffset;
-            const pass = actualMaxOffset === testCase.expectedMaxOffset;
-
-            console.log(`Center Value: ${testCase.centerValue}, Expected Max Offset: ${testCase.expectedMaxOffset}, Actual Max Offset: ${actualMaxOffset}, Result: ${pass ? "✅ PASS" : "❌ FAIL"}`);
-
-            if (!pass) {
-                allPass = false;
-                console.error(`Test failed for center value ${testCase.centerValue}. Expected max offset: ${testCase.expectedMaxOffset}, but got: ${actualMaxOffset}`);
-            }
+        // Radio button event listeners for composite colors
+        const compositeRadios = document.querySelectorAll('input[name="composite"]');
+        compositeRadios.forEach(radio => {
+            radio.addEventListener('change', () => {
+                if (radio.checked) {
+                    currentCompositeColorScheme = radio.value;
+                    renderVisibleCells();
+                }
+            });
         });
 
-        if (allPass) {
-            console.log("✅ All range calculation tests passed!");
-        } else {
-            console.error("❌ Some range calculation tests failed.");
+        // Checkbox event listeners for special prime types
+        const primeCheckboxes = document.querySelectorAll('input[type="checkbox"][id^="prime-"]');
+        primeCheckboxes.forEach(checkbox => {
+            checkbox.addEventListener('change', () => {
+                if (checkbox.checked) {
+                    activePrimeTypes.add(checkbox.value);
+                } else {
+                    activePrimeTypes.delete(checkbox.value);
+                }
+                renderVisibleCells();
+            });
+        });
+
+        // Animation loop for flashing primes
+        function animationLoop() {
+            flashFrameCount++;
+            // Check if any cell needs flashing (has multiple prime types)
+            const cells = document.querySelectorAll('.cell');
+            let needsFlash = false;
+            cells.forEach(cell => {
+                // Simple check: if cell is a prime cell and there are active types
+                if (activePrimeTypes.size > 0 && cell.style.backgroundColor.includes('1)')) {
+                    needsFlash = true;
+                }
+            });
+
+            if (needsFlash) {
+                renderVisibleCells();
+            }
+
+            animationFrameId = requestAnimationFrame(animationLoop);
         }
-    }
 
-    // Run the tests
-    testPseudoprimorialNumbers();
-    testRangeCalculation();
-
-    // Initial grid generation
-    generateGrid();
-</script>
+        // Initial setup
+        calculateCellDimensions();
+        offsetX = viewport.clientWidth / 2;  // Center column 0
+        offsetY = 0;
+        zoomLevel = 1;
+        renderVisibleCells();
+        animationLoop();
+    </script>
 </body>
 </html>

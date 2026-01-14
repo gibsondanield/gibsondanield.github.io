@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interesting Data</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            line-height: 1.6;
+            background: #000;
+            color: #fff;
+        }
+        h1 {
+            color: #fff;
+        }
+        a {
+            display: block;
+            margin: 10px 0;
+            color: #4da6ff;
+            text-decoration: none;
+        }
+        a:hover {
+            text-decoration: underline;
+            color: #82c7ff;
+        }
+        .page-id {
+            color: #666;
+            font-size: 0.9em;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #333;
+        }
+    </style>
+</head>
+<body>
+    <h1 id="title">Interesting Data</h1>
+    <div id="links-container"></div>
+    <div class="page-id">
+        Page ID: <span id="page-id"></span>
+    </div>
+
+    <script>
+        function generateRandomString(length) {
+            const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+            let result = '';
+            for (let i = 0; i < length; i++) {
+                result += characters.charAt(Math.floor(Math.random() * characters.length));
+            }
+            return result;
+        }
+
+        function generateRandomInt(max) {
+            return Math.floor(Math.random() * max);
+        }
+
+        // Get or create a page ID from the URL hash
+        let pageId = window.location.hash.substring(1);
+        if (!pageId) {
+            pageId = generateRandomString(12);
+            window.history.replaceState(null, '', '#' + pageId);
+        }
+
+        document.getElementById('page-id').textContent = pageId;
+
+        // Nonsense adjectives and nouns
+        const adjectives = [
+            'Zephunk', 'Blorsken', 'Quilpish', 'Flexxion', 'Grindle', 'Fluxian', 'Zorbant',
+            'Splenderk', 'Vortick', 'Glimpkin', 'Flauntier', 'Krinkle', 'Quorben', 'Thribble',
+            'Zankful', 'Fluxent', 'Gribblish', 'Phlorkian', 'Tinklen', 'Vexpish', 'Kronk',
+            'Flibberish', 'Zennox', 'Blurk', 'Quixphen', 'Glemlock', 'Frindel', 'Splocken',
+            'Vortian', 'Glumble', 'Zhonk', 'Flebbering', 'Krindle', 'Quophic', 'Thrindle'
+        ];
+
+        const nouns = [
+            'Splork', 'Flange', 'Gribble', 'Zank', 'Fentil', 'Quorp', 'Blurthen',
+            'Vortex', 'Klinger', 'Thriblet', 'Zephunk', 'Fluxion', 'Grendel', 'Splock',
+            'Phlonik', 'Tinkle', 'Vexp', 'Kronkle', 'Flibber', 'Zennon', 'Blurken',
+            'Quixphen', 'Glembork', 'Frondel', 'Sprocle', 'Vortine', 'Glumble', 'Zhonkle',
+            'Flebber', 'Krindley', 'Quophis', 'Thrindle'
+        ];
+
+        // Generate 20-40 random links with nonsense words
+        const linkCount = 20 + generateRandomInt(21);
+        const container = document.getElementById('links-container');
+
+        for (let i = 0; i < linkCount; i++) {
+            const randomHash = generateRandomString(12);
+            const adjective = adjectives[generateRandomInt(adjectives.length)];
+            const noun = nouns[generateRandomInt(nouns.length)];
+            const linkText = `${adjective} ${noun}`;
+
+            const link = document.createElement('a');
+            link.href = '#' + randomHash;
+            link.textContent = linkText;
+            container.appendChild(link);
+
+            // Add click handler to navigate to new page ID
+            link.addEventListener('click', (e) => {
+                e.preventDefault();
+                window.location.hash = randomHash;
+                window.location.reload();
+            });
+        }
+    </script>
+</body>
+</html>
