@@ -1,0 +1,1950 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Photography really needed another exposure chart </title>
+  <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+  <style>
+    :root {
+      /* ============ COLOR PALETTE (Aircraft Instrument Theme) ============ */
+      --color-bg-dark: #0a0f1a;
+      --color-bg-panel: #0f1420;
+      --color-bg-panel-light: #0d1118;
+      --color-grid-aperture: #00cc44;  /* Green: aperture reference */
+      --color-grid-shutter: #00aaff;   /* Cyan: shutter speed reference */
+      --color-contour-ev: #ff00ff;     /* Magenta: EV contours (flight director) */
+      --color-label-ev: #ffff00;       /* Yellow: reference points & markers */
+      --color-label-ev-alt: #ffcc00;   /* Darker yellow: secondary labels */
+      --color-text-bright: #00ff88;    /* Bright green: primary labels */
+      --color-text-muted: #aaa;        /* Gray: secondary text */
+      --color-text-normal: #ccc;       /* Light gray: normal text */
+      --color-border-control: #1a2332;
+      --color-border-highlight: #2a3a4a;
+      --color-glow-green: rgba(0, 204, 68, 0.1);
+      --color-glow-green-hover: rgba(0, 204, 68, 0.15);
+      --color-glow-cyan: rgba(0, 170, 255, 0.1);
+      --color-axis-line: #00ff00;
+
+      /* ============ TYPOGRAPHY ============ */
+      --font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Courier New', monospace;
+      --font-size-base: 16px;
+      --font-size-label: 13px;
+      --font-size-small: 12px;
+
+      /* ============ STROKE WIDTHS ============ */
+      --line-width-grid: 0.5px;
+      --line-width-contour: 1.5px;
+      --line-width-axis: 2px;
+      --line-width-axis-labels: 18px;
+
+      /* ============ SPACING ============ */
+      --padding-control: 14px;
+      --gap-control: 10px;
+      --border-radius: 6px;
+    }
+
+    body {
+      background: var(--color-bg-dark);
+      color: var(--color-text-normal);
+      font-family: var(--font-family);
+      padding: 12px;
+      margin: 0;
+      font-size: var(--font-size-base);
+    }
+
+    #container {
+      display: flex;
+      flex-direction: row;
+      gap: 20px;
+      margin: 0;
+      align-items: center;
+    }
+
+    #sidebar {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+      min-width: 250px;
+      flex-shrink: 0;
+      justify-content: center;
+      align-items: flex-start;
+      height: auto;
+    }
+
+    #mainContent {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+      flex: 1;
+    }
+
+    h1 {
+      margin: 0 0 20px 0;
+      font-size: 28px;
+      color: #fff;
+    }
+
+    .control-group {
+      display: flex;
+      flex-direction: column;
+      gap: var(--gap-control);
+      background: linear-gradient(135deg, var(--color-bg-panel) 0%, var(--color-bg-panel-light) 100%);
+      padding: var(--padding-control);
+      border-radius: var(--border-radius);
+      border: 1px solid var(--color-border-control);
+      box-shadow: 0 0 12px var(--color-glow-green), inset 0 1px 0 rgba(0, 255, 136, 0.05);
+      transition: all 0.2s ease;
+    }
+
+    .control-group:hover {
+      border-color: var(--color-border-highlight);
+      box-shadow: 0 0 16px var(--color-glow-green-hover), inset 0 1px 0 rgba(0, 255, 136, 0.08);
+    }
+
+    .control-group-label {
+      font-size: var(--font-size-small);
+      color: var(--color-text-bright);
+      text-transform: uppercase;
+      letter-spacing: 1.2px;
+      font-weight: bold;
+      opacity: 0.9;
+    }
+
+    .control-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: var(--font-size-label);
+      color: var(--color-text-normal);
+      transition: color 0.2s ease;
+    }
+
+    .control-item:hover {
+      color: var(--color-text-bright);
+    }
+
+    .control-item input[type="radio"],
+    .control-item input[type="checkbox"] {
+      cursor: pointer;
+      accent-color: var(--color-text-bright);
+    }
+
+    .checkbox-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+
+    .checkbox-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 13px;
+    }
+
+    input[type="range"] {
+      width: 100%;
+      height: 6px;
+      border-radius: 3px;
+      background: linear-gradient(90deg, #1a2332 0%, #0f1420 100%);
+      outline: none;
+      -webkit-appearance: none;
+    }
+
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: #00ff88;
+      cursor: pointer;
+      box-shadow: 0 0 6px rgba(0, 255, 136, 0.6);
+      transition: all 0.2s ease;
+    }
+
+    input[type="range"]::-webkit-slider-thumb:hover {
+      width: 18px;
+      height: 18px;
+      box-shadow: 0 0 10px rgba(0, 255, 136, 0.9);
+    }
+
+    input[type="range"]::-moz-range-thumb {
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: #00ff88;
+      cursor: pointer;
+      border: none;
+      box-shadow: 0 0 6px rgba(0, 255, 136, 0.6);
+      transition: all 0.2s ease;
+    }
+
+    input[type="range"]::-moz-range-thumb:hover {
+      width: 18px;
+      height: 18px;
+      box-shadow: 0 0 10px rgba(0, 255, 136, 0.9);
+    }
+
+    input[type="range"]::-moz-range-track {
+      background: transparent;
+      border: none;
+    }
+
+    canvas {
+      border: 2px solid var(--color-border-control);
+      background: #0a0a0a;
+      box-shadow:
+        0 0 20px rgba(0, 0, 0, 0.8),
+        0 0 30px var(--color-glow-cyan),
+        inset 0 0 20px var(--color-glow-green);
+    }
+
+    #legend {
+      font-size: 15px;
+      color: #ccc;
+      line-height: 1.5;
+      max-width: 1000px;
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin: 4px 0;
+    }
+
+    .legend-color {
+      width: 20px;
+      height: 2px;
+      border-radius: 1px;
+    }
+
+    .legend-color.red {
+      background: #ff4444;
+      height: 3px;
+    }
+
+    .legend-color.blue {
+      background: #4488ff;
+    }
+
+    .legend-color.gray {
+      background: #666;
+    }
+  </style>
+</head>
+<body>
+
+<div id="container">
+  <div id="sidebar">
+    <!-- Aperture Label -->
+    <div class="control-group">
+      <div class="control-group-label">Aperture Display</div>
+      <label class="control-item">
+        <input type="radio" id="labelFStop" name="apertureLabel" value="fstop" checked style="cursor: pointer;">
+        f-stop
+      </label>
+      <label class="control-item">
+        <input type="radio" id="labelAv" name="apertureLabel" value="av" style="cursor: pointer;">
+        Av
+      </label>
+    </div>
+
+
+    <!-- Contour Type -->
+    <div class="control-group">
+      <div class="control-group-label">Contour Type</div>
+      <label class="control-item">
+        <input type="radio" id="labelEV" name="contourLabel" value="ev" checked style="cursor: pointer;">
+        EV
+      </label>
+      <label class="control-item">
+        <input type="radio" id="labelISO" name="contourLabel" value="iso" style="cursor: pointer;">
+        ISO
+      </label>
+      <label class="control-item">
+        <input type="radio" id="labelBoth" name="contourLabel" value="both" style="cursor: pointer;">
+        EV+ISO
+      </label>
+    </div>
+
+    <!-- Camera Sensor Type -->
+    <div class="control-group">
+      <div class="control-group-label">Camera Sensor</div>
+      <label class="control-item">
+        <input type="radio" id="sensorMy_MF" name="cameraSensor" value="0.79" style="cursor: pointer;">
+        MF (0.79)
+      </label>
+      <label class="control-item">
+        <input type="radio" id="sensorMy_FF" name="cameraSensor" value="1.0" checked style="cursor: pointer;">
+        FF (1.0)
+      </label>
+      <label class="control-item">
+        <input type="radio" id="sensorMy_APS" name="cameraSensor" value="1.5" style="cursor: pointer;">
+        APS-C (1.5)
+      </label>
+      <label class="control-item">
+        <input type="radio" id="sensorMy_MFT" name="cameraSensor" value="2.0" style="cursor: pointer;">
+        MFT (2.0)
+      </label>
+    </div>
+
+    <!-- Adjustment Mode -->
+    <div class="control-group">
+      <div class="control-group-label">Adjustment Mode</div>
+      <label class="control-item">
+        <input type="radio" id="adjustmentActual" name="adjustmentMode" value="actual" checked style="cursor: pointer;">
+        Actual
+      </label>
+      <label class="control-item">
+        <input type="radio" id="adjustmentCropFactor" name="adjustmentMode" value="cropfactor" style="cursor: pointer;">
+        After Crop Factor
+      </label>
+    </div>
+
+    <!-- Reference Points -->
+    <div class="control-group">
+      <div class="control-group-label">Reference Points</div>
+      <label class="control-item">
+        <input type="checkbox" id="refPointSunny16" style="cursor: pointer;">
+        Sunny 16
+      </label>
+      <label class="control-item">
+        <input type="checkbox" id="refPointGoldenHour" style="cursor: pointer;">
+        Golden Hour
+      </label>
+      <label class="control-item">
+        <input type="checkbox" id="refPointBlueHour" style="cursor: pointer;">
+        Blue Hour
+      </label>
+      <label class="control-item">
+        <input type="checkbox" id="refPointOvercast" style="cursor: pointer;">
+        Overcast
+      </label>
+      <label class="control-item">
+        <input type="checkbox" id="refPointStudio" style="cursor: pointer;">
+        Studio/Tungsten
+      </label>
+    </div>
+
+    <!-- EV Gradient Background -->
+    <div class="control-group">
+      <div class="control-group-label">Visualization</div>
+      <label class="control-item">
+        <input type="checkbox" id="evGradientBg" style="cursor: pointer;">
+        EV Gradient Background
+      </label>
+    </div>
+
+    <!-- Zoom -->
+    <div class="control-group">
+      <div class="control-group-label">Zoom</div>
+      <input type="range" id="zoomSlider" min="20" max="80" value="45" step="5" style="width: 100%; cursor: pointer;">
+      <span id="zoomValue" style="color: #aaa; font-size: 13px;">1 stop = 45 px</span>
+    </div>
+
+    <!-- Dynamic Slider -->
+    <div class="control-group">
+      <div class="control-group-label" id="dynamicLabel">ISO</div>
+      <input type="range" id="dynamicSlider" min="1" max="100" value="50" style="width: 100%; cursor: pointer;">
+      <span id="dynamicValue" style="color: #aaa; font-size: 13px;">100</span>
+    </div>
+  </div>
+
+  <div id="mainContent">
+    <h1 style="width: 100%;">Photography really needed another exposure chart</h1>
+
+    <div id="plotWrapper" style="display: flex; justify-content: center; padding: 10px 0;">
+      <canvas id="plot" width="1600" height="1200" style="max-width: 98vw; height: auto;"></canvas>
+    </div>
+
+    <div id="formulaDisplay" style="margin-top: 15px; font-size: 16px; color: var(--color-text-normal); line-height: 1.8; padding: 16px; background: linear-gradient(135deg, var(--color-bg-dark) 0%, var(--color-bg-panel-light) 100%); border: 2px solid #00aa88; border-radius: var(--border-radius); width: 100%; max-width: 1200px; box-sizing: border-box; box-shadow: 0 0 12px rgba(0, 170, 136, 0.15), inset 0 1px 0 rgba(0, 255, 136, 0.1);">
+      <div id="formula1" style="font-family: monospace; color: var(--color-text-bright);"></div>
+      <div id="formula2" style="font-family: monospace; margin-top: 8px; color: var(--color-text-bright);"></div>
+      <div id="formula3" style="font-family: monospace; margin-top: 12px; font-size: 14px; color: #00cc88; border-top: 1px solid var(--color-border-control); padding-top: 12px;"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // ============ SETUP ============
+  // Grab all DOM elements. This is 100% vibe code naming (sensorMy_MF? really?),
+  // but it works and future-you will understand exactly what each one is. Ship it.
+  const canvas = document.getElementById("plot");
+  const ctx = canvas.getContext("2d");
+  const zoomSlider = document.getElementById("zoomSlider");
+  const zoomValue = document.getElementById("zoomValue");
+  const labelFStop = document.getElementById("labelFStop");
+  const labelAv = document.getElementById("labelAv");
+  const labelEV = document.getElementById("labelEV");
+  const labelISO = document.getElementById("labelISO");
+  const labelBoth = document.getElementById("labelBoth");
+  const adjustmentActual = document.getElementById("adjustmentActual");
+  const adjustmentCropFactor = document.getElementById("adjustmentCropFactor");
+  const sensorMy_MF = document.getElementById("sensorMy_MF");
+  const sensorMy_FF = document.getElementById("sensorMy_FF");
+  const sensorMy_APS = document.getElementById("sensorMy_APS");
+  const sensorMy_MFT = document.getElementById("sensorMy_MFT");
+  const dynamicSlider = document.getElementById("dynamicSlider");
+  const dynamicLabel = document.getElementById("dynamicLabel");
+  const dynamicValue = document.getElementById("dynamicValue");
+  const formula1 = document.getElementById("formula1");
+  const formula2 = document.getElementById("formula2");
+  const refPointSunny16 = document.getElementById("refPointSunny16");
+  const refPointGoldenHour = document.getElementById("refPointGoldenHour");
+  const refPointBlueHour = document.getElementById("refPointBlueHour");
+  const refPointOvercast = document.getElementById("refPointOvercast");
+  const refPointStudio = document.getElementById("refPointStudio");
+  const evGradientBg = document.getElementById("evGradientBg");
+
+  // ============ RENDERING CONSTANTS ============
+  // All visual parameters as constants for easy tweaking
+  const COLORS = {
+    gridAperture: "#00cc44",
+    gridShutter: "#00aaff",
+    contourEv: "#ff00ff",
+    labelEv: "#ffff00",
+    labelEvAlt: "#ffcc00",
+    refPointStroke: "#ffaa00",
+    refPointBackground: "rgba(255, 255, 0, 0.15)"
+  };
+
+  const LINE_WIDTHS = {
+    grid: 0.5,
+    contour: 1.5,
+    axis: 2
+  };
+
+  const EV_RANGE = {
+    gradientBottom: -3,
+    gradientTop: 16
+  };
+
+  // ============ STATE VARIABLES ============
+  // These control what the chart displays and how it renders. Modify these to change behavior.
+  let pixels_per_stop = 45;  // Scaling: pixels per stop in rotated coords (1 stop ≈ 38px at 96 DPI)
+  let aperture_label_mode = "fstop";  // "fstop" or "av" - what labels show on aperture axis
+  let contour_label_mode = "ev";  // "ev", "iso", or "both" - what contour lines represent
+  let adjustment_mode = "actual";  // "actual" or "cropfactor" - applies crop factor to Av and ISO calcs
+  let crop_factor = 1.0;  // Camera sensor crop factor (1.0 = Full Frame, 1.5 = APS-C, etc.)
+  let scene_ev_slider = 15;  // Current scene brightness (EV). Default 15 = Sunny 16
+  let iso_slider = 100;  // Current ISO. Used as reference when in EV mode
+
+  // ============ REFERENCE POINTS ============
+  // Photography-specific points to highlight on the chart. Format: {name, Av, Tv, description}
+  const REFERENCE_POINTS = {
+    sunny16: { name: "Sunny 16", av: 2 * Math.log2(16), tv: -Math.log2(1/125), description: "f/16 @ 1/125s" },
+    goldenHour: { name: "Golden Hour", av: 2 * Math.log2(2.8), tv: -Math.log2(1/15), description: "f/2.8 @ 1/15s" },
+    blueHour: { name: "Blue Hour", av: 2 * Math.log2(2.8), tv: -Math.log2(1/4), description: "f/2.8 @ 1/4s" },
+    overcast: { name: "Overcast", av: 2 * Math.log2(5.6), tv: -Math.log2(1/30), description: "f/5.6 @ 1/30s" },
+    studio: { name: "Studio/Tungsten", av: 2 * Math.log2(4), tv: -Math.log2(1/8), description: "f/4 @ 1/8s" }
+  };
+
+  // Track which reference points are visible
+  let refPointsVisible = {
+    sunny16: false,  // Off by default
+    goldenHour: false,
+    blueHour: false,
+    overcast: false,
+    studio: false
+  };
+
+  // Visualization options
+  let showEvGradientBg = false;  // EV gradient background (black at bottom, white at top)
+
+  // ============ PANNING STATE ============
+  // Mouse drag logic. Tracks where user is dragging from and applies offset to rendered content.
+  let isPanning = false;
+  let panStartX = 0;
+  let panStartY = 0;
+  let panOffsetX = 0;
+  let panOffsetY = -450;  // Default: show bottom/center. Positive = pan down, negative = pan up
+
+  // Get crop factor for current sensor
+  function getCropFactor() {
+    return crop_factor;
+  }
+
+  // Calculate displayed Av values based on adjustment mode
+  function getDisplayedAvValues() {
+    const crop_adjustment = adjustment_mode === "cropfactor" ? getCropFactor() : 1.0;
+    // Av_adjusted = Av_native + 2*log2(crop_adjustment)
+    return Av_values.map(av => av + 2 * Math.log2(crop_adjustment));
+  }
+
+  const W = canvas.width;
+  const H = canvas.height;
+  const centerX = W / 2;
+  const centerY = H / 2;
+
+  // ============ VIEWPORT (Fixed Screen Area) ============
+  // The plot is displayed in a fixed viewport area. Pan/zoom adjust what data space is visible.
+  // This is proper chart UI like Excel, Matplotlib, etc.
+  const VIEWPORT = {
+    left: 80,      // Left margin for aperture axis
+    top: 40,       // Top margin
+    right: W - 40, // Right edge (with right margin)
+    bottom: H - 60, // Bottom edge for shutter speed axis
+    get width() { return this.right - this.left; },
+    get height() { return this.bottom - this.top; }
+  };
+
+  // ============ COMPASS INDICATOR ============
+  // Fixed position in lower left of viewport
+  const COMPASS = {
+    x: VIEWPORT.left + 80,   // Left side of viewport
+    y: VIEWPORT.bottom - 80, // Near bottom
+    radius: 50,
+    arrowLength: 35,
+    fontSize: "12px",
+    fontColor: COLORS.labelEv,
+    arrowColor: COLORS.gridAperture,
+    arrowWidth: 1.5
+  };
+
+  // ============ CONSTANTS & DATA ============
+  // Everything below is photography reference data. Don't change unless you know what you're doing.
+
+  // Standard f-stops (1-stop increments). These are the standard values photographers use.
+  const F_STOPS = [1.0, 1.4, 2, 2.8, 4, 5.6, 8, 11, 16, 22, 32, 45, 64];
+
+  // Sensor size configurations: [name, crop_factor]
+  const SENSOR_SIZES = [
+    ["Medium Format", 0.79],
+    ["Full Frame", 1.0],
+    ["APS-C", 1.5],
+    ["MFT", 2.0]
+  ];
+
+  // Standard shutter speeds (in seconds)
+  const SHUTTER_SPEEDS = [
+    1/8000, 1/4000, 1/2000, 1/1000, 1/500, 1/250, 1/125, 1/60,
+    1/30, 1/15, 1/8, 1/4, 1/2, 1, 2, 4, 8, 15, 30, 60
+  ];
+
+  // Calculate Av values: Av = 2 * log₂(f-number)
+  const Av_values = F_STOPS.map(f => 2 * Math.log2(f));
+
+  // Calculate Tv values: Tv = -log₂(t) where t in seconds
+  const Tv_values = SHUTTER_SPEEDS.map(t => -Math.log2(t));
+
+  // EV range to display
+  const EV_MIN = -5;
+  const EV_MAX = 17;  // Cut off at 17
+
+  // ISO range for contour display
+  const MIN_ISO = 50;
+  const MAX_ISO = 12800;
+
+  // Physical conditions for each EV with examples
+  const EV_CONDITIONS = {
+    "-3": "Starlight only",
+    "-2": "Full moon landscape",
+    "-1": "Neon signs at night",
+    "0": "Stage lighting dim",
+    "1": "Twilight, just before sunset",
+    "2": "Twilight, civil dusk",
+    "3": "Tungsten lighting indoor",
+    "4": "Dim room, desk lamp",
+    "5": "Office fluorescent",
+    "6": "Deep shade, bright day",
+    "7": "Tree shade, sunny day",
+    "8": "Overcast, cloudy",
+    "9": "Heavy overcast sky",
+    "10": "Cloudy bright, hazy",
+    "11": "Bright overcast",
+    "12": "Partly cloudy bright",
+    "13": "Sunny day typical",
+    "14": "Sunny contrasty",
+    "15": "Sunny 16 rule (f/16 1/125)",
+    "16": "Direct sun, very bright",
+    "17": "Bright sun + snow/water",
+    "18": "White sand, extreme sun",
+    "19": "High altitude extreme",
+    "20": "Desert extremes"
+  };
+
+  // Helper function to get description for an EV value
+  function getEVDescription(ev) {
+    return EV_CONDITIONS[Math.round(ev).toString()] || "";
+  }
+
+  // Data bounds (pre-rotation) - keep in native Av space, display separately
+  const Av_min = Math.min(...Av_values) - 0.5;
+  const Av_max = Math.max(...Av_values) + 0.5;
+  const Tv_min = Math.min(...Tv_values) - 0.5;
+  const Tv_max = Math.max(...Tv_values) + 0.5;
+
+  // ============ COORDINATE SYSTEM SETUP ============
+  // This is where the magic happens: 45° counter-clockwise rotation.
+  // The rotation makes EV contours (Av + Tv = constant) into horizontal lines.
+  const cos45 = 1 / Math.sqrt(2);
+  const sin45 = 1 / Math.sqrt(2);
+
+  let rotAv_min, rotAv_max, rotTv_min_rot, rotTv_max_rot;
+  let rotAv_center, rotTv_center;
+  const centerX_data = W / 2;
+  const centerY_data = H / 2;
+  const padding = 100;
+
+  // Calculate bounds of the data rectangle after 45° rotation.
+  // This ensures the canvas shows the right portion of the rotated space.
+  function initializeCoordinateSystem() {
+    // Start with corners of pre-rotation rectangle
+    const corners = [
+      [Av_min, Tv_min],
+      [Av_max, Tv_min],
+      [Av_max, Tv_max],
+      [Av_min, Tv_max]
+    ];
+
+    // Apply 45° CCW rotation: (Av, Tv) -> ((Av-Tv)/√2, (Av+Tv)/√2)
+    const rotated = corners.map(([av, tv]) => [
+      (av - tv) * cos45,
+      (av + tv) * cos45
+    ]);
+
+    // Find min/max of rotated bounds
+    rotAv_min = Infinity;
+    rotAv_max = -Infinity;
+    rotTv_min_rot = Infinity;
+    rotTv_max_rot = -Infinity;
+
+    rotated.forEach(([av, tv]) => {
+      rotAv_min = Math.min(rotAv_min, av);
+      rotAv_max = Math.max(rotAv_max, av);
+      rotTv_min_rot = Math.min(rotTv_min_rot, tv);
+      rotTv_max_rot = Math.max(rotTv_max_rot, tv);
+    });
+
+    // Center of rotated space (used for panning offsets)
+    rotAv_center = (rotAv_min + rotAv_max) / 2;
+    rotTv_center = (rotTv_min_rot + rotTv_max_rot) / 2;
+  }
+  initializeCoordinateSystem();  // Run once on load
+
+  // ============ TRANSFORMATION PIPELINE ============
+  // Three steps: pre-rotation coords -> rotated coords -> canvas pixel coords
+
+  // Step 3: Rotated data coords -> viewport pixels (applies zoom, pan, invert Y)
+  // Maps to the fixed viewport area, not the full canvas
+  function rotatedToCanvas(rotAv, rotTv) {
+    const current_scale = pixels_per_stop * Math.sqrt(2);
+    // Map to viewport center, applying pan offset within viewport
+    const viewport_centerX = VIEWPORT.left + VIEWPORT.width / 2;
+    const viewport_centerY = VIEWPORT.top + VIEWPORT.height / 2;
+    const x = viewport_centerX + panOffsetX + (rotAv - rotAv_center) * current_scale;
+    const y = viewport_centerY + panOffsetY - (rotTv - rotTv_center) * current_scale;  // Invert Y for screen
+    return [x, y];
+  }
+
+  // Step 2: Pre-rotation (Av, Tv) -> Rotated ((Av-Tv)/√2, (Av+Tv)/√2)
+  // After rotation: horizontal = f-stop/shutter trade-off, vertical = exposure level (EV)
+  function preRotToRotated(av, tv) {
+    return [
+      (av - tv) * cos45,  // Horizontal: aperture-shutter independence
+      (av + tv) * cos45   // Vertical: exposure level (EV = Av + Tv)
+    ];
+  }
+
+  // Step 1: Full pipeline - photography coords -> canvas pixels
+  function dataToCanvas(av, tv) {
+    const [rotAv, rotTv] = preRotToRotated(av, tv);
+    return rotatedToCanvas(rotAv, rotTv);
+  }
+
+  // Compass is now in fixed screen coordinates, defined in VIEWPORT setup above
+  // It stays in the same place regardless of pan/zoom
+
+  // ============ DRAWING FUNCTIONS ============
+
+  function drawBackground() {
+    // Fill canvas with instrument-style dark background
+    ctx.fillStyle = "#0a0f1a";
+    ctx.fillRect(0, 0, W, H);
+
+    // Draw viewport borders (light outline)
+    ctx.strokeStyle = "rgba(0, 204, 68, 0.3)";
+    ctx.lineWidth = 1;
+    ctx.strokeRect(VIEWPORT.left, VIEWPORT.top, VIEWPORT.width, VIEWPORT.height);
+  }
+
+  // Draw fixed axes at viewport edges (rotated 45 degrees)
+  // These stay in place visually, but labels update based on pan/zoom
+  function drawViewportAxes() {
+    ctx.globalAlpha = 1.0;  // Ensure full opacity
+    ctx.strokeStyle = COLORS.gridAperture;  // Green
+    ctx.lineWidth = 3;  // Make prominent
+
+    const axisLength = Math.max(VIEWPORT.width, VIEWPORT.height);
+    const angle45 = Math.PI / 4;  // 45 degrees
+
+    // Aperture axis: diagonal from bottom-left going up-right at 45°
+    const ax_start_x = VIEWPORT.left;
+    const ax_start_y = VIEWPORT.bottom;
+    const ax_end_x = ax_start_x + axisLength * Math.cos(angle45);
+    const ax_end_y = ax_start_y - axisLength * Math.sin(angle45);
+
+    ctx.beginPath();
+    ctx.moveTo(ax_start_x, ax_start_y);
+    ctx.lineTo(ax_end_x, ax_end_y);
+    ctx.stroke();
+
+    // Shutter axis: diagonal from bottom-left going right at 45° below horizontal
+    const tv_end_x = ax_start_x + axisLength * Math.cos(-angle45);
+    const tv_end_y = ax_start_y - axisLength * Math.sin(-angle45);
+
+    ctx.beginPath();
+    ctx.moveTo(ax_start_x, ax_start_y);
+    ctx.lineTo(tv_end_x, tv_end_y);
+    ctx.stroke();
+
+    // Marker at origin (intersection)
+    const markerSize = 8;
+    ctx.fillStyle = COLORS.gridAperture;
+    ctx.fillRect(ax_start_x - markerSize / 2, ax_start_y - markerSize / 2, markerSize, markerSize);
+  }
+
+  // Draw EV gradient background: black at bottom to white at top.
+  // Polygon bounded by the EV contour lines and the plot rectangle edges.
+  function drawEvGradientBackground() {
+    if (!showEvGradientBg || contour_label_mode !== "ev") return;  // Only in EV mode
+
+    const ev_bottom = EV_RANGE.gradientBottom;
+    const ev_top = EV_RANGE.gradientTop;
+
+    // Find all intersection points of EV contours with plot boundaries
+    // EV line: Tv = -Av + EV, so for a given boundary we solve for the other coordinate
+    const points = [];
+
+    // Helper: clamp a point to be on the boundary if it's close
+    function addPointIfValid(av, tv) {
+      if (av >= Av_min && av <= Av_max && tv >= Tv_min && tv <= Tv_max) {
+        points.push(dataToCanvas(av, tv));
+        return true;
+      }
+      return false;
+    }
+
+    // Trace the polygon boundary:
+    // Start from bottom-left, go around the region between EV_bottom and EV_top
+
+    // 1. Start at intersection of EV_bottom with left edge (Av_min)
+    let tv = -Av_min + ev_bottom;
+    if (tv >= Tv_min && tv <= Tv_max) {
+      points.push(dataToCanvas(Av_min, tv));
+    } else if (tv < Tv_min) {
+      // EV_bottom intersects bottom edge instead
+      let av = -Tv_min + ev_bottom;
+      if (av >= Av_min && av <= Av_max) {
+        points.push(dataToCanvas(av, Tv_min));
+      }
+    }
+
+    // 2. Follow EV_bottom line from left to right, or along plot edges
+    // Go to where EV_bottom hits the right edge
+    tv = -Av_max + ev_bottom;
+    if (tv >= Tv_min && tv <= Tv_max) {
+      points.push(dataToCanvas(Av_max, tv));
+    } else if (tv < Tv_min) {
+      // EV_bottom hits bottom edge at the right
+      let av = -Tv_min + ev_bottom;
+      if (av >= Av_min && av <= Av_max) {
+        points.push(dataToCanvas(av, Tv_min));
+      }
+      // Then go to bottom-right corner
+      points.push(dataToCanvas(Av_max, Tv_min));
+    }
+
+    // 3. Now follow EV_top from right to left
+    // Start at right edge (Av_max)
+    tv = -Av_max + ev_top;
+    if (tv >= Tv_min && tv <= Tv_max) {
+      points.push(dataToCanvas(Av_max, tv));
+    } else if (tv > Tv_max) {
+      // EV_top intersects top edge
+      let av = -Tv_max + ev_top;
+      if (av >= Av_min && av <= Av_max) {
+        points.push(dataToCanvas(av, Tv_max));
+      }
+      points.push(dataToCanvas(Av_max, Tv_max));
+    }
+
+    // 4. Follow EV_top to the left edge
+    tv = -Av_min + ev_top;
+    if (tv >= Tv_min && tv <= Tv_max) {
+      points.push(dataToCanvas(Av_min, tv));
+    } else if (tv > Tv_max) {
+      // EV_top intersects top edge at the left
+      let av = -Tv_max + ev_top;
+      if (av >= Av_min && av <= Av_max) {
+        points.push(dataToCanvas(av, Tv_max));
+      }
+      points.push(dataToCanvas(Av_min, Tv_max));
+    }
+
+    // Draw polygon with gradient
+    if (points.length >= 3) {
+      // Get Y range for gradient (in rotated space: EV = Av + Tv)
+      // Extend gradient to full viewport height to ensure white fills to top
+      const [_x_bottom, y_bottom] = dataToCanvas(0, ev_bottom);
+      const y_top_viewport = VIEWPORT.top;  // Extend to full viewport top
+
+      const gradient = ctx.createLinearGradient(0, y_bottom, 0, y_top_viewport);
+      gradient.addColorStop(0, "#000000");  // Black at EV bottom
+      gradient.addColorStop(1, "#ffffff");  // White at EV top and beyond
+
+      ctx.fillStyle = gradient;
+      ctx.beginPath();
+      ctx.moveTo(points[0][0], points[0][1]);
+      for (let i = 1; i < points.length; i++) {
+        ctx.lineTo(points[i][0], points[i][1]);
+      }
+
+      // Extend polygon to viewport top to ensure white fills entire top region
+      // Go from last point up to viewport top along right edge, then across top to left edge
+      const lastPoint = points[points.length - 1];
+      const [rightEdgeX, _ry] = dataToCanvas(Av_max, Tv_max);  // Right edge x-coord in rotated space
+      const [leftEdgeX, _ly] = dataToCanvas(Av_min, Tv_max);   // Left edge x-coord in rotated space
+
+      ctx.lineTo(rightEdgeX, VIEWPORT.top);   // Go up to viewport top-right
+      ctx.lineTo(leftEdgeX, VIEWPORT.top);    // Go across top
+
+      ctx.closePath();
+      ctx.fill();
+
+      // Subtle outline
+      ctx.strokeStyle = "rgba(100, 100, 100, 0.2)";
+      ctx.lineWidth = 0.5;
+      ctx.stroke();
+    }
+  }
+
+  // Draw the reference grid: aperture lines (green) and shutter speed lines (cyan).
+  // After rotation, these lines are curved (rotated curves), but they show the base Av/Tv coordinates.
+  function drawGrid() {
+    ctx.lineWidth = LINE_WIDTHS.grid;
+    ctx.globalAlpha = 0.8;
+
+    // Aperture grid: Av = constant (1-stop increments)
+    // Green = safe/approachable. After rotation, these become diagonal curves.
+    ctx.strokeStyle = COLORS.gridAperture;
+    for (let av = Math.ceil(Av_min); av <= Math.floor(Av_max); av++) {
+      const points = [];
+      for (let tv = Tv_min; tv <= Tv_max; tv += 0.1) {
+        points.push(dataToCanvas(av, tv));
+      }
+
+      if (points.length > 1) {
+        ctx.beginPath();
+        ctx.moveTo(points[0][0], points[0][1]);
+        for (let i = 1; i < points.length; i++) {
+          ctx.lineTo(points[i][0], points[i][1]);
+        }
+        ctx.stroke();
+      }
+    }
+
+    // Shutter speed grid: Tv = constant (1-stop increments)
+    // Cyan = reference/info. These also curve after rotation.
+    ctx.strokeStyle = COLORS.gridShutter;
+    for (let tv = Math.ceil(Tv_min); tv <= Math.floor(Tv_max); tv++) {
+      const points = [];
+      for (let av = Av_min; av <= Av_max; av += 0.1) {
+        points.push(dataToCanvas(av, tv));
+      }
+
+      if (points.length > 1) {
+        ctx.beginPath();
+        ctx.moveTo(points[0][0], points[0][1]);
+        for (let i = 1; i < points.length; i++) {
+          ctx.lineTo(points[i][0], points[i][1]);
+        }
+        ctx.stroke();
+      }
+    }
+
+    ctx.globalAlpha = 1.0;
+  }
+
+  // Draw EV (exposure) contours. These are the main reference lines.
+  // EV contours satisfy: Av + Tv = constant, which makes them perfectly horizontal after 45° rotation.
+  function drawEVContours() {
+    // Calculate shift offset based on current mode/slider
+    // This shifts the EV values shown on the contours
+    let ev_offset = 0;
+    if (contour_label_mode === "ev") {
+      // EV mode: ISO slider shifts the exposure reference
+      // Higher ISO = lower EV needed (each stop of ISO = 1 stop of EV offset)
+      ev_offset = -Math.log2(iso_slider / 100);
+    } else {
+      // ISO/Both mode: Scene EV slider controls which scene brightness we're metering
+      ev_offset = scene_ev_slider - 15;  // 15 is reference (Sunny 16)
+    }
+
+    // Draw contours from EV -5 to 20 (standard range for photography)
+    for (let ev = EV_MIN; ev <= 20; ev++) {
+      const ev_shifted = ev + ev_offset;
+
+      // EV contour equation (in pre-rotation space): Av + Tv = EV
+      // Rearranged: Tv = -Av + EV
+      // Find where this line intersects the data boundary rectangle
+      let points = [];
+
+      // Check left edge: Av = Av_min
+      const tv_at_av_min = -Av_min + ev_shifted;
+      if (tv_at_av_min >= Tv_min && tv_at_av_min <= Tv_max) {
+        points.push([Av_min, tv_at_av_min]);
+      }
+
+      // Check right edge: Av = Av_max
+      const tv_at_av_max = -Av_max + ev_shifted;
+      if (tv_at_av_max >= Tv_min && tv_at_av_max <= Tv_max) {
+        points.push([Av_max, tv_at_av_max]);
+      }
+
+      // Check bottom edge: Tv = Tv_min
+      const av_at_tv_min = -Tv_min + ev_shifted;
+      if (av_at_tv_min >= Av_min && av_at_tv_min <= Av_max) {
+        points.push([av_at_tv_min, Tv_min]);
+      }
+
+      // Check top edge: Tv = Tv_max
+      const av_at_tv_max = -Tv_max + ev_shifted;
+      if (av_at_tv_max >= Av_min && av_at_tv_max <= Av_max) {
+        points.push([av_at_tv_max, Tv_max]);
+      }
+
+      // Only draw if we found a valid line segment (2+ endpoints)
+      if (points.length >= 2) {
+        // Sort left to right so line renders cleanly
+        points.sort((a, b) => a[0] - b[0]);
+
+        const [av1, tv1] = points[0];
+        const [av2, tv2] = points[1];
+
+        // Magenta = primary exposure reference (fighter jet HUD vibes 🎯)
+        ctx.strokeStyle = COLORS.contourEv;
+        ctx.lineWidth = LINE_WIDTHS.contour;
+        ctx.globalAlpha = 0.8;
+
+        const [x1, y1] = dataToCanvas(av1, tv1);
+        const [x2, y2] = dataToCanvas(av2, tv2);
+
+        ctx.beginPath();
+        ctx.moveTo(x1, y1);
+        ctx.lineTo(x2, y2);
+        ctx.stroke();
+      }
+    }
+    ctx.globalAlpha = 1.0;
+  }
+
+  // Draw labels on EV contours. This is vibe code to find good label placement along contours.
+  // Uses a diagonal reference line to position labels in a readable way (vibe placement for readability).
+  function drawEVLabels() {
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+
+    // Calculate offset for shifted contours (same logic as drawEVContours)
+    let ev_offset = 0;
+    if (contour_label_mode === "ev") {
+      ev_offset = -Math.log2(iso_slider / 100);
+    } else {
+      ev_offset = scene_ev_slider - 15;
+    }
+
+    // Reference diagonal line: from f/1 @ 30s (bottom-left) to f/64 @ 1/8000s (top-right)
+    // We'll place labels along the contours where they cross this diagonal.
+    // 100% vibe code: it works because labels appear in a readable place without the grid blocking them.
+    const av_diag_start = 0;
+    const tv_diag_start = -Math.log2(30);
+    const av_diag_end = 2 * Math.log2(64);
+    const tv_diag_end = Math.log2(8000);
+
+    // Draw labels for ALL EV contours (EV -5 to 20, skip 21)
+    for (let ev = EV_MIN; ev <= 20; ev++) {
+      const ev_shifted = ev + ev_offset;
+
+      // Find intersection of shifted EV line with diagonal
+      // EV line: Tv = -Av + ev_shifted
+      let label_point = null;
+      let best_distance = Infinity;
+
+      // Find closest point on diagonal to the EV line
+      for (let t = 0; t <= 1; t += 0.005) {  // Finer granularity
+        const av_diag = av_diag_start + t * (av_diag_end - av_diag_start);
+        const tv_diag = tv_diag_start + t * (tv_diag_end - tv_diag_start);
+
+        const tv_on_ev_line = -av_diag + ev_shifted;
+        const distance = Math.abs(tv_on_ev_line - tv_diag);
+
+        // Keep the closest point (not just first one that's within tolerance)
+        if (distance < best_distance) {
+          best_distance = distance;
+          label_point = [av_diag, tv_diag];
+        }
+
+        // If very close, can break early
+        if (distance < 0.05) break;
+      }
+
+      // Only render if we found a reasonably close intersection
+      if (label_point && best_distance < 0.15) {
+        const [av_label, tv_label] = label_point;
+        const [x, y] = dataToCanvas(av_label, tv_label);
+
+        // Keep labels on canvas (with generous bounds)
+        const margin = 100;
+        const label_visible = (x > -margin && x < W + margin && y > -margin && y < H + margin);
+
+        if (label_visible) {
+          let label_text, description;
+          let skip_label = false;
+
+          if (contour_label_mode === "ev") {
+            // Skip EV values above max
+            if (ev > EV_MAX) {
+              skip_label = true;
+            } else {
+              label_text = `EV${Math.round(ev)}`;
+              description = EV_CONDITIONS[ev] || "";
+            }
+          } else if (contour_label_mode === "iso" || contour_label_mode === "both") {
+            // ISO mode: Show ISO needed for this EV at metered scene
+            let iso_value = 100 * Math.pow(2, scene_ev_slider - ev_shifted);
+
+            // Apply crop factor if iso_mode is "equiv"
+            if (adjustment_mode === "cropfactor") {
+              iso_value = iso_value * crop_factor;
+            }
+
+            // Round to nearest common ISO value
+            const iso_common = roundToCommonISO(iso_value);
+
+            // Skip ISO values outside the range
+            if (iso_common < MIN_ISO || iso_common > MAX_ISO) {
+              skip_label = true;
+            } else {
+              if (contour_label_mode === "both") {
+                // In both mode, show both EV and ISO
+                if (ev > EV_MAX) {
+                  skip_label = true;
+                } else {
+                  label_text = `EV${Math.round(ev)} / ISO${iso_common}`;
+                  description = "";
+                }
+              } else {
+                label_text = iso_common.toString();
+                description = "";
+              }
+            }
+          }
+
+          if (!skip_label) {
+            // Calculate box width based on actual content
+            ctx.font = "bold 16px monospace";
+            const labelMetrics = ctx.measureText(label_text);
+            let boxWidth = labelMetrics.width + 12;
+
+            // If there's a description, add space for it
+            if (description) {
+              ctx.font = "12px monospace";
+              const descMetrics = ctx.measureText(description);
+              boxWidth = Math.max(boxWidth, 50 - 6 + descMetrics.width);
+            }
+
+            const boxHeight = 24;
+            ctx.fillStyle = "rgba(20, 20, 30, 0.95)";
+
+            // Determine alignment based on mode
+            const is_ev_mode = contour_label_mode === "ev";
+            const is_iso_mode = contour_label_mode === "iso";
+            const is_both_mode = contour_label_mode === "both";
+
+            // For ISO mode: right justify. For EV mode: left justify. For both: center
+            if (is_iso_mode) {
+              // Right justify: box extends leftward
+              ctx.fillRect(x - boxWidth, y - boxHeight/2, boxWidth, boxHeight);
+              ctx.font = "bold 16px monospace";
+              ctx.fillStyle = "#ff00ff";
+              ctx.textAlign = "right";
+              ctx.fillText(label_text, x - 6, y);
+            } else if (is_both_mode) {
+              // Center justify for both mode
+              ctx.fillRect(x - boxWidth/2, y - boxHeight/2, boxWidth, boxHeight);
+              ctx.font = "bold 14px monospace";
+              ctx.fillStyle = "#ffff00";
+              ctx.textAlign = "center";
+              ctx.fillText(label_text, x, y);
+            } else {
+              // Left justify: box extends rightward (EV mode)
+              ctx.fillRect(x, y - boxHeight/2, boxWidth, boxHeight);
+              ctx.font = "bold 16px monospace";
+              ctx.fillStyle = "#ff00ff";
+              ctx.textAlign = "left";
+              ctx.fillText(label_text, x + 6, y);
+
+              // Draw description on same line (smaller, gray)
+              if (description) {
+                ctx.font = "12px monospace";
+                ctx.fillStyle = "#aaaaaa";
+                ctx.textAlign = "left";
+                ctx.fillText(description, x + 50, y);
+              }
+            }
+            ctx.textAlign = "center";
+          }
+        }
+      }
+    }
+  }
+
+  // Helper function to round ISO to pure powers of 2 (100 * 2^n)
+  function roundToCommonISO(iso_value) {
+    // ISO = 100 * 2^n, so n = log2(iso_value / 100)
+    const n = Math.log2(iso_value / 100);
+    const n_rounded = Math.round(n);
+    const iso_rounded = 100 * Math.pow(2, n_rounded);
+    return Math.round(iso_rounded); // Return exact powers of 2 times 100
+  }
+
+  function drawSunny16() {
+    // Sunny 16: f/16 @ 1/125s
+    // Av = 2 * log₂(16) = 8
+    const sunny16_Av = 2 * Math.log2(16);
+    // Tv = -log₂(1/125) ≈ 6.97
+    const sunny16_Tv = -Math.log2(1 / 125);
+
+    const [x, y] = dataToCanvas(sunny16_Av, sunny16_Tv);
+
+    // Draw large bright star
+    drawStar(x, y, 22, 6, "#ffff00", "#ff1111");
+
+    // Add annotation
+    ctx.font = "bold 18px monospace";
+    ctx.fillStyle = "#ffff00";
+    ctx.textAlign = "left";
+    ctx.textBaseline = "bottom";
+    ctx.fillText("★ Sunny 16", x + 30, y - 8);
+    ctx.font = "bold 18px monospace";
+    ctx.fillStyle = "#ffcc00";
+    ctx.fillText("f/16 @ 1/125s", x + 30, y + 8);
+  }
+
+  function drawStar(cx, cy, r1, r2, fillColor, strokeColor) {
+    ctx.save();
+    ctx.translate(cx, cy);
+    ctx.fillStyle = fillColor;
+    ctx.strokeStyle = strokeColor;
+    ctx.lineWidth = 2;
+
+    ctx.beginPath();
+    for (let i = 0; i < 10; i++) {
+      const angle = (i * Math.PI) / 5 - Math.PI / 2;
+      const r = i % 2 === 0 ? r1 : r2;
+      const px = r * Math.cos(angle);
+      const py = r * Math.sin(angle);
+      if (i === 0) ctx.moveTo(px, py);
+      else ctx.lineTo(px, py);
+    }
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  function drawAxisLabels() {
+    // Get displayed aperture values (may be equivalized to full frame)
+    const displayed_av = getDisplayedAvValues();
+    const displayed_fstops = F_STOPS.map((f, i) => {
+      if (adjustment_mode === "cropfactor") {
+        const crop = getCropFactor();
+        return f / crop;  // Equivalent f-stop
+      }
+      return f;
+    });
+
+    // Font settings
+    ctx.font = "bold 24px monospace";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+
+    // Draw ONLY aperture scale labels (single row) - use displayed Av
+    displayed_av.forEach((av_disp, i) => {
+      const tv = Tv_min - 0.8;
+      const [x, y] = dataToCanvas(av_disp, tv);
+      ctx.fillStyle = COLORS.gridAperture;  // Green for aperture labels
+      ctx.save();
+      ctx.translate(x, y);
+      ctx.rotate(Math.PI / 4);  // 45 degrees downward, readable
+      ctx.textAlign = "left";
+      ctx.textBaseline = "middle";
+
+      let label;
+      if (aperture_label_mode === "fstop") {
+        // Format f-stops without decimals when they're whole numbers
+        const fstop = displayed_fstops[i];
+        if (fstop === Math.round(fstop)) {
+          label = `f/${Math.round(fstop)}`;
+        } else {
+          label = `f/${fstop.toFixed(1)}`;
+        }
+      } else {
+        label = `${Math.round(av_disp)}`;
+      }
+      ctx.fillText(label, 0, 0);
+      ctx.restore();
+    });
+
+    // Draw aperture axis label (45° rotated, readable)
+    ctx.font = "bold 24px monospace";
+    let aperture_label_text = aperture_label_mode === "fstop" ? "Aperture (f-stop)" : "Aperture Value (Av)";
+    if (adjustment_mode === "cropfactor") {
+      aperture_label_text += " [FF equiv]";
+    }
+    const av_center = (Av_min + Av_max) / 2;
+    const tv_label_pos = Tv_min - 3.5;
+    const [ax_label_x, ax_label_y] = dataToCanvas(av_center, tv_label_pos);
+    ctx.fillStyle = COLORS.gridAperture;  // Green
+    ctx.save();
+    ctx.translate(ax_label_x, ax_label_y);
+    ctx.rotate(-Math.PI / 4);  // 45° rotation for readability
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillText(aperture_label_text, 0, 0);
+    ctx.restore();
+
+    // Draw shutter speed labels
+    ctx.font = "bold 18px monospace";
+    Tv_values.forEach((tv, i) => {
+      const av = Av_min - 0.6;
+      const [x, y] = dataToCanvas(av, tv);
+      ctx.fillStyle = COLORS.gridShutter;  // Cyan (reference)
+      ctx.save();
+      ctx.translate(x, y);
+      ctx.rotate(-Math.PI / 4);  // 45 degrees (top-right to bottom-left)
+      ctx.textAlign = "right";
+      ctx.textBaseline = "middle";
+
+      const t = SHUTTER_SPEEDS[i];
+      let label;
+      if (t >= 1) {
+        label = `${Math.round(t)}`;  // Whole number, no 's'
+      } else {
+        label = `1/${Math.round(1 / t)}`;  // No 's' suffix
+      }
+      ctx.fillText(label, 0, 0);
+      ctx.restore();
+    });
+
+    // Draw shutter speed axis label (45 degrees downward)
+    ctx.font = "bold 24px monospace";
+    const tv_center = (Tv_min + Tv_max) / 2;
+    const av_label_pos = Av_min - 2.5;
+    const [tv_label_x, tv_label_y] = dataToCanvas(av_label_pos, tv_center);
+    ctx.fillStyle = COLORS.gridShutter;  // Cyan for shutter labels
+    ctx.save();
+    ctx.translate(tv_label_x, tv_label_y);
+    ctx.rotate(Math.PI / 4);  // 45 degrees downward (readable diagonal)
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillText("Shutter Speed (seconds)", 0, 0);
+    ctx.restore();
+  }
+
+  function drawAxisLines() {
+    ctx.strokeStyle = COLORS.gridAperture;  // Use green for axis lines
+    ctx.lineWidth = LINE_WIDTHS.axis;
+
+    // Left edge (Av_min line)
+    const [ax1, ay1] = dataToCanvas(Av_min, Tv_min);
+    const [ax2, ay2] = dataToCanvas(Av_min, Tv_max);
+    ctx.beginPath();
+    ctx.moveTo(ax1, ay1);
+    ctx.lineTo(ax2, ay2);
+    ctx.stroke();
+    // Bottom edge (Tv_min line)
+    const [bx1, by1] = dataToCanvas(Av_min, Tv_min);
+    const [bx2, by2] = dataToCanvas(Av_max, Tv_min);
+    ctx.beginPath();
+    ctx.moveTo(bx1, by1);
+    ctx.lineTo(bx2, by2);
+    ctx.stroke();
+
+    // Draw brightness indicator in upper right
+    // drawBrightnessIndicator();
+  }
+
+  // Draw exposure compass: aircraft-style indicator showing exposure/aperture trade-offs.
+  // Shows four cardinal directions: brighter (up), darker (down),
+  // slower shutter/tighter aperture (right), faster shutter/wider aperture (left).
+  function drawExposureCompass() {
+    const c = COMPASS;
+
+    ctx.save();  // Save current state
+
+    // Outer circle (subtle border)
+    ctx.strokeStyle = c.arrowColor;
+    ctx.lineWidth = 1;
+    ctx.globalAlpha = 0.6;
+    ctx.beginPath();
+    ctx.arc(c.x, c.y, c.radius, 0, Math.PI * 2);
+    ctx.stroke();
+
+    // Cardinal direction arrows
+    ctx.globalAlpha = 1.0;
+    ctx.strokeStyle = c.arrowColor;
+    ctx.fillStyle = c.arrowColor;
+    ctx.lineWidth = c.arrowWidth;
+
+    // Helper: draw arrow pointing in a direction (0=up, 1=right, 2=down, 3=left)
+    const drawArrow = (direction, label) => {
+      const angles = [
+        -Math.PI / 2,  // Up
+        0,             // Right
+        Math.PI / 2,   // Down
+        Math.PI        // Left
+      ];
+      const angle = angles[direction];
+
+      // Arrow base position
+      const baseDist = c.radius + 15;
+      const baseX = c.x + Math.cos(angle) * baseDist;
+      const baseY = c.y + Math.sin(angle) * baseDist;
+
+      // Arrow tip position
+      const tipDist = c.radius + c.arrowLength;
+      const tipX = c.x + Math.cos(angle) * tipDist;
+      const tipY = c.y + Math.sin(angle) * tipDist;
+
+      // Arrow shaft
+      ctx.beginPath();
+      ctx.moveTo(baseX, baseY);
+      ctx.lineTo(tipX, tipY);
+      ctx.stroke();
+
+      // Arrow head (small triangle)
+      const arrowHeadSize = 6;
+      const perpAngle = angle + Math.PI / 2;
+      const leftX = tipX + Math.cos(perpAngle) * arrowHeadSize;
+      const leftY = tipY + Math.sin(perpAngle) * arrowHeadSize;
+      const rightX = tipX - Math.cos(perpAngle) * arrowHeadSize;
+      const rightY = tipY - Math.sin(perpAngle) * arrowHeadSize;
+
+      ctx.beginPath();
+      ctx.moveTo(tipX, tipY);
+      ctx.lineTo(leftX, leftY);
+      ctx.lineTo(rightX, rightY);
+      ctx.closePath();
+      ctx.fill();
+
+      // Label (positioned beyond the arrow)
+      const labelDist = c.radius + c.arrowLength + 20;
+      const labelX = c.x + Math.cos(angle) * labelDist;
+      const labelY = c.y + Math.sin(angle) * labelDist;
+
+      ctx.font = `bold ${c.fontSize} monospace`;
+      ctx.fillStyle = c.fontColor;
+      ctx.globalAlpha = 1.0;  // Ensure labels are fully opaque
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillText(label, labelX, labelY);
+    };
+
+    // Draw all four directions
+    drawArrow(0, "Brighter");
+    drawArrow(2, "Darker");
+    drawArrow(1, "Slower/Tighter");
+    drawArrow(3, "Faster/Wider");
+
+    // Center label
+    ctx.font = `10px monospace`;
+    ctx.fillStyle = c.fontColor;
+    ctx.globalAlpha = 0.7;
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillText("EV", c.x, c.y);
+
+    ctx.restore();  // Restore state to clean up alpha and other properties
+  }
+
+  // Draw reference points in aircraft instrument style: target/crosshair with label.
+  // This creates a small circular target with crosshairs, like flight director markers.
+  function drawReferencePoints() {
+    Object.entries(refPointsVisible).forEach(([key, isVisible]) => {
+      if (!isVisible) return;
+
+      const point = REFERENCE_POINTS[key];
+      const [x, y] = dataToCanvas(point.av, point.tv);
+
+      // Only draw if on canvas
+      const margin = 100;
+      if (x < -margin || x > W + margin || y < -margin || y > H + margin) return;
+
+      // Aircraft-style indicator: circular target with crosshairs
+      const targetRadius = 12;
+      const crosshairLength = 20;
+
+      // Outer halo glow (subtle)
+      ctx.fillStyle = COLORS.refPointBackground;
+      ctx.beginPath();
+      ctx.arc(x, y, targetRadius + 4, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Circle outline (yellow)
+      ctx.strokeStyle = COLORS.labelEv;
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.arc(x, y, targetRadius, 0, Math.PI * 2);
+      ctx.stroke();
+
+      // Crosshairs (yellow with orange ends)
+      // Vertical crosshair
+      ctx.strokeStyle = COLORS.labelEv;
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.moveTo(x, y - crosshairLength);
+      ctx.lineTo(x, y + crosshairLength);
+      ctx.stroke();
+
+      // Horizontal crosshair
+      ctx.beginPath();
+      ctx.moveTo(x - crosshairLength, y);
+      ctx.lineTo(x + crosshairLength, y);
+      ctx.stroke();
+
+      // Center dot
+      ctx.fillStyle = COLORS.labelEv;
+      ctx.beginPath();
+      ctx.arc(x, y, 2, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Label: place to the right and slightly below the target
+      const labelOffsetX = crosshairLength + 15;
+      const labelOffsetY = -8;
+
+      ctx.font = "bold 12px monospace";
+      ctx.fillStyle = COLORS.labelEv;
+      ctx.textAlign = "left";
+      ctx.textBaseline = "bottom";
+      ctx.fillText(point.name, x + labelOffsetX, y + labelOffsetY);
+
+      // Description below name
+      ctx.font = "10px monospace";
+      ctx.fillStyle = COLORS.labelEvAlt;
+      ctx.textAlign = "left";
+      ctx.textBaseline = "top";
+      ctx.fillText(point.description, x + labelOffsetX, y + labelOffsetY + 2);
+    });
+  }
+
+  function drawBrightnessIndicator() {
+    // Calculate current EV offset
+    let ev_offset = 0;
+    if (contour_label_mode === "ev") {
+      ev_offset = -Math.log2(iso_slider / 100);
+    } else {
+      ev_offset = scene_ev_slider - 15;
+    }
+
+    // EV-mapped gradient bar on the right side
+    const margin = 20;
+    const bar_x = W - margin - 20;
+    const bar_y = margin;
+    const bar_width = 35;
+    const bar_height = H - margin * 2;
+
+    // EV range: -5 to 20 (25 stops total)
+    const ev_min = -5;
+    const ev_max = 20;
+    const ev_range = ev_max - ev_min;
+
+    // Create gradient from black (bottom, dark, EV -5) to white (top, bright, EV 20)
+    const gradient = ctx.createLinearGradient(0, bar_y + bar_height, 0, bar_y);
+    gradient.addColorStop(0, "#000000");  // Black at bottom (dark)
+    gradient.addColorStop(1, "#ffffff");  // White at top (bright)
+
+    // Draw the gradient bar
+    ctx.fillStyle = gradient;
+    ctx.fillRect(bar_x, bar_y, bar_width, bar_height);
+
+    // Draw border around the bar
+    ctx.strokeStyle = "#666666";
+    ctx.lineWidth = 1;
+    ctx.strokeRect(bar_x, bar_y, bar_width, bar_height);
+
+    // Draw indicator marker for current EV offset
+    // EV 15 is neutral; offset shifts this point up/down
+    const current_ev = 15 + ev_offset;
+    const ev_position = (current_ev - ev_min) / ev_range;  // 0 to 1 from bottom to top
+    const marker_y = bar_y + bar_height - (ev_position * bar_height);
+
+    // Draw marker line
+    ctx.strokeStyle = "#00ff00";
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(bar_x - 5, marker_y);
+    ctx.lineTo(bar_x + bar_width + 5, marker_y);
+    ctx.stroke();
+
+    // Labels
+    ctx.font = "bold 11px monospace";
+    ctx.textAlign = "left";
+    ctx.fillStyle = "#ffffff";
+    ctx.fillText("Bright", bar_x + bar_width + 8, bar_y + 8);
+
+    ctx.fillStyle = "#888888";
+    ctx.fillText("Dark", bar_x + bar_width + 8, bar_y + bar_height - 8);
+  }
+
+  // ============ DEBUG LOGGING ============
+  // This is helpful for understanding coordinate transformations and camera position.
+  const current_scale = pixels_per_stop * Math.sqrt(2);
+  console.log("Canvas initialized:", {
+    width: W,
+    height: H,
+    pixels_per_stop: pixels_per_stop,
+    scale_in_pixels: current_scale.toFixed(2),
+    Av_range: [Av_min.toFixed(2), Av_max.toFixed(2)],
+    Tv_range: [Tv_min.toFixed(2), Tv_max.toFixed(2)],
+    rotated_Av_range: [rotAv_min.toFixed(2), rotAv_max.toFixed(2)],
+    rotated_Tv_range: [rotTv_min_rot.toFixed(2), rotTv_max_rot.toFixed(2)],
+    estimated_cm_per_stop: (current_scale / 38).toFixed(2)
+  });
+
+  console.log("Sunny 16 reference point:");
+  console.log("  f/16 Av =", (2 * Math.log2(16)).toFixed(4));
+  console.log("  1/125s Tv =", (-Math.log2(1/125)).toFixed(4));
+  const sunny16_Av = 2 * Math.log2(16);
+  const sunny16_Tv = -Math.log2(1 / 125);
+  const sunny16_canvas = dataToCanvas(sunny16_Av, sunny16_Tv);
+  console.log("  Canvas pixel position:", sunny16_canvas.map(v => v.toFixed(2)));
+
+  // ============ MAIN RENDER LOOP ============
+  // Orchestrates the drawing sequence. Called on every interaction (zoom, pan, mode change).
+  // Order matters: gradient first, then grid/contours/labels on top, then fixed overlays.
+  function render() {
+    drawBackground();
+
+    // Clip to viewport so nothing bleeds outside
+    ctx.save();
+    ctx.beginPath();
+    ctx.rect(VIEWPORT.left, VIEWPORT.top, VIEWPORT.width, VIEWPORT.height);
+    ctx.clip();
+
+    // Draw everything within the viewport
+    drawEvGradientBackground();  // Draw under everything (in EV mode)
+    drawGrid();                  // Gridlines on top of gradient
+    drawEVContours();
+    drawEVLabels();
+    drawReferencePoints();       // Draw toggleable reference points
+
+    ctx.restore();  // End clipping
+
+    // Draw fixed axes over everything (so they're always visible)
+    drawAxisLines();
+    drawAxisLabels();
+
+    // Draw fixed compass in upper right
+    drawExposureCompass();
+  }
+
+  // Initial render on page load
+  try {
+    render();
+  } catch (err) {
+    console.error("Render error on load:", err);
+  }
+
+  // ============ ZOOM SLIDER ============
+  // Slider: 20-80 pixels per stop. Updates render in real-time.
+  zoomSlider.addEventListener("input", (e) => {
+    pixels_per_stop = parseInt(e.target.value);
+    zoomValue.textContent = `1 stop = ${pixels_per_stop} px`;
+    try {
+      render();
+    } catch (err) {
+      console.error("Render error during zoom:", err);
+    }
+  });
+
+  // ============ MOUSE WHEEL ZOOM ============
+  // Scroll up = zoom in (smaller scale = more pixels per stop)
+  // Scroll down = zoom out (larger scale = fewer pixels per stop)
+  canvas.addEventListener("wheel", (e) => {
+    e.preventDefault();
+
+    const zoomStep = 5;
+    const delta = e.deltaY > 0 ? -zoomStep : zoomStep;  // deltaY positive = scroll down
+    const new_zoom = Math.max(20, Math.min(80, pixels_per_stop + delta));
+
+    if (new_zoom !== pixels_per_stop) {
+      pixels_per_stop = new_zoom;
+      zoomValue.textContent = `1 stop = ${pixels_per_stop} px`;
+      zoomSlider.value = pixels_per_stop;
+      try {
+        render();
+      } catch (err) {
+        console.error("Render error during mouse wheel zoom:", err);
+      }
+    }
+  }, { passive: false });
+
+  // ============ CANVAS PANNING (MOUSE DRAG) ============
+  // Click-drag to pan around the chart. Tracks pan offset as you drag.
+  canvas.addEventListener("mousedown", (e) => {
+    isPanning = true;
+    panStartX = e.offsetX;
+    panStartY = e.offsetY;
+  });
+
+  canvas.addEventListener("mousemove", (e) => {
+    if (isPanning) {
+      const dx = e.offsetX - panStartX;
+      const dy = e.offsetY - panStartY;
+      panOffsetX += dx;
+      panOffsetY += dy;
+      panStartX = e.offsetX;
+      panStartY = e.offsetY;
+      try {
+        render();
+      } catch (err) {
+        console.error("Render error during pan:", err);
+      }
+    }
+  });
+
+  canvas.addEventListener("mouseup", () => {
+    isPanning = false;
+  });
+
+  canvas.addEventListener("mouseleave", () => {
+    isPanning = false;  // Stop panning if mouse leaves canvas
+  });
+
+  // ============ APERTURE LABEL MODE ============
+  // Toggle between showing aperture as f-stops or as Av (numerical aperture values)
+  labelFStop.addEventListener("change", () => {
+    aperture_label_mode = "fstop";
+    updateFormula();
+    try {
+      render();
+    } catch (err) {
+      console.error("Render error during label mode change:", err);
+    }
+  });
+
+  labelAv.addEventListener("change", () => {
+    aperture_label_mode = "av";  // Show as Av instead of f-stops
+    updateFormula();
+    try {
+      render();
+    } catch (err) {
+      console.error("Render error during label mode change:", err);
+    }
+  });
+
+  // ============ CONTOUR TYPE (EV vs ISO vs Both) ============
+  // Changes what the magenta contour lines represent on the chart.
+  labelEV.addEventListener("change", () => {
+    contour_label_mode = "ev";  // Show constant-exposure contours
+    dynamicLabel.textContent = "ISO:";  // Slider now controls ISO (affects EV offset)
+    updateDynamicSlider();
+    updateFormula();
+    try {
+      render();
+    } catch (err) {
+      console.error("Render error during contour label mode change:", err);
+    }
+  });
+
+  labelISO.addEventListener("change", () => {
+    contour_label_mode = "iso";  // Show ISO-needed contours for a given scene
+    dynamicLabel.textContent = "Scene EV:";  // Slider now controls scene brightness
+    updateDynamicSlider();
+    updateFormula();
+    try {
+      render();
+    } catch (err) {
+      console.error("Render error during contour label mode change:", err);
+    }
+  });
+
+  labelBoth.addEventListener("change", () => {
+    contour_label_mode = "both";  // Show both EV and ISO on labels
+    dynamicLabel.textContent = "Scene EV:";
+    updateDynamicSlider();
+    updateFormula();
+    try {
+      render();
+    } catch (err) {
+      console.error("Render error during contour label mode change:", err);
+    }
+  });
+
+  // ============ ADJUSTMENT MODE (Actual vs After Crop Factor) ============
+  // Toggle between native sensor values and full-frame equivalent values
+  adjustmentActual.addEventListener("change", () => {
+    adjustment_mode = "actual";  // Show native values (no equivalizing)
+    updateFormula();
+    try {
+      render();
+    } catch (err) {
+      console.error("Render error during adjustment mode change:", err);
+    }
+  });
+
+  adjustmentCropFactor.addEventListener("change", () => {
+    adjustment_mode = "cropfactor";  // Show full-frame equivalent (apply crop factor)
+    updateFormula();
+    try {
+      render();
+    } catch (err) {
+      console.error("Render error during adjustment mode change:", err);
+    }
+  });
+
+  // ============ CAMERA SENSOR SELECTION ============
+  // Set the crop factor for the selected sensor. Affects aperture/ISO equivalents.
+  const cameraSensorRadios = [sensorMy_MF, sensorMy_FF, sensorMy_APS, sensorMy_MFT];
+  const cameraSensorValues = [0.79, 1.0, 1.5, 2.0];  // MF, FF, APS-C, MFT crop factors
+
+  cameraSensorRadios.forEach((radio, index) => {
+    radio.addEventListener("change", () => {
+      crop_factor = cameraSensorValues[index];
+      updateFormula();
+      try {
+        render();
+      } catch (err) {
+        console.error("Render error during camera sensor change:", err);
+      }
+    });
+  });
+
+  // ============ REFERENCE POINTS TOGGLES ============
+  // Toggle visibility of photography-specific reference points on the chart.
+  refPointSunny16.addEventListener("change", () => {
+    refPointsVisible.sunny16 = refPointSunny16.checked;
+    try {
+      render();
+    } catch (err) {
+      console.error("Render error during reference point toggle:", err);
+    }
+  });
+
+  refPointGoldenHour.addEventListener("change", () => {
+    refPointsVisible.goldenHour = refPointGoldenHour.checked;
+    try {
+      render();
+    } catch (err) {
+      console.error("Render error during reference point toggle:", err);
+    }
+  });
+
+  refPointBlueHour.addEventListener("change", () => {
+    refPointsVisible.blueHour = refPointBlueHour.checked;
+    try {
+      render();
+    } catch (err) {
+      console.error("Render error during reference point toggle:", err);
+    }
+  });
+
+  refPointOvercast.addEventListener("change", () => {
+    refPointsVisible.overcast = refPointOvercast.checked;
+    try {
+      render();
+    } catch (err) {
+      console.error("Render error during reference point toggle:", err);
+    }
+  });
+
+  refPointStudio.addEventListener("change", () => {
+    refPointsVisible.studio = refPointStudio.checked;
+    try {
+      render();
+    } catch (err) {
+      console.error("Render error during reference point toggle:", err);
+    }
+  });
+
+  // ============ EV GRADIENT BACKGROUND TOGGLE ============
+  evGradientBg.addEventListener("change", () => {
+    showEvGradientBg = evGradientBg.checked;
+    try {
+      render();
+    } catch (err) {
+      console.error("Render error during EV gradient toggle:", err);
+    }
+  });
+
+  // ============ DYNAMIC SLIDER (ISO or Scene EV) ============
+  // This slider's behavior changes based on contour mode:
+  // - EV mode: controls ISO (50-12800) which shifts the EV offset
+  // - ISO/Both mode: controls scene brightness (EV -5 to 20)
+  function updateDynamicSlider() {
+    if (contour_label_mode === "ev") {
+      // EV mode: slider is ISO selector (in exponent form: n where ISO = 100 * 2^n)
+      dynamicLabel.textContent = "ISO:";
+      dynamicSlider.min = "-1";
+      dynamicSlider.max = "7";
+      dynamicSlider.step = "1";
+
+      // Convert current iso_slider to exponent
+      const n = Math.log2(iso_slider / 100);
+      dynamicSlider.value = Math.round(n);
+      dynamicValue.textContent = iso_slider;
+    } else if (contour_label_mode === "iso" || contour_label_mode === "both") {
+      // ISO/Both mode: slider is scene EV selector (-5 to 20)
+      dynamicLabel.textContent = "Scene EV:";
+      dynamicSlider.min = "-5";
+      dynamicSlider.max = "20";
+      dynamicSlider.step = "1";
+      dynamicSlider.value = scene_ev_slider;
+      const description = getEVDescription(scene_ev_slider);
+      if (description) {
+        dynamicValue.textContent = `${scene_ev_slider} (${description})`;
+      } else {
+        dynamicValue.textContent = `${scene_ev_slider}`;
+      }
+    }
+  }
+
+  // Dynamic slider input handler. Updates either iso_slider or scene_ev_slider depending on mode.
+  dynamicSlider.addEventListener("input", (e) => {
+    if (contour_label_mode === "ev") {
+      // EV mode: slider value is exponent n, convert to actual ISO
+      const n = parseInt(e.target.value);
+      iso_slider = Math.round(100 * Math.pow(2, n));
+      dynamicValue.textContent = iso_slider;
+    } else if (contour_label_mode === "iso" || contour_label_mode === "both") {
+      // ISO/Both mode: slider value is scene EV directly
+      scene_ev_slider = parseInt(e.target.value);
+      const description = getEVDescription(scene_ev_slider);
+      if (description) {
+        dynamicValue.textContent = `${scene_ev_slider} (${description})`;
+      } else {
+        dynamicValue.textContent = `${scene_ev_slider}`;
+      }
+    }
+    updateFormula();
+    try {
+      render();
+    } catch (err) {
+      console.error("Render error during slider:", err);
+    }
+  });
+
+  // ============ UPDATE FORMULA DISPLAY ============
+  // Updates the formula display and guidance text below the chart.
+  // The formula changes based on: aperture label mode (f-stop vs Av),
+  // contour type (EV vs ISO vs Both), and adjustment mode (actual vs crop factor).
+  function updateFormula() {
+    const formula3_elem = document.getElementById("formula3");
+    const crop_factor = getCropFactor();
+    const crop_adjustment = 2 * Math.log2(crop_factor);
+
+    // Build the appropriate formula based on current mode selections
+    let formula_text;
+
+    if (contour_label_mode === "ev") {
+      // EV mode - we are calculating EV
+      if (aperture_label_mode === "fstop") {
+        // EV as function of f-stops and shutter time
+        if (adjustment_mode === "cropfactor") {
+          // With crop factor adjustment for equivalent apertures
+          formula_text = `$$\\mathrm{EV} = 2\\log_2 N_{equiv} - \\log_2 t - 2\\log_2 C$$`;
+        } else {
+          formula_text = `$$\\mathrm{EV} = 2\\log_2 N - \\log_2 t$$`;
+        }
+      } else {
+        // EV as function of Av and Tv
+        if (adjustment_mode === "cropfactor") {
+          // With crop factor adjustment for equivalent Av
+          formula_text = `$$\\mathrm{EV} = A_v + T_v - 2\\log_2 C$$`;
+        } else {
+          formula_text = `$$\\mathrm{EV} = A_v + T_v$$`;
+        }
+      }
+    } else if (contour_label_mode === "iso" || contour_label_mode === "both") {
+      // ISO mode - we are calculating ISO
+      // Include crop factor adjustment if iso_mode is "equiv"
+      let iso_formula_suffix = adjustment_mode === "cropfactor" ? ` + 2\\log_2 C` : "";
+
+      if (aperture_label_mode === "fstop") {
+        // ISO as function of scene EV, f-stops, and shutter time
+        if (adjustment_mode === "cropfactor") {
+          formula_text = `$$\\mathrm{ISO} = 100 \\times 2^{\\mathrm{Scene\\_EV} - 2\\log_2 N_{equiv} + \\log_2 t + 2\\log_2 C${iso_formula_suffix}}$$`;
+        } else {
+          formula_text = `$$\\mathrm{ISO} = 100 \\times 2^{\\mathrm{Scene\\_EV} - 2\\log_2 N + \\log_2 t${iso_formula_suffix}}$$`;
+        }
+      } else {
+        // ISO as function of scene EV, Av, and Tv
+        if (adjustment_mode === "cropfactor") {
+          formula_text = `$$\\mathrm{ISO} = 100 \\times 2^{\\mathrm{Scene\\_EV} - A_v - T_v + 2\\log_2 C${iso_formula_suffix}}$$`;
+        } else {
+          formula_text = `$$\\mathrm{ISO} = 100 \\times 2^{\\mathrm{Scene\\_EV} - A_v - T_v${iso_formula_suffix}}$$`;
+        }
+      }
+    }
+
+    // Set the formula
+    formula1.innerHTML = formula_text;
+
+    // Remove formula2 line (second line removed per user request)
+    formula2.textContent = "";
+
+    // Build dynamic guidance text based on all settings
+    let guidance_text = "Read the chart: ";
+
+    if (contour_label_mode === "ev") {
+      // EV mode
+      guidance_text += "Each magenta line is constant exposure. Move right to increase aperture (faster shutter). Move left to decrease aperture (slower shutter). Same magenta line = same exposure";
+      if (adjustment_mode === "cropfactor") {
+        guidance_text += " (aperture axis shows FF-equivalent f-stops, calculations use crop factor).";
+      } else {
+        guidance_text += " (showing native sensor values).";
+      }
+    } else if (contour_label_mode === "iso") {
+      // ISO mode only
+      const scene_desc = getEVDescription(scene_ev_slider);
+      guidance_text += `Scene EV is ${scene_ev_slider}${scene_desc ? ` (${scene_desc})` : ""}. Magenta lines show the ISO you need for proper exposure with each aperture/shutter combination`;
+      if (adjustment_mode === "cropfactor") {
+        guidance_text += " (includes crop factor adjustment).";
+      } else {
+        guidance_text += " (native sensor sensitivity).";
+      }
+    } else {
+      // Both mode - show both descriptions
+      guidance_text += "Magenta lines show constant exposure (EV). Scene EV is " + scene_ev_slider;
+      const scene_desc = getEVDescription(scene_ev_slider);
+      if (scene_desc) {
+        guidance_text += ` (${scene_desc})`;
+      }
+      guidance_text += ". Numbers on lines show both EV and required ISO for that exposure";
+      if (adjustment_mode === "cropfactor") {
+        guidance_text += " (includes crop factor).";
+      } else {
+        guidance_text += " (native values).";
+      }
+    }
+
+    formula3_elem.textContent = guidance_text;
+
+    // Re-render MathJax
+    if (typeof MathJax !== 'undefined') {
+      MathJax.typesetPromise([formula1]).catch(err => console.log(err));
+    }
+  }
+
+  // Initialize
+  updateDynamicSlider();
+  updateFormula();
+  zoomValue.textContent = `1 stop = ${pixels_per_stop} px`;
+</script>
+
+</body>
+</html>
