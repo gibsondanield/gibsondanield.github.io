@@ -12,14 +12,19 @@
         * {
             box-sizing: border-box;
         }
-        body {
+        html, body {
             margin: 0;
             padding: 0;
+            overflow: hidden;
+            position: fixed;
+            width: 100%;
+            height: 100%;
+        }
+        body {
             font-family: Arial, sans-serif;
             background-color: #f0f0f0;
             display: flex;
             flex-direction: column;
-            height: 100vh;
         }
         .topbar {
             background-color: #e8e8e8;
@@ -111,6 +116,8 @@
             position: relative;
             background-color: #fff;
             cursor: grab;
+            touch-action: none;
+            -webkit-overflow-scrolling: touch;
         }
         .viewport.dragging {
             cursor: grabbing;
@@ -139,7 +146,7 @@
             <span id="rowsValue">30</span>
         </div>
         <fieldset class="control-section radio-group">
-            <legend style="font-size: 12px; padding: 0; margin: 0; font-weight: 500;">Composite:</legend>
+            <legend style="font-size: 12px; padding: 0; margin: 0; font-weight: 500;">Composite number color scheme:</legend>
             <div class="radio-item">
                 <input type="radio" id="comp-white" name="composite" value="white">
                 <label for="comp-white"><span class="color-swatch" style="background-color: rgba(255,255,255,0.5);"></span>White</label>
@@ -166,34 +173,62 @@
             </div>
         </fieldset>
         <fieldset class="control-section radio-group">
-            <legend style="font-size: 12px; padding: 0; margin: 0; font-weight: 500;">Special Primes:</legend>
+            <legend style="font-size: 12px; padding: 0; margin: 0; font-weight: 500;">Special Prime Types:</legend>
             <div class="radio-item">
                 <input type="checkbox" id="prime-ramanujan" value="ramanujan">
-                <label for="prime-ramanujan"><span class="color-swatch" style="background-color: rgba(139,0,0,1);"></span>Ramanujan</label>
+                <label for="prime-ramanujan" title="Ramanujan primes: The nth Ramanujan prime is the least integer R_n such that π(x) - π(x/2) ≥ n for all x ≥ R_n, where π(x) is the prime counting function"><span class="color-swatch" style="background-color: rgba(139,0,0,1);"></span>Ramanujan</label>
             </div>
             <div class="radio-item">
                 <input type="checkbox" id="prime-fermat" value="fermat">
-                <label for="prime-fermat"><span class="color-swatch" style="background-color: rgba(0,0,139,1);"></span>Fermat</label>
+                <label for="prime-fermat" title="Fermat primes: Primes of the form F_n = 2^(2^n) + 1. Only 5 are known: 3, 5, 17, 257, 65537"><span class="color-swatch" style="background-color: rgba(0,0,139,1);"></span>Fermat</label>
             </div>
             <div class="radio-item">
                 <input type="checkbox" id="prime-mersenne" value="mersenne">
-                <label for="prime-mersenne"><span class="color-swatch" style="background-color: rgba(139,69,0,1);"></span>Mersenne</label>
+                <label for="prime-mersenne" title="Mersenne primes: Primes of the form M_p = 2^p - 1 where p is also prime"><span class="color-swatch" style="background-color: rgba(139,69,0,1);"></span>Mersenne</label>
             </div>
             <div class="radio-item">
                 <input type="checkbox" id="prime-twin" value="twin">
-                <label for="prime-twin"><span class="color-swatch" style="background-color: rgba(0,100,0,1);"></span>Twin</label>
+                <label for="prime-twin" title="Twin primes: Pairs of primes that differ by 2 (e.g., 3 and 5, 11 and 13, 17 and 19)"><span class="color-swatch" style="background-color: rgba(0,100,0,1);"></span>Twin</label>
             </div>
             <div class="radio-item">
                 <input type="checkbox" id="prime-cousin" value="cousin">
-                <label for="prime-cousin"><span class="color-swatch" style="background-color: rgba(139,69,69,1);"></span>Cousin</label>
+                <label for="prime-cousin" title="Cousin primes: Pairs of primes that differ by 4 (e.g., 3 and 7, 7 and 11, 13 and 17)"><span class="color-swatch" style="background-color: rgba(139,69,69,1);"></span>Cousin</label>
             </div>
             <div class="radio-item">
                 <input type="checkbox" id="prime-sexy" value="sexy">
-                <label for="prime-sexy"><span class="color-swatch" style="background-color: rgba(75,0,130,1);"></span>Sexy</label>
+                <label for="prime-sexy" title="Sexy primes: Pairs of primes that differ by 6 (e.g., 5 and 11, 7 and 13, 23 and 29). Name from Latin 'sex' meaning six"><span class="color-swatch" style="background-color: rgba(75,0,130,1);"></span>Sexy</label>
             </div>
             <div class="radio-item">
                 <input type="checkbox" id="prime-sophie" value="sophie">
-                <label for="prime-sophie"><span class="color-swatch" style="background-color: rgba(0,128,128,1);"></span>Sophie Germain</label>
+                <label for="prime-sophie" title="Sophie Germain primes: A prime p where 2p + 1 is also prime (e.g., 2, 3, 5, 11, 23, 29)"><span class="color-swatch" style="background-color: rgba(0,128,128,1);"></span>Sophie Germain</label>
+            </div>
+            <div class="radio-item">
+                <input type="checkbox" id="prime-safe" value="safe">
+                <label for="prime-safe" title="Safe primes: A prime p where (p-1)/2 is also prime. The number (p-1)/2 is called a Sophie Germain prime"><span class="color-swatch" style="background-color: rgba(128,0,128,1);"></span>Safe</label>
+            </div>
+            <div class="radio-item">
+                <input type="checkbox" id="prime-palindromic" value="palindromic">
+                <label for="prime-palindromic" title="Palindromic primes: Primes that read the same forwards and backwards (e.g., 2, 3, 5, 7, 11, 101, 131)"><span class="color-swatch" style="background-color: rgba(139,90,43,1);"></span>Palindromic</label>
+            </div>
+            <div class="radio-item">
+                <input type="checkbox" id="prime-triplet" value="triplet">
+                <label for="prime-triplet" title="Prime triplets: (p, p+2, p+6) or (p, p+4, p+6) where all three are prime (e.g., 5,7,11 or 7,11,13)"><span class="color-swatch" style="background-color: rgba(47,79,79,1);"></span>Triplet</label>
+            </div>
+            <div class="radio-item">
+                <input type="checkbox" id="prime-quadruplet" value="quadruplet">
+                <label for="prime-quadruplet" title="Prime quadruplets: (p, p+2, p+6, p+8) where all four are prime (e.g., 5,7,11,13)"><span class="color-swatch" style="background-color: rgba(85,107,47,1);"></span>Quadruplet</label>
+            </div>
+            <div class="radio-item">
+                <input type="checkbox" id="prime-chen" value="chen">
+                <label for="prime-chen" title="Chen primes: Prime p where p+2 is either prime or semiprime (product of exactly 2 primes)"><span class="color-swatch" style="background-color: rgba(139,35,69,1);"></span>Chen</label>
+            </div>
+            <div class="radio-item">
+                <input type="checkbox" id="prime-pythagorean" value="pythagorean">
+                <label for="prime-pythagorean" title="Pythagorean primes: Primes of the form 4k+1, can be expressed as sum of two squares"><span class="color-swatch" style="background-color: rgba(0,100,100,1);"></span>Pythagorean</label>
+            </div>
+            <div class="radio-item">
+                <input type="checkbox" id="prime-circular" value="circular">
+                <label for="prime-circular" title="Circular primes: Primes where every rotation of digits gives another prime (e.g., 13, 197, 199)"><span class="color-swatch" style="background-color: rgba(102,51,153,1);"></span>Circular</label>
             </div>
         </fieldset>
         <button id="recenterBtn" class="button">Recenter</button>
@@ -220,13 +255,14 @@
 
         let baseRowsOnScreen = parseInt(rowsInput.value) || 30;
         let rowsOnScreen = baseRowsOnScreen;
-        let currentCompositeColorScheme = 'modular';
+        let currentCompositeColorScheme = '235';
         let activePrimeTypes = new Set();
         let cellWidth = 0;
         let cellHeight = 0;
         let columnsOnScreen = 0;
         let animationFrameId = null;
         let flashFrameCount = 0;
+        let renderPending = false;
 
         // Pan and zoom state
         let zoomLevel = 1;
@@ -346,13 +382,96 @@
                 const deltaY = e.clientY - dragStartY;
                 offsetX = dragStartOffsetX + deltaX;
                 offsetY = dragStartOffsetY + deltaY;
-                updateTransform();
+
+                // Throttle rendering - only schedule one render per frame
+                if (!renderPending) {
+                    renderPending = true;
+                    requestAnimationFrame(() => {
+                        constrainView();
+                        gridWrapper.style.transform = `translate(${offsetX}px, ${offsetY}px) scale(${zoomLevel})`;
+                        renderVisibleCells();
+                        renderPending = false;
+                    });
+                }
             }
         });
 
         document.addEventListener('mouseup', () => {
             isDragging = false;
             viewport.classList.remove('dragging');
+        });
+
+        // Touch events for mobile
+        viewport.addEventListener('touchstart', (e) => {
+            if (e.touches.length === 1) {
+                isDragging = true;
+                dragStartX = e.touches[0].clientX;
+                dragStartY = e.touches[0].clientY;
+                dragStartOffsetX = offsetX;
+                dragStartOffsetY = offsetY;
+                viewport.classList.add('dragging');
+            } else if (e.touches.length === 2) {
+                // Pinch zoom - store initial touch distance
+                const dx = e.touches[0].clientX - e.touches[1].clientX;
+                const dy = e.touches[0].clientY - e.touches[1].clientY;
+                e.touches[0].initialDistance = Math.sqrt(dx * dx + dy * dy);
+            }
+            e.preventDefault();
+        });
+
+        viewport.addEventListener('touchmove', (e) => {
+            if (e.touches.length === 1 && isDragging) {
+                const deltaX = e.touches[0].clientX - dragStartX;
+                const deltaY = e.touches[0].clientY - dragStartY;
+                offsetX = dragStartOffsetX + deltaX;
+                offsetY = dragStartOffsetY + deltaY;
+
+                // Throttle rendering - only schedule one render per frame
+                if (!renderPending) {
+                    renderPending = true;
+                    requestAnimationFrame(() => {
+                        constrainView();
+                        gridWrapper.style.transform = `translate(${offsetX}px, ${offsetY}px) scale(${zoomLevel})`;
+                        renderVisibleCells();
+                        renderPending = false;
+                    });
+                }
+            } else if (e.touches.length === 2 && e.touches[0].initialDistance) {
+                // Pinch zoom
+                const dx = e.touches[0].clientX - e.touches[1].clientX;
+                const dy = e.touches[0].clientY - e.touches[1].clientY;
+                const currentDistance = Math.sqrt(dx * dx + dy * dy);
+                const oldZoom = zoomLevel;
+                const zoomRatio = currentDistance / e.touches[0].initialDistance;
+                zoomLevel = Math.max(0.5, Math.min(5, zoomLevel * zoomRatio));
+
+                // Update rows on screen based on zoom
+                rowsOnScreen = Math.max(1, Math.round(baseRowsOnScreen / zoomLevel));
+                rowsInput.value = rowsOnScreen;
+                rowsValueDisplay.textContent = rowsOnScreen;
+
+                // Center zoom on touch point
+                const rect = viewport.getBoundingClientRect();
+                const centerX = (e.touches[0].clientX + e.touches[1].clientX) / 2 - rect.left;
+                const centerY = (e.touches[0].clientY + e.touches[1].clientY) / 2 - rect.top;
+                offsetX += centerX * (1 / oldZoom - 1 / zoomLevel);
+                offsetY += centerY * (1 / oldZoom - 1 / zoomLevel);
+
+                e.touches[0].initialDistance = currentDistance;
+                updateTransform();
+            }
+            e.preventDefault();
+        });
+
+        viewport.addEventListener('touchend', (e) => {
+            if (e.touches.length === 0) {
+                isDragging = false;
+                viewport.classList.remove('dragging');
+            }
+            if (e.touches.length < 2) {
+                delete e.touches[0].initialDistance;
+            }
+            e.preventDefault();
         });
 
         // Row control - changes the base rows at zoom 1
@@ -448,7 +567,14 @@
             'twin': 'rgba(0, 100, 0, 1)',              // dark green
             'cousin': 'rgba(139, 69, 69, 1)',          // dark pink/rose
             'sexy': 'rgba(75, 0, 130, 1)',             // indigo (darker purple)
-            'sophie': 'rgba(0, 128, 128, 1)'           // dark cyan/teal
+            'sophie': 'rgba(0, 128, 128, 1)',          // dark cyan/teal
+            'safe': 'rgba(128, 0, 128, 1)',            // dark magenta
+            'palindromic': 'rgba(139, 90, 43, 1)',     // dark brown
+            'triplet': 'rgba(47, 79, 79, 1)',          // dark slate gray
+            'quadruplet': 'rgba(85, 107, 47, 1)',      // dark olive
+            'chen': 'rgba(139, 35, 69, 1)',            // dark maroon
+            'pythagorean': 'rgba(0, 100, 100, 1)',     // dark teal
+            'circular': 'rgba(102, 51, 153, 1)'        // dark purple
         };
 
         function isRamanujanPrime(n) {
@@ -475,19 +601,145 @@
             return (isPrime(n + 6) || isPrime(n - 6));
         }
 
+        // Ramanujan primes: computed on demand, cached
+        let ramanujanCache = null;
+        function getRamanujanPrimes(limit) {
+            if (ramanujanCache) return ramanujanCache;
+            // Ramanujan prime R_n is the least integer such that π(x) - π(x/2) ≥ n for all x ≥ R_n
+            // For practical purposes, use known Ramanujan primes up to limit
+            const known = [2, 11, 13, 29, 37, 41, 47, 59, 67, 71, 79, 97, 101, 107, 127, 149, 163, 181, 191, 197, 223, 229, 233, 239, 241, 251, 257, 263, 269, 281, 307, 311, 317, 337, 347, 349, 353, 359, 367, 373, 389, 397, 401, 409, 419, 431, 439, 443, 449, 457, 461, 467, 479];
+            ramanujanCache = known.filter(p => p <= limit);
+            return ramanujanCache;
+        }
+
+        function isRamanujanPrime(n) {
+            return getRamanujanPrimes(n + 1000).includes(n);
+        }
+
+        // Fermat primes: 2^(2^k)+1. Only 5 known
+        function isFermatPrime(n) {
+            for (let k = 0; k < 5; k++) {
+                const exp = Math.pow(2, k);
+                if (exp > 100000) break; // Fermat numbers get huge quickly
+                const fermat = Math.pow(2, exp) + 1;
+                if (fermat === n) return true;
+                if (fermat > n) break;
+            }
+            return false;
+        }
+
+        // Mersenne primes: 2^p-1 where p is prime. Generate up to limit
+        let mersenneCache = null;
+        function getMersennePrimes(limit) {
+            if (mersenneCache) return mersenneCache;
+            const result = [];
+            for (let exp = 2; Math.pow(2, exp) - 1 <= limit; exp++) {
+                if (isPrime(exp)) {
+                    const mersenne = Math.pow(2, exp) - 1;
+                    // Check if the mersenne number itself is prime (expensive for large exponents)
+                    if (mersenne <= 524287) { // Known Mersenne primes up to this
+                        if (isPrime(mersenne)) {
+                            result.push(mersenne);
+                        }
+                    }
+                }
+            }
+            mersenneCache = result;
+            return result;
+        }
+
+        function isMersennePrime(n) {
+            return getMersennePrimes(n + 1000).includes(n);
+        }
+
+        // Sophie Germain primes: p where 2p+1 is also prime
         function isSophieGermainPrime(n) {
-            return sophieGermainPrimes.includes(n);
+            if (!isPrime(n)) return false;
+            return isPrime(2 * n + 1);
+        }
+
+        // Safe primes: prime p where (p-1)/2 is also prime
+        function isSafePrime(n) {
+            if (!isPrime(n) || n === 2) return false;
+            return isPrime((n - 1) / 2);
+        }
+
+        // Palindromic primes: prime that reads the same forwards and backwards
+        function isPalindromicPrime(n) {
+            if (!isPrime(n)) return false;
+            const str = n.toString();
+            return str === str.split('').reverse().join('');
+        }
+
+        // Prime triplets: (p, p+2, p+6) or (p, p+4, p+6) all prime
+        function isPrimeTriplet(n) {
+            if (!isPrime(n)) return false;
+            // Check (p, p+2, p+6)
+            if (isPrime(n + 2) && isPrime(n + 6)) return true;
+            // Check (p, p+4, p+6)
+            if (isPrime(n + 4) && isPrime(n + 6)) return true;
+            return false;
+        }
+
+        // Prime quadruplets: (p, p+2, p+6, p+8) all prime
+        function isPrimeQuadruplet(n) {
+            if (!isPrime(n)) return false;
+            return isPrime(n + 2) && isPrime(n + 6) && isPrime(n + 8);
+        }
+
+        // Chen primes: prime p where p+2 is either prime or semiprime (product of exactly 2 primes)
+        function isChPrime(n) {
+            if (!isPrime(n)) return false;
+            const p2 = n + 2;
+            if (isPrime(p2)) return true;
+            // Check if semiprime: find smallest factor and see if quotient is prime
+            for (let i = 2; i * i <= p2; i++) {
+                if (p2 % i === 0) {
+                    const quotient = p2 / i;
+                    return isPrime(quotient);
+                }
+            }
+            return false;
+        }
+
+        // Pythagorean primes: primes of form 4k+1
+        function isPythagoreanPrime(n) {
+            if (!isPrime(n)) return false;
+            return n % 4 === 1;
+        }
+
+        // Circular primes: all cyclic rotations of digits are prime
+        function isCircularPrime(n) {
+            if (!isPrime(n)) return false;
+            const str = n.toString();
+            if (str.length === 1) return true;
+            for (let i = 1; i < str.length; i++) {
+                const rotated = str.substring(i) + str.substring(0, i);
+                if (!isPrime(parseInt(rotated))) return false;
+            }
+            return true;
         }
 
         function getPrimeTypes(n) {
+            // Early exit if no special types are active
+            if (activePrimeTypes.size === 0) return [];
+
             const types = [];
-            if (isRamanujanPrime(n)) types.push('ramanujan');
-            if (isFermatPrime(n)) types.push('fermat');
-            if (isMersennePrime(n)) types.push('mersenne');
-            if (isTwinPrime(n)) types.push('twin');
-            if (isCousinPrime(n)) types.push('cousin');
-            if (isSexyPrime(n)) types.push('sexy');
-            if (isSophieGermainPrime(n)) types.push('sophie');
+            // Only check types that are actually selected
+            if (activePrimeTypes.has('ramanujan') && isRamanujanPrime(n)) types.push('ramanujan');
+            if (activePrimeTypes.has('fermat') && isFermatPrime(n)) types.push('fermat');
+            if (activePrimeTypes.has('mersenne') && isMersennePrime(n)) types.push('mersenne');
+            if (activePrimeTypes.has('twin') && isTwinPrime(n)) types.push('twin');
+            if (activePrimeTypes.has('cousin') && isCousinPrime(n)) types.push('cousin');
+            if (activePrimeTypes.has('sexy') && isSexyPrime(n)) types.push('sexy');
+            if (activePrimeTypes.has('sophie') && isSophieGermainPrime(n)) types.push('sophie');
+            if (activePrimeTypes.has('safe') && isSafePrime(n)) types.push('safe');
+            if (activePrimeTypes.has('palindromic') && isPalindromicPrime(n)) types.push('palindromic');
+            if (activePrimeTypes.has('triplet') && isPrimeTriplet(n)) types.push('triplet');
+            if (activePrimeTypes.has('quadruplet') && isPrimeQuadruplet(n)) types.push('quadruplet');
+            if (activePrimeTypes.has('chen') && isChPrime(n)) types.push('chen');
+            if (activePrimeTypes.has('pythagorean') && isPythagoreanPrime(n)) types.push('pythagorean');
+            if (activePrimeTypes.has('circular') && isCircularPrime(n)) types.push('circular');
             return types;
         }
 
@@ -649,17 +901,30 @@
 
                     cell.style.backgroundColor = bgColor;
 
-                    // Hover info with column indicator
-                    cell.addEventListener('mouseover', () => {
-                        const factors = primeFactorization(Math.abs(value));
-                        const factorStr = factors.length > 0 ? factors.join(' × ') : '1';
-                        coordinatesDisplay.innerHTML = `Row: ${row} | Column: ${col} | Value: ${value}, Factors: ${factorStr} | Row Center: ${pseudoprimorial}`;
-                    });
+                    // Store data for event delegation hover
+                    cell.dataset.row = row;
+                    cell.dataset.col = col;
+                    cell.dataset.value = value;
+                    cell.dataset.pseudoprimorial = pseudoprimorial;
 
                     grid.appendChild(cell);
                 }
             }
         }
+
+        // Event delegation for cell hover
+        grid.addEventListener('mouseover', (e) => {
+            const cell = e.target.closest('.cell');
+            if (cell && cell.dataset.value) {
+                const row = parseInt(cell.dataset.row);
+                const col = parseInt(cell.dataset.col);
+                const value = parseInt(cell.dataset.value);
+                const pseudoprimorial = parseInt(cell.dataset.pseudoprimorial);
+                const factors = primeFactorization(Math.abs(value));
+                const factorStr = factors.length > 0 ? factors.join(' × ') : '1';
+                coordinatesDisplay.innerHTML = `Row: ${row} | Column: ${col} | Value: ${value}, Factors: ${factorStr} | Row Center: ${pseudoprimorial}`;
+            }
+        });
 
         // Radio button event listeners for composite colors
         const compositeRadios = document.querySelectorAll('input[name="composite"]');
@@ -672,7 +937,19 @@
             });
         });
 
-        // Checkbox event listeners for special prime types
+        // Animation loop for flashing primes - only runs when special primes are active
+        function animationLoop() {
+            if (activePrimeTypes.size > 0) {
+                flashFrameCount++;
+                // Only re-render every 10 frames for color cycling (reduces from 60fps to 6fps)
+                if (flashFrameCount % 10 === 0) {
+                    renderVisibleCells();
+                }
+                animationFrameId = requestAnimationFrame(animationLoop);
+            }
+        }
+
+        // Start animation loop when special primes are checked
         const primeCheckboxes = document.querySelectorAll('input[type="checkbox"][id^="prime-"]');
         primeCheckboxes.forEach(checkbox => {
             checkbox.addEventListener('change', () => {
@@ -682,36 +959,27 @@
                     activePrimeTypes.delete(checkbox.value);
                 }
                 renderVisibleCells();
-            });
-        });
-
-        // Animation loop for flashing primes
-        function animationLoop() {
-            flashFrameCount++;
-            // Check if any cell needs flashing (has multiple prime types)
-            const cells = document.querySelectorAll('.cell');
-            let needsFlash = false;
-            cells.forEach(cell => {
-                // Simple check: if cell is a prime cell and there are active types
-                if (activePrimeTypes.size > 0 && cell.style.backgroundColor.includes('1)')) {
-                    needsFlash = true;
+                // Start animation loop if this was the first type checked
+                if (activePrimeTypes.size === 1) {
+                    animationLoop();
                 }
             });
-
-            if (needsFlash) {
-                renderVisibleCells();
-            }
-
-            animationFrameId = requestAnimationFrame(animationLoop);
-        }
+        });
 
         // Initial setup
         calculateCellDimensions();
         offsetX = viewport.clientWidth / 2;  // Center column 0
         offsetY = 0;
         zoomLevel = 1;
+
+        // Set the correct radio button for the default composite color scheme
+        const radioForDefault = document.querySelector(`input[name="composite"][value="${currentCompositeColorScheme}"]`);
+        if (radioForDefault) {
+            radioForDefault.checked = true;
+        }
+
         renderVisibleCells();
-        animationLoop();
+        // Animation loop starts only when special primes are checked
     </script>
 </body>
 </html>

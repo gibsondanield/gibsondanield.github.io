@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Prime Grid Unit Tests</title>
+    <style>
+        body {
+            font-family: monospace;
+            margin: 20px;
+            background: #f0f0f0;
+        }
+        .test-group {
+            background: white;
+            margin: 20px 0;
+            padding: 15px;
+            border-left: 4px solid #333;
+        }
+        .test {
+            margin: 10px 0;
+            padding: 10px;
+        }
+        .pass {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .fail {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .summary {
+            margin-top: 30px;
+            padding: 20px;
+            background: #e7e7e7;
+            font-weight: bold;
+            font-size: 16px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Prime Grid Unit Tests</h1>
+    <div id="results"></div>
+
+    <script>
+    /* primality v1.6.1 - inlined */
+    (function(){function a(b,c,d){var e=a.resolve(b);if(null==e){d=d||b,c=c||"root";var f=Error('Failed to require "'+d+'" from "'+c+'"');throw f.path=d,f.parent=c,f.require=!0,f}var g=a.modules[e];if(!g._resolving&&!g.exports){var h={};h.exports={},h.client=h.component=!0,g._resolving=!0,g.call(this,h.exports,a.relative(e),h),delete g._resolving,g.exports=h.exports}return g.exports}a.modules={},a.aliases={},a.resolve=function(b){"/"===b.charAt(0)&&(b=b.slice(1));for(var c=[b,b+".js",b+".json",b+"/index.js",b+"/index.json"],d=0;d<c.length;d++){var b=c[d];if(a.modules.hasOwnProperty(b))return b;if(a.aliases.hasOwnProperty(b))return a.aliases[b]}},a.normalize=function(a,b){var c=[];if("."!=b.charAt(0))return b;a=a.split("/"),b=b.split("/");for(var d=0;d<b.length;++d)".."==b[d]?a.pop():"."!=b[d]&&""!=b[d]&&c.push(b[d]);return a.concat(c).join("/")},a.register=function(b,c){a.modules[b]=c},a.alias=function(b,c){if(!a.modules.hasOwnProperty(b))throw Error('Failed to alias "'+b+'", it does not exist');a.aliases[c]=b},a.relative=function(b){function c(a,b){for(var c=a.length;c--;)if(a[c]===b)return c;return-1}function d(c){var e=d.resolve(c);return a(e,b,c)}var e=a.normalize(b,"..");return d.resolve=function(d){var f=d.charAt(0);if("/"==f)return d.slice(1);if("."==f)return a.normalize(e,d);var g=b.split("/"),h=c(g,"deps")+1;return h||(h=0),d=g.slice(0,h+1).join("/")+"/deps/"+d},d.exists=function(b){return a.modules.hasOwnProperty(d.resolve(b))},d},a.register("KenanY-factorial/index.js",function(a,b,c){function d(a){return 0===a?1:a*d(a-1)}c.exports=d}),a.register("component-global/index.js",function(a,b,c){c.exports=function(){return this}()}),a.register("KenanY-is-finite/index.js",function(a,b,c){var d=b("global"),e=d.isFinite,f=d.isNaN;c.exports=function(a){return e(a)&&!f(parseFloat(a))}}),a.register("KenanY-is-nan/index.js",function(a,b,c){function d(a){return"number"==typeof a||g.call(a)==e}var e="[object Number]",f=Object.prototype,g=f.toString;c.exports=function(a){return d(a)&&a!=+a}}),a.register("yields-isArray/index.js",function(a,b,c){var d=Array.isArray,e=Object.prototype.toString;c.exports=d||function(a){return!!a&&"[object Array]"==e.call(a)}}),a.register("Nami-Doc-contains/index.js",function(a,b,c){c.exports=function(a,b){if("string"===typeof a)return!!~a.indexOf(b);for(var c=0,d=a.length>>>0;c<d;)if(b===a[c++])return!0;return!1}}),a.register("primality/primality.js",function(a,b,c){function d(a){if(0===a)return 0;if(a%1||a*a<2)return 1;if(0===a%2)return 2;if(0===a%3)return 3;if(0===a%5)return 5;for(var b=Math.sqrt(a),c=7;c<=b;c+=30){if(0===a%c)return c;if(0===a%(c+4))return c+4;if(0===a%(c+6))return c+6;if(0===a%(c+10))return c+10;if(0===a%(c+12))return c+12;if(0===a%(c+16))return c+16;if(0===a%(c+22))return c+22;if(0===a%(c+24))return c+24}return a}function e(a){return m.isNaN(a)||!m.isFinite(a)||a%1||a<2?!1:a!==d(a)?!1:!0}function f(a,b,c){return Math.abs(a-b)!==c?!1:q([a,b])}function g(a,b){return f(a,b,2)}function h(a,b){return f(a,b,4)}function i(a,b){return f(a,b,6)}function j(a){return m.contains(o,a)?!0:0===(l(a-1)+1)%Math.pow(a,2)}function k(a){return m.contains(p,a)?!0:0===(Math.pow(2,a-1)-1)%Math.pow(a,2)}var l=b("factorial"),m={};try{m.contains=b("lodash.contains"),m.isArray=b("lodash.isarray"),m.isFinite=b("lodash.isfinite"),m.isNaN=b("lodash.isnan")}catch(n){m.contains=b("contains"),m.isArray=b("isArray"),m.isFinite=b("is-finite"),m.isNaN=b("is-nan")}var o=[5,13,563],p=[1093,3511],q=function(a){if(null===a||""===a)return null;if(m.isArray(a)){for(var b=a.length;b--;)if(!e(a[b]))return!1;return!0}return e(a)};q.VERSION="1.6.1",q.areTwinPrimes=g,q.areCousinPrimes=h,q.areSexyPrimes=i,q.isWilsonPrime=j,q.isWieferichPrime=k,(c.exports=q).primality=q}),a.alias("KenanY-factorial/index.js","primality/deps/factorial/index.js"),a.alias("KenanY-factorial/index.js","primality/deps/factorial/index.js"),a.alias("KenanY-factorial/index.js","factorial/index.js"),a.alias("KenanY-factorial/index.js","KenanY-factorial/index.js"),a.alias("KenanY-is-finite/index.js","primality/deps/is-finite/index.js"),a.alias("KenanY-is-finite/index.js","is-finite/index.js"),a.alias("component-global/index.js","KenanY-is-finite/deps/global/index.js"),a.alias("KenanY-is-nan/index.js","primality/deps/is-nan/index.js"),a.alias("KenanY-is-nan/index.js","is-nan/index.js"),a.alias("yields-isArray/index.js","primality/deps/isArray/index.js"),a.alias("yields-isArray/index.js","isArray/index.js"),a.alias("Nami-Doc-contains/index.js","primality/deps/contains/index.js"),a.alias("Nami-Doc-contains/index.js","contains/index.js"),a.alias("primality/primality.js","primality/index.js");var b={"boolean":!1,"function":!0,object:!0,number:!1,string:!1,undefined:!1},c=b[typeof window]&&window||this,d=b[typeof exports]&&exports,e=b[typeof module]&&module&&module.exports==d&&module,f=b[typeof global]&&global;!f||f.global!==f&&f.window!==f||(c=f);var g=a("primality");"function"==typeof define&&"object"==typeof define.amd&&define.amd?(c.primality=g,define(function(){return g})):d&&!d.nodeType?e?(e.exports=g).primality=g:d.primality=g:c.primality=g}).call(this);
+
+    // Prime detection function
+    function isPrime(n) {
+        return primality(n);
+    }
+
+    // Computed prime type functions
+    function isRamanujanPrime(n) {
+        const known = [2, 11, 13, 29, 37, 41, 47, 59, 67, 71, 79, 97];
+        return known.includes(n);
+    }
+
+    function isFermatPrime(n) {
+        for (let k = 0; k < 5; k++) {
+            const exp = Math.pow(2, k);
+            if (exp > 100000) break;
+            const fermat = Math.pow(2, exp) + 1;
+            if (fermat === n) return true;
+            if (fermat > n) break;
+        }
+        return false;
+    }
+
+    function isMersennePrime(n) {
+        const known = [3, 7, 31, 127, 8191];
+        return known.includes(n);
+    }
+
+    function isTwinPrime(n) {
+        return isPrime(n + 2) || isPrime(n - 2);
+    }
+
+    function isCousinPrime(n) {
+        return isPrime(n + 4) || isPrime(n - 4);
+    }
+
+    function isSexyPrime(n) {
+        return isPrime(n + 6) || isPrime(n - 6);
+    }
+
+    function isSophieGermainPrime(n) {
+        if (!isPrime(n)) return false;
+        return isPrime(2 * n + 1);
+    }
+
+    function isSafePrime(n) {
+        if (!isPrime(n) || n === 2) return false;
+        return isPrime((n - 1) / 2);
+    }
+
+    function isPalindromicPrime(n) {
+        if (!isPrime(n)) return false;
+        const str = n.toString();
+        return str === str.split('').reverse().join('');
+    }
+
+    function isPrimeTriplet(n) {
+        if (!isPrime(n)) return false;
+        if (isPrime(n + 2) && isPrime(n + 6)) return true;
+        if (isPrime(n + 4) && isPrime(n + 6)) return true;
+        return false;
+    }
+
+    function isPrimeQuadruplet(n) {
+        if (!isPrime(n)) return false;
+        return isPrime(n + 2) && isPrime(n + 6) && isPrime(n + 8);
+    }
+
+    function isChPrime(n) {
+        if (!isPrime(n)) return false;
+        const p2 = n + 2;
+        if (isPrime(p2)) return true;
+        for (let i = 2; i * i <= p2; i++) {
+            if (p2 % i === 0) {
+                const quotient = p2 / i;
+                return isPrime(quotient);
+            }
+        }
+        return false;
+    }
+
+    function isPythagoreanPrime(n) {
+        if (!isPrime(n)) return false;
+        return n % 4 === 1;
+    }
+
+    function isCircularPrime(n) {
+        if (!isPrime(n)) return false;
+        const str = n.toString();
+        if (str.length === 1) return true;
+        for (let i = 1; i < str.length; i++) {
+            const rotated = str.substring(i) + str.substring(0, i);
+            if (!isPrime(parseInt(rotated))) return false;
+        }
+        return true;
+    }
+
+    // Test harness
+    let passed = 0, failed = 0;
+
+    function assert(condition, message) {
+        if (condition) {
+            passed++;
+            return `✓ PASS: ${message}`;
+        } else {
+            failed++;
+            return `✗ FAIL: ${message}`;
+        }
+    }
+
+    function test(name, fn) {
+        const results = document.getElementById('results');
+        const group = document.createElement('div');
+        group.className = 'test-group';
+        group.innerHTML = `<h2>${name}</h2>`;
+
+        const testResults = fn();
+        testResults.forEach(result => {
+            const testDiv = document.createElement('div');
+            testDiv.className = 'test';
+            testDiv.className += result.includes('PASS') ? ' pass' : ' fail';
+            testDiv.textContent = result;
+            group.appendChild(testDiv);
+        });
+
+        results.appendChild(group);
+    }
+
+    // Tests
+    test('Prime Detection', () => [
+        assert(isPrime(2), 'isPrime(2) should be true'),
+        assert(isPrime(3), 'isPrime(3) should be true'),
+        assert(isPrime(5), 'isPrime(5) should be true'),
+        assert(isPrime(11), 'isPrime(11) should be true'),
+        assert(!isPrime(4), 'isPrime(4) should be false'),
+        assert(!isPrime(9), 'isPrime(9) should be false'),
+        assert(!isPrime(1), 'isPrime(1) should be false'),
+    ]);
+
+    test('Twin Primes (computed on-the-fly)', () => [
+        assert(isTwinPrime(3), '3 is twin with 5'),
+        assert(isTwinPrime(5), '5 is twin with 3 and 7'),
+        assert(isTwinPrime(11), '11 is twin with 13'),
+        assert(isTwinPrime(13), '13 is twin with 11'),
+        assert(!isTwinPrime(2), '2 is not a twin prime'),
+    ]);
+
+    test('Cousin Primes (computed on-the-fly)', () => [
+        assert(isCousinPrime(3), '3 is cousin with 7'),
+        assert(isCousinPrime(7), '7 is cousin with 3 and 11'),
+        assert(isCousinPrime(13), '13 is cousin with 17'),
+        assert(!isCousinPrime(2), '2 is not a cousin prime'),
+    ]);
+
+    test('Sexy Primes (computed on-the-fly)', () => [
+        assert(isSexyPrime(5), '5 is sexy with 11'),
+        assert(isSexyPrime(7), '7 is sexy with 13'),
+        assert(isSexyPrime(11), '11 is sexy with 5 and 17'),
+        assert(!isSexyPrime(2), '2 is not a sexy prime'),
+    ]);
+
+    test('Sophie Germain Primes (computed on-the-fly)', () => [
+        assert(isSophieGermainPrime(2), '2: 2*2+1=5 is prime'),
+        assert(isSophieGermainPrime(3), '3: 2*3+1=7 is prime'),
+        assert(isSophieGermainPrime(5), '5: 2*5+1=11 is prime'),
+        assert(!isSophieGermainPrime(7), '7: 2*7+1=15 is not prime'),
+    ]);
+
+    test('Safe Primes (computed on-the-fly)', () => [
+        assert(isSafePrime(5), '5: (5-1)/2=2 is prime'),
+        assert(isSafePrime(7), '7: (7-1)/2=3 is prime'),
+        assert(isSafePrime(11), '11: (11-1)/2=5 is prime'),
+        assert(!isSafePrime(3), '3: (3-1)/2=1 is not prime'),
+    ]);
+
+    test('Palindromic Primes (computed on-the-fly)', () => [
+        assert(isPalindromicPrime(2), 'Single digit: 2'),
+        assert(isPalindromicPrime(3), 'Single digit: 3'),
+        assert(isPalindromicPrime(11), 'Two digits: 11'),
+        assert(isPalindromicPrime(101), 'Three digits: 101'),
+        assert(!isPalindromicPrime(13), '13 is not palindromic'),
+    ]);
+
+    test('Prime Triplets (computed on-the-fly)', () => [
+        assert(isPrimeTriplet(5), '5: (5,7,11) form triplet'),
+        assert(isPrimeTriplet(7), '7: (7,11,13) form triplet'),
+        assert(!isPrimeTriplet(2), '2 does not form triplet'),
+    ]);
+
+    test('Prime Quadruplets (computed on-the-fly)', () => [
+        assert(isPrimeQuadruplet(5), '5: (5,7,11,13) form quadruplet'),
+        assert(!isPrimeQuadruplet(7), '7 does not form quadruplet'),
+    ]);
+
+    test('Chen Primes (computed on-the-fly)', () => [
+        assert(isChPrime(3), '3: 3+2=5 is prime'),
+        assert(isChPrime(5), '5: 5+2=7 is prime'),
+        assert(isChPrime(11), '11: 11+2=13 is prime'),
+        assert(!isChPrime(23), '23: 23+2=25 is semiprime'),
+    ]);
+
+    test('Pythagorean Primes (computed on-the-fly)', () => [
+        assert(isPythagoreanPrime(5), '5 = 4*1+1'),
+        assert(isPythagoreanPrime(13), '13 = 4*3+1'),
+        assert(!isPythagoreanPrime(3), '3 = 4*0+3'),
+        assert(!isPythagoreanPrime(7), '7 = 4*1+3'),
+    ]);
+
+    test('Circular Primes (computed on-the-fly)', () => [
+        assert(isCircularPrime(2), 'Single digit: 2'),
+        assert(isCircularPrime(13), '13 and 31 are both prime'),
+        assert(isCircularPrime(17), '17 and 71 are both prime'),
+        assert(!isCircularPrime(19), '19 is prime but 91 is not'),
+    ]);
+
+    test('Fermat Primes (computed formula)', () => [
+        assert(isFermatPrime(3), 'Fermat: 2^1+1'),
+        assert(isFermatPrime(5), 'Fermat: 2^2+1'),
+        assert(isFermatPrime(17), 'Fermat: 2^4+1'),
+        assert(isFermatPrime(257), 'Fermat: 2^8+1'),
+        assert(!isFermatPrime(11), '11 is not Fermat'),
+    ]);
+
+    test('Mersenne Primes (known list)', () => [
+        assert(isMersennePrime(3), 'Mersenne: 2^2-1'),
+        assert(isMersennePrime(7), 'Mersenne: 2^3-1'),
+        assert(!isMersennePrime(5), '5 is not Mersenne'),
+    ]);
+
+    test('Ramanujan Primes (known list)', () => [
+        assert(isRamanujanPrime(2), 'Ramanujan prime: 2'),
+        assert(isRamanujanPrime(11), 'Ramanujan prime: 11'),
+        assert(!isRamanujanPrime(3), '3 is not Ramanujan'),
+    ]);
+
+    // Summary
+    window.addEventListener('load', () => {
+        const results = document.getElementById('results');
+        const summary = document.createElement('div');
+        summary.className = 'summary';
+        summary.innerHTML = `Tests Passed: ${passed} | Tests Failed: ${failed} | Total: ${passed + failed}`;
+        if (failed === 0) {
+            summary.style.background = '#d4edda';
+            summary.style.color = '#155724';
+        } else {
+            summary.style.background = '#f8d7da';
+            summary.style.color = '#721c24';
+        }
+        results.appendChild(summary);
+    });
+    </script>
+</body>
+</html>
