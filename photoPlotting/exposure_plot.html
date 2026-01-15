@@ -728,10 +728,11 @@
 
   // Check if a screen point is near either diagonal axis
   function isNearAxisLine(screenX, screenY, bufferPixels = 8) {
-    // Distance to / diagonal (aperture axis): from bottom-left to top-right
-    const d1 = distanceToLine(screenX, screenY, VIEWPORT.left, VIEWPORT.bottom, VIEWPORT.right, VIEWPORT.top);
-    // Distance to \ diagonal (shutter axis): from top-left to bottom-right
-    const d2 = distanceToLine(screenX, screenY, VIEWPORT.left, VIEWPORT.top, VIEWPORT.right, VIEWPORT.bottom);
+    const axes = getAxisEndpoints();
+    // Distance to / diagonal (aperture axis)
+    const d1 = distanceToLine(screenX, screenY, axes.slash.x1, axes.slash.y1, axes.slash.x2, axes.slash.y2);
+    // Distance to \ diagonal (shutter axis)
+    const d2 = distanceToLine(screenX, screenY, axes.backslash.x1, axes.backslash.y1, axes.backslash.x2, axes.backslash.y2);
     return d1 < bufferPixels || d2 < bufferPixels;
   }
 
@@ -1263,18 +1264,20 @@
     ctx.font = "bold 14px monospace";
     const label_spacing = 70;  // pixels along diagonal
 
+    const axes = getAxisEndpoints();
+
     // ============ APERTURE LABELS (along / diagonal) ============
-    // Diagonal from VIEWPORT.left, VIEWPORT.bottom to VIEWPORT.right, VIEWPORT.top
     ctx.fillStyle = COLORS.gridAperture;
 
-    const diag_length = Math.sqrt(
-      (VIEWPORT.right - VIEWPORT.left) ** 2 + (VIEWPORT.top - VIEWPORT.bottom) ** 2
-    );
+    // Length of / diagonal
+    const slash_dx = axes.slash.x2 - axes.slash.x1;
+    const slash_dy = axes.slash.y2 - axes.slash.y1;
+    const slash_length = Math.sqrt(slash_dx * slash_dx + slash_dy * slash_dy);
 
-    for (let dist = 0; dist <= diag_length; dist += label_spacing) {
-      const t = dist / diag_length;  // 0 to 1 along the diagonal
-      const screenX = VIEWPORT.left + (VIEWPORT.right - VIEWPORT.left) * t;
-      const screenY = VIEWPORT.bottom + (VIEWPORT.top - VIEWPORT.bottom) * t;
+    for (let dist = 0; dist <= slash_length; dist += label_spacing) {
+      const t = dist / slash_length;  // 0 to 1 along the diagonal
+      const screenX = axes.slash.x1 + slash_dx * t;
+      const screenY = axes.slash.y1 + slash_dy * t;
 
       const [av_at_pos, tv_at_pos] = canvasToData(screenX, screenY);
 
@@ -1313,13 +1316,17 @@
     }
 
     // ============ SHUTTER SPEED LABELS (along \ diagonal) ============
-    // Diagonal from VIEWPORT.left, VIEWPORT.top to VIEWPORT.right, VIEWPORT.bottom
     ctx.fillStyle = COLORS.gridShutter;
 
-    for (let dist = 0; dist <= diag_length; dist += label_spacing) {
-      const t = dist / diag_length;
-      const screenX = VIEWPORT.left + (VIEWPORT.right - VIEWPORT.left) * t;
-      const screenY = VIEWPORT.top + (VIEWPORT.bottom - VIEWPORT.top) * t;
+    // Length of \ diagonal
+    const backslash_dx = axes.backslash.x2 - axes.backslash.x1;
+    const backslash_dy = axes.backslash.y2 - axes.backslash.y1;
+    const backslash_length = Math.sqrt(backslash_dx * backslash_dx + backslash_dy * backslash_dy);
+
+    for (let dist = 0; dist <= backslash_length; dist += label_spacing) {
+      const t = dist / backslash_length;
+      const screenX = axes.backslash.x1 + backslash_dx * t;
+      const screenY = axes.backslash.y1 + backslash_dy * t;
 
       const [av_at_pos, tv_at_pos] = canvasToData(screenX, screenY);
 
@@ -1354,21 +1361,63 @@
     }
   }
 
-  function drawAxisLines() {
-    ctx.strokeStyle = COLORS.gridAperture;  // Green for aperture axis
-    ctx.lineWidth = LINE_WIDTHS.axis;
+  function getAxisEndpoints() {
+    // Draw true 45-degree perpendicular axes through viewport center
+    const centerX = (VIEWPORT.left + VIEWPORT.right) / 2;
+    const centerY = (VIEWPORT.top + VIEWPORT.bottom) / 2;
 
-    // Aperture axis: / diagonal from bottom-left to top-right
+    // / diagonal: direction (1, -1) (up-right, since Y increases downward)
+    // Find max t where line hits right or top boundary
+    const maxT_slash = Math.min(
+      VIEWPORT.right - centerX,   // distance to right edge
+      centerY - VIEWPORT.top      // distance to top edge
+    );
+    // Find min t (could be negative) where line hits left or bottom boundary
+    const minT_slash = Math.max(
+      VIEWPORT.left - centerX,    // distance to left edge
+      centerY - VIEWPORT.bottom   // distance to bottom edge
+    );
+
+    // \ diagonal: direction (1, 1) (down-right)
+    // Find max t where line hits right or bottom boundary
+    const maxT_backslash = Math.min(
+      VIEWPORT.right - centerX,     // distance to right edge
+      VIEWPORT.bottom - centerY     // distance to bottom edge
+    );
+    // Find min t where line hits left or top boundary
+    const minT_backslash = Math.max(
+      VIEWPORT.left - centerX,      // distance to left edge
+      VIEWPORT.top - centerY        // distance to top edge
+    );
+
+    return {
+      slash: {
+        x1: centerX + minT_slash, y1: centerY - minT_slash,
+        x2: centerX + maxT_slash, y2: centerY - maxT_slash
+      },
+      backslash: {
+        x1: centerX + minT_backslash, y1: centerY + minT_backslash,
+        x2: centerX + maxT_backslash, y2: centerY + maxT_backslash
+      }
+    };
+  }
+
+  function drawAxisLines() {
+    const axes = getAxisEndpoints();
+
+    // Draw / diagonal (aperture axis) - green
+    ctx.strokeStyle = COLORS.gridAperture;
+    ctx.lineWidth = LINE_WIDTHS.axis;
     ctx.beginPath();
-    ctx.moveTo(VIEWPORT.left, VIEWPORT.bottom);
-    ctx.lineTo(VIEWPORT.right, VIEWPORT.top);
+    ctx.moveTo(axes.slash.x1, axes.slash.y1);
+    ctx.lineTo(axes.slash.x2, axes.slash.y2);
     ctx.stroke();
 
-    // Shutter speed axis: \ diagonal from top-left to bottom-right
-    ctx.strokeStyle = COLORS.gridShutter;  // Cyan for shutter speed axis
+    // Draw \ diagonal (shutter speed axis) - cyan
+    ctx.strokeStyle = COLORS.gridShutter;
     ctx.beginPath();
-    ctx.moveTo(VIEWPORT.left, VIEWPORT.top);
-    ctx.lineTo(VIEWPORT.right, VIEWPORT.bottom);
+    ctx.moveTo(axes.backslash.x1, axes.backslash.y1);
+    ctx.lineTo(axes.backslash.x2, axes.backslash.y2);
     ctx.stroke();
   }
 
