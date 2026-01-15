@@ -899,18 +899,18 @@
   }
 
   // Draw the reference grid: aperture lines (green) and shutter speed lines (cyan).
-  // After rotation, these lines are curved (rotated curves), but they show the base Av/Tv coordinates.
+  // Aperture lines (Av = constant) are vertical; shutter lines (Tv = constant) are horizontal.
   function drawGrid() {
     ctx.lineWidth = LINE_WIDTHS.grid;
     ctx.globalAlpha = 0.8;
 
     // Aperture grid: Av = constant (1-stop increments)
-    // Green = safe/approachable. After rotation, these become diagonal curves.
+    // Green = aperture axis. Vertical lines.
     ctx.strokeStyle = COLORS.gridAperture;
     for (let av = Math.ceil(Av_min); av <= Math.floor(Av_max); av++) {
       const points = [];
       for (let tv = Tv_min; tv <= Tv_max; tv += 0.1) {
-        points.push(dataToCanvas(av, tv));
+        points.push(avTvToCanvasUnrotated(av, tv));
       }
 
       if (points.length > 1) {
@@ -924,12 +924,12 @@
     }
 
     // Shutter speed grid: Tv = constant (1-stop increments)
-    // Cyan = reference/info. These also curve after rotation.
+    // Cyan = shutter speed axis. Horizontal lines.
     ctx.strokeStyle = COLORS.gridShutter;
     for (let tv = Math.ceil(Tv_min); tv <= Math.floor(Tv_max); tv++) {
       const points = [];
       for (let av = Av_min; av <= Av_max; av += 0.1) {
-        points.push(dataToCanvas(av, tv));
+        points.push(avTvToCanvasUnrotated(av, tv));
       }
 
       if (points.length > 1) {
