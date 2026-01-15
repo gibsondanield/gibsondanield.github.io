@@ -688,6 +688,21 @@
     return rotatedToCanvas(rotAv, rotTv);
   }
 
+  // Direct mapping without rotation (for EV contours which should be at 45°)
+  function avTvToCanvasUnrotated(av, tv) {
+    // Map (Av, Tv) directly to screen without rotation
+    // Still apply pan and zoom, just skip the 45° rotation step
+    const center_av = (Av_min + Av_max) / 2;
+    const center_tv = (Tv_min + Tv_max) / 2;
+    const current_scale = pixels_per_stop * Math.sqrt(2);
+    const viewport_centerX = VIEWPORT.left + VIEWPORT.width / 2;
+    const viewport_centerY = VIEWPORT.top + VIEWPORT.height / 2;
+
+    const x = viewport_centerX + (av - center_av) * current_scale + panOffsetX;
+    const y = viewport_centerY - (tv - center_tv) * current_scale + panOffsetY;
+    return [x, y];
+  }
+
   // ============ INVERSE TRANSFORMATION PIPELINE ============
   // Go backwards from canvas pixels to data coordinates (for fixed axis labels)
 
@@ -986,10 +1001,11 @@
         const [av1, tv1] = points[0];
         const [av2, tv2] = points[1];
 
-        const [x1, y1] = dataToCanvas(av1, tv1);
-        const [x2, y2] = dataToCanvas(av2, tv2);
+        const [x1, y1] = avTvToCanvasUnrotated(av1, tv1);
+        const [x2, y2] = avTvToCanvasUnrotated(av2, tv2);
 
         // Magenta = primary exposure reference (fighter jet HUD vibes 🎯)
+        // At 45° angle since Av + Tv = constant has slope -1
         ctx.strokeStyle = COLORS.contourEv;
         ctx.lineWidth = LINE_WIDTHS.contour;
         ctx.globalAlpha = 0.8;
@@ -1055,7 +1071,7 @@
       // Only render if we found a reasonably close intersection
       if (label_point && best_distance < 0.15) {
         const [av_label, tv_label] = label_point;
-        const [x, y] = dataToCanvas(av_label, tv_label);
+        const [x, y] = avTvToCanvasUnrotated(av_label, tv_label);
 
         // Keep labels on canvas (with generous bounds)
         const margin = 100;
