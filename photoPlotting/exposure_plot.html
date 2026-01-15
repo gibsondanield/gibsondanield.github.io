@@ -1228,21 +1228,28 @@
       return f;
     });
 
-    // ============ APERTURE LABELS (along bottom edge) ============
-    // Position labels at fixed VIEWPORT.bottom, using canvasToData to find visible values
-    ctx.font = "bold 18px monospace";
-    ctx.fillStyle = COLORS.gridAperture;  // Green for aperture labels
+    // ============ APERTURE LABELS (along / diagonal) ============
+    // Aperture axis runs from VIEWPORT.left, VIEWPORT.bottom to VIEWPORT.right, VIEWPORT.top
+    ctx.font = "bold 16px monospace";
+    ctx.fillStyle = COLORS.gridAperture;
 
-    // Draw labels at regular intervals along the bottom edge
-    const label_spacing = 60;  // pixels apart
-    for (let px = VIEWPORT.left; px <= VIEWPORT.right; px += label_spacing) {
-      const [av_at_px, tv_at_px] = canvasToData(px, VIEWPORT.bottom);
+    const label_spacing = 60;  // pixels along the diagonal
+    const diagonal_length = Math.sqrt(
+      (VIEWPORT.right - VIEWPORT.left) ** 2 + (VIEWPORT.top - VIEWPORT.bottom) ** 2
+    );
+
+    for (let dist = 0; dist <= diagonal_length; dist += label_spacing) {
+      const t = dist / diagonal_length;  // 0 to 1 along the diagonal
+      const px = VIEWPORT.left + (VIEWPORT.right - VIEWPORT.left) * t;
+      const py = VIEWPORT.bottom + (VIEWPORT.top - VIEWPORT.bottom) * t;
+
+      const [av_at_pos, tv_at_pos] = canvasToData(px, py);
 
       // Find closest standard f-stop or Av value
       let best_idx = -1;
       let best_dist = Infinity;
       displayed_av.forEach((av_val, idx) => {
-        const dist = Math.abs(av_val - av_at_px);
+        const dist = Math.abs(av_val - av_at_pos);
         if (dist < best_dist) {
           best_dist = dist;
           best_idx = idx;
@@ -1251,11 +1258,9 @@
 
       if (best_idx >= 0) {
         ctx.save();
-        ctx.translate(px, VIEWPORT.bottom + 15);
-        ctx.rotate(Math.PI / 4);
-        ctx.textAlign = "left";
-        ctx.textBaseline = "middle";
-        ctx.fillStyle = COLORS.gridAperture;
+        ctx.translate(px, py);
+        ctx.textAlign = "center";
+        ctx.textBaseline = "bottom";
 
         let label;
         if (aperture_label_mode === "fstop") {
@@ -1268,39 +1273,43 @@
         } else {
           label = `${Math.round(displayed_av[best_idx])}`;
         }
-        ctx.fillText(label, 0, 0);
+        ctx.fillStyle = COLORS.gridAperture;
+        ctx.fillText(label, 0, -8);
         ctx.restore();
       }
     }
 
     // Draw aperture axis label
-    ctx.font = "bold 20px monospace";
+    ctx.font = "bold 18px monospace";
     let aperture_label_text = aperture_label_mode === "fstop" ? "Aperture (f-stop)" : "Aperture (Av)";
     if (adjustment_mode === "cropfactor") {
       aperture_label_text += " [equiv]";
     }
     ctx.save();
-    ctx.translate(VIEWPORT.left - 40, VIEWPORT.bottom + 35);
-    ctx.rotate(Math.PI / 4);
+    ctx.translate((VIEWPORT.left + VIEWPORT.right) / 2, (VIEWPORT.bottom + VIEWPORT.top) / 2 - 40);
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
     ctx.fillStyle = COLORS.gridAperture;
     ctx.fillText(aperture_label_text, 0, 0);
     ctx.restore();
 
-    // ============ SHUTTER SPEED LABELS (along left edge) ============
+    // ============ SHUTTER SPEED LABELS (along \ diagonal) ============
+    // Shutter speed axis runs from VIEWPORT.left, VIEWPORT.top to VIEWPORT.right, VIEWPORT.bottom
     ctx.font = "bold 16px monospace";
-    ctx.fillStyle = COLORS.gridShutter;  // Cyan for shutter labels
+    ctx.fillStyle = COLORS.gridShutter;
 
-    // Draw labels at regular intervals along the left edge
-    for (let py = VIEWPORT.top; py <= VIEWPORT.bottom; py += label_spacing) {
-      const [av_at_py, tv_at_py] = canvasToData(VIEWPORT.left, py);
+    for (let dist = 0; dist <= diagonal_length; dist += label_spacing) {
+      const t = dist / diagonal_length;  // 0 to 1 along the diagonal
+      const px = VIEWPORT.left + (VIEWPORT.right - VIEWPORT.left) * t;
+      const py = VIEWPORT.top + (VIEWPORT.bottom - VIEWPORT.top) * t;
+
+      const [av_at_pos, tv_at_pos] = canvasToData(px, py);
 
       // Find closest standard shutter speed
       let best_idx = -1;
       let best_dist = Infinity;
       Tv_values.forEach((tv_val, idx) => {
-        const dist = Math.abs(tv_val - tv_at_py);
+        const dist = Math.abs(tv_val - tv_at_pos);
         if (dist < best_dist) {
           best_dist = dist;
           best_idx = idx;
@@ -1309,11 +1318,9 @@
 
       if (best_idx >= 0) {
         ctx.save();
-        ctx.translate(VIEWPORT.left - 15, py);
-        ctx.rotate(-Math.PI / 4);
-        ctx.textAlign = "right";
-        ctx.textBaseline = "middle";
-        ctx.fillStyle = COLORS.gridShutter;
+        ctx.translate(px, py);
+        ctx.textAlign = "center";
+        ctx.textBaseline = "top";
 
         const t = SHUTTER_SPEEDS[best_idx];
         let label;
@@ -1322,16 +1329,16 @@
         } else {
           label = `1/${Math.round(1 / t)}`;
         }
-        ctx.fillText(label, 0, 0);
+        ctx.fillStyle = COLORS.gridShutter;
+        ctx.fillText(label, 0, 8);
         ctx.restore();
       }
     }
 
     // Draw shutter speed axis label
-    ctx.font = "bold 20px monospace";
+    ctx.font = "bold 18px monospace";
     ctx.save();
-    ctx.translate(VIEWPORT.left - 50, VIEWPORT.top - 20);
-    ctx.rotate(-Math.PI / 4);
+    ctx.translate((VIEWPORT.left + VIEWPORT.right) / 2, (VIEWPORT.top + VIEWPORT.bottom) / 2 + 40);
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
     ctx.fillStyle = COLORS.gridShutter;
@@ -1343,27 +1350,18 @@
     ctx.strokeStyle = COLORS.gridAperture;  // Use green for axis lines
     ctx.lineWidth = LINE_WIDTHS.axis;
 
-    // Left edge (fixed at VIEWPORT.left)
-    ctx.beginPath();
-    ctx.moveTo(VIEWPORT.left, VIEWPORT.top);
-    ctx.lineTo(VIEWPORT.left, VIEWPORT.bottom);
-    ctx.stroke();
+    // Diagonal axes at 45 degrees to match the rotated data coordinate system
 
-    // Bottom edge (fixed at VIEWPORT.bottom)
+    // Aperture axis: bottom-left to top-right (/)
     ctx.beginPath();
     ctx.moveTo(VIEWPORT.left, VIEWPORT.bottom);
-    ctx.lineTo(VIEWPORT.right, VIEWPORT.bottom);
-    ctx.stroke();
-
-    // Top edge (for visual framing)
-    ctx.beginPath();
-    ctx.moveTo(VIEWPORT.left, VIEWPORT.top);
     ctx.lineTo(VIEWPORT.right, VIEWPORT.top);
     ctx.stroke();
 
-    // Right edge (for visual framing)
+    // Shutter speed axis: top-left to bottom-right (\)
+    ctx.strokeStyle = COLORS.gridShutter;  // Use cyan for shutter speed axis
     ctx.beginPath();
-    ctx.moveTo(VIEWPORT.right, VIEWPORT.top);
+    ctx.moveTo(VIEWPORT.left, VIEWPORT.top);
     ctx.lineTo(VIEWPORT.right, VIEWPORT.bottom);
     ctx.stroke();
   }
