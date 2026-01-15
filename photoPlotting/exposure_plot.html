@@ -689,17 +689,16 @@
   }
 
   // Direct mapping without rotation (for EV contours which should be at 45°)
+  // Maps: Tv → x (horizontal), Av → y (vertical, inverted for canvas coords)
   function avTvToCanvasUnrotated(av, tv) {
-    // Map (Av, Tv) directly to screen without rotation
-    // Still apply pan and zoom, just skip the 45° rotation step
     const center_av = (Av_min + Av_max) / 2;
     const center_tv = (Tv_min + Tv_max) / 2;
     const current_scale = pixels_per_stop * Math.sqrt(2);
     const viewport_centerX = VIEWPORT.left + VIEWPORT.width / 2;
     const viewport_centerY = VIEWPORT.top + VIEWPORT.height / 2;
 
-    const x = viewport_centerX + (av - center_av) * current_scale + panOffsetX;
-    const y = viewport_centerY - (tv - center_tv) * current_scale + panOffsetY;
+    const x = viewport_centerX + (tv - center_tv) * current_scale + panOffsetX;      // Tv → x
+    const y = viewport_centerY - (av - center_av) * current_scale + panOffsetY;      // Av → y (inverted)
     return [x, y];
   }
 
@@ -711,8 +710,8 @@
     const viewport_centerX = VIEWPORT.left + VIEWPORT.width / 2;
     const viewport_centerY = VIEWPORT.top + VIEWPORT.height / 2;
 
-    const av = center_av + (x - viewport_centerX - panOffsetX) / current_scale;
-    const tv = center_tv - (y - viewport_centerY - panOffsetY) / current_scale;
+    const tv = center_tv + (x - viewport_centerX - panOffsetX) / current_scale;      // x → Tv
+    const av = center_av - (y - viewport_centerY - panOffsetY) / current_scale;      // y → Av
     return [av, tv];
   }
 
@@ -1260,13 +1259,14 @@
     });
 
     const displayed_av = getDisplayedAvValues();
+    const center_tv = (Tv_min + Tv_max) / 2;
 
-    // Draw a label for each standard f-stop/Av value
+    // Draw a label for each standard f-stop/Av value at its y coordinate
     for (let i = 0; i < F_STOPS.length; i++) {
       const av_val = displayed_av[i];
-      const [x, y] = avTvToCanvasUnrotated(av_val, (Tv_min + Tv_max) / 2);  // Use center Tv
+      const [x, y] = avTvToCanvasUnrotated(av_val, center_tv);
 
-      // Only draw if within viewport bounds (with margin)
+      // Only draw if y is within viewport bounds (with margin)
       const margin = 30;
       if (y >= VIEWPORT.top - margin && y <= VIEWPORT.bottom + margin) {
         let label;
@@ -1289,12 +1289,14 @@
     }
 
     // ============ SHUTTER SPEED LABELS (bottom horizontal axis) ============
-    // Draw a label for each standard shutter speed value
+    // Draw a label for each standard shutter speed value at its x coordinate
+    const center_av = (Av_min + Av_max) / 2;
+
     for (let i = 0; i < SHUTTER_SPEEDS.length; i++) {
       const tv_val = Tv_values[i];
-      const [x, y] = avTvToCanvasUnrotated((Av_min + Av_max) / 2, tv_val);  // Use center Av
+      const [x, y] = avTvToCanvasUnrotated(center_av, tv_val);
 
-      // Only draw if within viewport bounds (with margin)
+      // Only draw if x is within viewport bounds (with margin)
       const margin = 30;
       if (x >= VIEWPORT.left - margin && x <= VIEWPORT.right + margin) {
         const t = SHUTTER_SPEEDS[i];
