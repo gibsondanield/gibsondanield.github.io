@@ -63,15 +63,17 @@
     #leftColumn {
       display: flex;
       flex-direction: column;
-      gap: 20px;
-      min-width: 250px;
+      gap: 15px;
+      width: 180px;
       flex-shrink: 0;
     }
 
     #leftColumn h1 {
       margin: 0;
-      font-size: 24px;
+      font-size: 18px;
+      line-height: 1.2;
       color: #fff;
+      word-wrap: break-word;
     }
 
     #sidebar {
@@ -1290,23 +1292,29 @@
     ctx.strokeStyle = COLORS.gridAperture;  // Use green for axis lines
     ctx.lineWidth = LINE_WIDTHS.axis;
 
-    // Left edge (Av_min line)
-    const [ax1, ay1] = dataToCanvas(Av_min, Tv_min);
-    const [ax2, ay2] = dataToCanvas(Av_min, Tv_max);
+    // Left edge (fixed at VIEWPORT.left)
     ctx.beginPath();
-    ctx.moveTo(ax1, ay1);
-    ctx.lineTo(ax2, ay2);
-    ctx.stroke();
-    // Bottom edge (Tv_min line)
-    const [bx1, by1] = dataToCanvas(Av_min, Tv_min);
-    const [bx2, by2] = dataToCanvas(Av_max, Tv_min);
-    ctx.beginPath();
-    ctx.moveTo(bx1, by1);
-    ctx.lineTo(bx2, by2);
+    ctx.moveTo(VIEWPORT.left, VIEWPORT.top);
+    ctx.lineTo(VIEWPORT.left, VIEWPORT.bottom);
     ctx.stroke();
 
-    // Draw brightness indicator in upper right
-    // drawBrightnessIndicator();
+    // Bottom edge (fixed at VIEWPORT.bottom)
+    ctx.beginPath();
+    ctx.moveTo(VIEWPORT.left, VIEWPORT.bottom);
+    ctx.lineTo(VIEWPORT.right, VIEWPORT.bottom);
+    ctx.stroke();
+
+    // Top edge (for visual framing)
+    ctx.beginPath();
+    ctx.moveTo(VIEWPORT.left, VIEWPORT.top);
+    ctx.lineTo(VIEWPORT.right, VIEWPORT.top);
+    ctx.stroke();
+
+    // Right edge (for visual framing)
+    ctx.beginPath();
+    ctx.moveTo(VIEWPORT.right, VIEWPORT.top);
+    ctx.lineTo(VIEWPORT.right, VIEWPORT.bottom);
+    ctx.stroke();
   }
 
   // Draw exposure compass: aircraft-style indicator showing exposure/aperture trade-offs.
