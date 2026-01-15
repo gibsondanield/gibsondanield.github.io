@@ -911,47 +911,38 @@
   }
 
   // Draw the reference grid: aperture lines (green) and shutter speed lines (cyan).
-  // Aperture lines (Av = constant) are vertical; shutter lines (Tv = constant) are horizontal.
+  // Gridlines span the entire viewport, generated based on visible data range.
   function drawGrid() {
+    // Find visible Av/Tv range by converting viewport corners to data coords
+    const [av_top, tv_top] = canvasToUnrotatedData(VIEWPORT.left, VIEWPORT.top);
+    const [av_bottom, tv_bottom] = canvasToUnrotatedData(VIEWPORT.right, VIEWPORT.bottom);
+
+    const av_min_visible = Math.min(av_top, av_bottom);
+    const av_max_visible = Math.max(av_top, av_bottom);
+    const tv_min_visible = Math.min(tv_top, tv_bottom);
+    const tv_max_visible = Math.max(tv_top, tv_bottom);
+
     ctx.lineWidth = LINE_WIDTHS.grid;
     ctx.globalAlpha = 0.8;
 
-    // Aperture grid: Av = constant (1-stop increments)
-    // Green = aperture axis. Vertical lines.
+    // Aperture grid: Av = constant (horizontal lines spanning viewport)
     ctx.strokeStyle = COLORS.gridAperture;
-    for (let av = Math.ceil(Av_min); av <= Math.floor(Av_max); av++) {
-      const points = [];
-      for (let tv = Tv_min; tv <= Tv_max; tv += 0.1) {
-        points.push(avTvToCanvasUnrotated(av, tv));
-      }
-
-      if (points.length > 1) {
-        ctx.beginPath();
-        ctx.moveTo(points[0][0], points[0][1]);
-        for (let i = 1; i < points.length; i++) {
-          ctx.lineTo(points[i][0], points[i][1]);
-        }
-        ctx.stroke();
-      }
+    for (let av = Math.ceil(av_min_visible); av <= Math.floor(av_max_visible); av++) {
+      const [x, y] = avTvToCanvasUnrotated(av, (tv_min_visible + tv_max_visible) / 2);
+      ctx.beginPath();
+      ctx.moveTo(VIEWPORT.left, y);
+      ctx.lineTo(VIEWPORT.right, y);
+      ctx.stroke();
     }
 
-    // Shutter speed grid: Tv = constant (1-stop increments)
-    // Cyan = shutter speed axis. Horizontal lines.
+    // Shutter speed grid: Tv = constant (vertical lines spanning viewport)
     ctx.strokeStyle = COLORS.gridShutter;
-    for (let tv = Math.ceil(Tv_min); tv <= Math.floor(Tv_max); tv++) {
-      const points = [];
-      for (let av = Av_min; av <= Av_max; av += 0.1) {
-        points.push(avTvToCanvasUnrotated(av, tv));
-      }
-
-      if (points.length > 1) {
-        ctx.beginPath();
-        ctx.moveTo(points[0][0], points[0][1]);
-        for (let i = 1; i < points.length; i++) {
-          ctx.lineTo(points[i][0], points[i][1]);
-        }
-        ctx.stroke();
-      }
+    for (let tv = Math.ceil(tv_min_visible); tv <= Math.floor(tv_max_visible); tv++) {
+      const [x, y] = avTvToCanvasUnrotated((av_min_visible + av_max_visible) / 2, tv);
+      ctx.beginPath();
+      ctx.moveTo(x, VIEWPORT.top);
+      ctx.lineTo(x, VIEWPORT.bottom);
+      ctx.stroke();
     }
 
     ctx.globalAlpha = 1.0;
@@ -1248,8 +1239,15 @@
   function drawAxisLabels() {
     ctx.font = "bold 12px monospace";
 
-    // ============ APERTURE LABELS (left vertical axis) ============
-    // Get standard f-stop values (or Av values if in that mode)
+    // Find visible Av/Tv range
+    const [av_top, tv_top] = canvasToUnrotatedData(VIEWPORT.left, VIEWPORT.top);
+    const [av_bottom, tv_bottom] = canvasToUnrotatedData(VIEWPORT.right, VIEWPORT.bottom);
+
+    const av_min_visible = Math.min(av_top, av_bottom);
+    const av_max_visible = Math.max(av_top, av_bottom);
+    const tv_min_visible = Math.min(tv_top, tv_bottom);
+    const tv_max_visible = Math.max(tv_top, tv_bottom);
+
     const displayed_fstops = F_STOPS.map((f, i) => {
       if (adjustment_mode === "cropfactor") {
         const crop = getCropFactor();
@@ -1259,58 +1257,67 @@
     });
 
     const displayed_av = getDisplayedAvValues();
-    const center_tv = (Tv_min + Tv_max) / 2;
+    const center_tv = (tv_min_visible + tv_max_visible) / 2;
 
-    // Draw a label for each standard f-stop/Av value at its y coordinate
+    // ============ APERTURE LABELS (left vertical axis) ============
+    // Draw labels for all f-stops that are currently visible
+    const margin_y = 30;
     for (let i = 0; i < F_STOPS.length; i++) {
       const av_val = displayed_av[i];
-      const [x, y] = avTvToCanvasUnrotated(av_val, center_tv);
 
-      // Only draw if y is within viewport bounds (with margin)
-      const margin = 30;
-      if (y >= VIEWPORT.top - margin && y <= VIEWPORT.bottom + margin) {
-        let label;
-        if (aperture_label_mode === "fstop") {
-          const fstop = displayed_fstops[i];
-          if (fstop === Math.round(fstop)) {
-            label = `f/${Math.round(fstop)}`;
+      // Only draw if this Av value is visible
+      if (av_val >= av_min_visible - 0.5 && av_val <= av_max_visible + 0.5) {
+        const [x, y] = avTvToCanvasUnrotated(av_val, center_tv);
+
+        // Also check y is on screen
+        if (y >= VIEWPORT.top - margin_y && y <= VIEWPORT.bottom + margin_y) {
+          let label;
+          if (aperture_label_mode === "fstop") {
+            const fstop = displayed_fstops[i];
+            if (fstop === Math.round(fstop)) {
+              label = `f/${Math.round(fstop)}`;
+            } else {
+              label = `f/${fstop.toFixed(1)}`;
+            }
           } else {
-            label = `f/${fstop.toFixed(1)}`;
+            label = `${Math.round(av_val)}`;
           }
-        } else {
-          label = `${Math.round(av_val)}`;
-        }
 
-        ctx.textAlign = "right";
-        ctx.textBaseline = "middle";
-        ctx.fillStyle = COLORS.gridAperture;
-        ctx.fillText(label, VIEWPORT.left - 8, y);
+          ctx.textAlign = "right";
+          ctx.textBaseline = "middle";
+          ctx.fillStyle = COLORS.gridAperture;
+          ctx.fillText(label, VIEWPORT.left - 8, y);
+        }
       }
     }
 
     // ============ SHUTTER SPEED LABELS (bottom horizontal axis) ============
-    // Draw a label for each standard shutter speed value at its x coordinate
-    const center_av = (Av_min + Av_max) / 2;
+    // Draw labels for all shutter speeds that are currently visible
+    const center_av = (av_min_visible + av_max_visible) / 2;
+    const margin_x = 30;
 
     for (let i = 0; i < SHUTTER_SPEEDS.length; i++) {
       const tv_val = Tv_values[i];
-      const [x, y] = avTvToCanvasUnrotated(center_av, tv_val);
 
-      // Only draw if x is within viewport bounds (with margin)
-      const margin = 30;
-      if (x >= VIEWPORT.left - margin && x <= VIEWPORT.right + margin) {
-        const t = SHUTTER_SPEEDS[i];
-        let label;
-        if (t >= 1) {
-          label = `${Math.round(t)}s`;
-        } else {
-          label = `1/${Math.round(1 / t)}`;
+      // Only draw if this Tv value is visible
+      if (tv_val >= tv_min_visible - 0.5 && tv_val <= tv_max_visible + 0.5) {
+        const [x, y] = avTvToCanvasUnrotated(center_av, tv_val);
+
+        // Also check x is on screen
+        if (x >= VIEWPORT.left - margin_x && x <= VIEWPORT.right + margin_x) {
+          const t = SHUTTER_SPEEDS[i];
+          let label;
+          if (t >= 1) {
+            label = `${Math.round(t)}s`;
+          } else {
+            label = `1/${Math.round(1 / t)}`;
+          }
+
+          ctx.textAlign = "center";
+          ctx.textBaseline = "top";
+          ctx.fillStyle = COLORS.gridShutter;
+          ctx.fillText(label, x, VIEWPORT.bottom + 8);
         }
-
-        ctx.textAlign = "center";
-        ctx.textBaseline = "top";
-        ctx.fillStyle = COLORS.gridShutter;
-        ctx.fillText(label, x, VIEWPORT.bottom + 8);
       }
     }
   }
