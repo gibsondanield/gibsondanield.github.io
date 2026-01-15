@@ -430,8 +430,8 @@
   // ============ RENDERING CONSTANTS ============
   // All visual parameters as constants for easy tweaking
   const COLORS = {
-    gridAperture: "#00cc44",
-    gridShutter: "#00aaff",
+    gridAperture: "#00aaff",
+    gridShutter: "#00cc44",
     contourEv: "#ff00ff",
     labelEv: "#ffff00",
     labelEvAlt: "#ffcc00",
@@ -701,6 +701,19 @@
     const x = viewport_centerX + (av - center_av) * current_scale + panOffsetX;
     const y = viewport_centerY - (tv - center_tv) * current_scale + panOffsetY;
     return [x, y];
+  }
+
+  // Inverse of unrotated mapping (for axis labels)
+  function canvasToUnrotatedData(x, y) {
+    const center_av = (Av_min + Av_max) / 2;
+    const center_tv = (Tv_min + Tv_max) / 2;
+    const current_scale = pixels_per_stop * Math.sqrt(2);
+    const viewport_centerX = VIEWPORT.left + VIEWPORT.width / 2;
+    const viewport_centerY = VIEWPORT.top + VIEWPORT.height / 2;
+
+    const av = center_av + (x - viewport_centerX - panOffsetX) / current_scale;
+    const tv = center_tv - (y - viewport_centerY - panOffsetY) / current_scale;
+    return [av, tv];
   }
 
   // ============ INVERSE TRANSFORMATION PIPELINE ============
@@ -1249,7 +1262,7 @@
 
     const label_spacing_v = 60;  // pixels apart on vertical axis
     for (let y = VIEWPORT.top; y <= VIEWPORT.bottom; y += label_spacing_v) {
-      const [av_at_pos, tv_at_pos] = canvasToData(VIEWPORT.left, y);
+      const [av_at_pos, tv_at_pos] = canvasToUnrotatedData(VIEWPORT.left, y);
 
       let best_idx = -1;
       let best_dist = Infinity;
@@ -1284,7 +1297,7 @@
     ctx.fillStyle = COLORS.gridShutter;
     const label_spacing_h = 60;  // pixels apart on horizontal axis
     for (let x = VIEWPORT.left; x <= VIEWPORT.right; x += label_spacing_h) {
-      const [av_at_pos, tv_at_pos] = canvasToData(x, VIEWPORT.bottom);
+      const [av_at_pos, tv_at_pos] = canvasToUnrotatedData(x, VIEWPORT.bottom);
 
       let best_idx = -1;
       let best_dist = Infinity;
