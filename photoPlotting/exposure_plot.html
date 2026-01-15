@@ -716,6 +716,25 @@
     return rotatedToPreRot(rotAv, rotTv);
   }
 
+  // ============ DIAGONAL AXIS MASKING ============
+  // Distance from a point to a line segment (used for masking data near axes)
+  function distanceToLine(px, py, x1, y1, x2, y2) {
+    const dx = x2 - x1;
+    const dy = y2 - y1;
+    const num = Math.abs(dy * px - dx * py + x2 * y1 - y2 * x1);
+    const denom = Math.sqrt(dy * dy + dx * dx);
+    return num / denom;
+  }
+
+  // Check if a screen point is near either diagonal axis
+  function isNearAxisLine(screenX, screenY, bufferPixels = 8) {
+    // Distance to / diagonal (aperture axis): from bottom-left to top-right
+    const d1 = distanceToLine(screenX, screenY, VIEWPORT.left, VIEWPORT.bottom, VIEWPORT.right, VIEWPORT.top);
+    // Distance to \ diagonal (shutter axis): from top-left to bottom-right
+    const d2 = distanceToLine(screenX, screenY, VIEWPORT.left, VIEWPORT.top, VIEWPORT.right, VIEWPORT.bottom);
+    return d1 < bufferPixels || d2 < bufferPixels;
+  }
+
   // Compass is now in fixed screen coordinates, defined in VIEWPORT setup above
   // It stays in the same place regardless of pan/zoom
 
@@ -885,6 +904,7 @@
 
   // Draw the reference grid: aperture lines (green) and shutter speed lines (cyan).
   // After rotation, these lines are curved (rotated curves), but they show the base Av/Tv coordinates.
+  // Skip drawing grid lines near the diagonal axes.
   function drawGrid() {
     ctx.lineWidth = LINE_WIDTHS.grid;
     ctx.globalAlpha = 0.8;
@@ -895,7 +915,11 @@
     for (let av = Math.ceil(Av_min); av <= Math.floor(Av_max); av++) {
       const points = [];
       for (let tv = Tv_min; tv <= Tv_max; tv += 0.1) {
-        points.push(dataToCanvas(av, tv));
+        const screenPos = dataToCanvas(av, tv);
+        // Only keep points that are far from diagonal axes
+        if (!isNearAxisLine(screenPos[0], screenPos[1], 6)) {
+          points.push(screenPos);
+        }
       }
 
       if (points.length > 1) {
@@ -914,7 +938,11 @@
     for (let tv = Math.ceil(Tv_min); tv <= Math.floor(Tv_max); tv++) {
       const points = [];
       for (let av = Av_min; av <= Av_max; av += 0.1) {
-        points.push(dataToCanvas(av, tv));
+        const screenPos = dataToCanvas(av, tv);
+        // Only keep points that are far from diagonal axes
+        if (!isNearAxisLine(screenPos[0], screenPos[1], 6)) {
+          points.push(screenPos);
+        }
       }
 
       if (points.length > 1) {
@@ -986,18 +1014,21 @@
         const [av1, tv1] = points[0];
         const [av2, tv2] = points[1];
 
-        // Magenta = primary exposure reference (fighter jet HUD vibes 🎯)
-        ctx.strokeStyle = COLORS.contourEv;
-        ctx.lineWidth = LINE_WIDTHS.contour;
-        ctx.globalAlpha = 0.8;
-
         const [x1, y1] = dataToCanvas(av1, tv1);
         const [x2, y2] = dataToCanvas(av2, tv2);
 
-        ctx.beginPath();
-        ctx.moveTo(x1, y1);
-        ctx.lineTo(x2, y2);
-        ctx.stroke();
+        // Skip drawing if either endpoint is too close to a diagonal axis
+        if (!isNearAxisLine(x1, y1, 6) && !isNearAxisLine(x2, y2, 6)) {
+          // Magenta = primary exposure reference (fighter jet HUD vibes 🎯)
+          ctx.strokeStyle = COLORS.contourEv;
+          ctx.lineWidth = LINE_WIDTHS.contour;
+          ctx.globalAlpha = 0.8;
+
+          ctx.beginPath();
+          ctx.moveTo(x1, y1);
+          ctx.lineTo(x2, y2);
+          ctx.stroke();
+        }
       }
     }
     ctx.globalAlpha = 1.0;
@@ -1104,7 +1135,8 @@
             }
           }
 
-          if (!skip_label) {
+          if (!skip_label && !isNearAxisLine(x, y, 8)) {
+            // Skip rendering if too close to diagonal axes
             // Calculate box width based on actual content
             ctx.font = "bold 16px monospace";
             const labelMetrics = ctx.measureText(label_text);
@@ -1228,19 +1260,29 @@
       return f;
     });
 
-    // ============ APERTURE LABELS (along left edge) ============
-    ctx.font = "bold 16px monospace";
+    ctx.font = "bold 14px monospace";
+    const label_spacing = 70;  // pixels along diagonal
+
+    // ============ APERTURE LABELS (along / diagonal) ============
+    // Diagonal from VIEWPORT.left, VIEWPORT.bottom to VIEWPORT.right, VIEWPORT.top
     ctx.fillStyle = COLORS.gridAperture;
 
-    const label_spacing = 60;  // pixels apart
-    for (let py = VIEWPORT.top; py <= VIEWPORT.bottom; py += label_spacing) {
-      const [av_at_py, tv_at_py] = canvasToData(VIEWPORT.left, py);
+    const diag_length = Math.sqrt(
+      (VIEWPORT.right - VIEWPORT.left) ** 2 + (VIEWPORT.top - VIEWPORT.bottom) ** 2
+    );
+
+    for (let dist = 0; dist <= diag_length; dist += label_spacing) {
+      const t = dist / diag_length;  // 0 to 1 along the diagonal
+      const screenX = VIEWPORT.left + (VIEWPORT.right - VIEWPORT.left) * t;
+      const screenY = VIEWPORT.bottom + (VIEWPORT.top - VIEWPORT.bottom) * t;
+
+      const [av_at_pos, tv_at_pos] = canvasToData(screenX, screenY);
 
       // Find closest standard f-stop or Av value
       let best_idx = -1;
       let best_dist = Infinity;
       displayed_av.forEach((av_val, idx) => {
-        const dist = Math.abs(av_val - av_at_py);
+        const dist = Math.abs(av_val - av_at_pos);
         if (dist < best_dist) {
           best_dist = dist;
           best_idx = idx;
@@ -1249,11 +1291,9 @@
 
       if (best_idx >= 0) {
         ctx.save();
-        ctx.translate(VIEWPORT.left - 15, py);
-        ctx.rotate(-Math.PI / 4);
-        ctx.textAlign = "right";
-        ctx.textBaseline = "middle";
-        ctx.fillStyle = COLORS.gridAperture;
+        ctx.translate(screenX, screenY);
+        ctx.textAlign = "center";
+        ctx.textBaseline = "bottom";
 
         let label;
         if (aperture_label_mode === "fstop") {
@@ -1266,38 +1306,28 @@
         } else {
           label = `${Math.round(displayed_av[best_idx])}`;
         }
-        ctx.fillText(label, 0, 0);
+        ctx.fillStyle = COLORS.gridAperture;
+        ctx.fillText(label, -8, -8);
         ctx.restore();
       }
     }
 
-    // Draw aperture axis label
-    ctx.font = "bold 18px monospace";
-    let aperture_label_text = aperture_label_mode === "fstop" ? "Aperture (f-stop)" : "Aperture (Av)";
-    if (adjustment_mode === "cropfactor") {
-      aperture_label_text += " [equiv]";
-    }
-    ctx.save();
-    ctx.translate(VIEWPORT.left - 50, VIEWPORT.top - 20);
-    ctx.rotate(-Math.PI / 4);
-    ctx.textAlign = "center";
-    ctx.textBaseline = "middle";
-    ctx.fillStyle = COLORS.gridAperture;
-    ctx.fillText(aperture_label_text, 0, 0);
-    ctx.restore();
-
-    // ============ SHUTTER SPEED LABELS (along bottom edge) ============
-    ctx.font = "bold 16px monospace";
+    // ============ SHUTTER SPEED LABELS (along \ diagonal) ============
+    // Diagonal from VIEWPORT.left, VIEWPORT.top to VIEWPORT.right, VIEWPORT.bottom
     ctx.fillStyle = COLORS.gridShutter;
 
-    for (let px = VIEWPORT.left; px <= VIEWPORT.right; px += label_spacing) {
-      const [av_at_px, tv_at_px] = canvasToData(px, VIEWPORT.bottom);
+    for (let dist = 0; dist <= diag_length; dist += label_spacing) {
+      const t = dist / diag_length;
+      const screenX = VIEWPORT.left + (VIEWPORT.right - VIEWPORT.left) * t;
+      const screenY = VIEWPORT.top + (VIEWPORT.bottom - VIEWPORT.top) * t;
+
+      const [av_at_pos, tv_at_pos] = canvasToData(screenX, screenY);
 
       // Find closest standard shutter speed
       let best_idx = -1;
       let best_dist = Infinity;
       Tv_values.forEach((tv_val, idx) => {
-        const dist = Math.abs(tv_val - tv_at_px);
+        const dist = Math.abs(tv_val - tv_at_pos);
         if (dist < best_dist) {
           best_dist = dist;
           best_idx = idx;
@@ -1306,11 +1336,9 @@
 
       if (best_idx >= 0) {
         ctx.save();
-        ctx.translate(px, VIEWPORT.bottom + 15);
-        ctx.rotate(Math.PI / 4);
-        ctx.textAlign = "left";
-        ctx.textBaseline = "middle";
-        ctx.fillStyle = COLORS.gridShutter;
+        ctx.translate(screenX, screenY);
+        ctx.textAlign = "center";
+        ctx.textBaseline = "top";
 
         const t = SHUTTER_SPEEDS[best_idx];
         let label;
@@ -1319,37 +1347,27 @@
         } else {
           label = `1/${Math.round(1 / t)}`;
         }
-        ctx.fillText(label, 0, 0);
+        ctx.fillStyle = COLORS.gridShutter;
+        ctx.fillText(label, 8, 8);
         ctx.restore();
       }
     }
-
-    // Draw shutter speed axis label
-    ctx.font = "bold 18px monospace";
-    ctx.save();
-    ctx.translate(VIEWPORT.right - 50, VIEWPORT.bottom + 35);
-    ctx.rotate(Math.PI / 4);
-    ctx.textAlign = "center";
-    ctx.textBaseline = "middle";
-    ctx.fillStyle = COLORS.gridShutter;
-    ctx.fillText("Shutter Speed", 0, 0);
-    ctx.restore();
   }
 
   function drawAxisLines() {
-    ctx.strokeStyle = COLORS.gridAperture;  // Use green for axis lines
+    ctx.strokeStyle = COLORS.gridAperture;  // Green for aperture axis
     ctx.lineWidth = LINE_WIDTHS.axis;
 
-    // Left edge (Aperture axis) - vertical
-    ctx.beginPath();
-    ctx.moveTo(VIEWPORT.left, VIEWPORT.top);
-    ctx.lineTo(VIEWPORT.left, VIEWPORT.bottom);
-    ctx.stroke();
-
-    // Bottom edge (Shutter speed axis) - horizontal
-    ctx.strokeStyle = COLORS.gridShutter;  // Use cyan for shutter speed axis
+    // Aperture axis: / diagonal from bottom-left to top-right
     ctx.beginPath();
     ctx.moveTo(VIEWPORT.left, VIEWPORT.bottom);
+    ctx.lineTo(VIEWPORT.right, VIEWPORT.top);
+    ctx.stroke();
+
+    // Shutter speed axis: \ diagonal from top-left to bottom-right
+    ctx.strokeStyle = COLORS.gridShutter;  // Cyan for shutter speed axis
+    ctx.beginPath();
+    ctx.moveTo(VIEWPORT.left, VIEWPORT.top);
     ctx.lineTo(VIEWPORT.right, VIEWPORT.bottom);
     ctx.stroke();
   }
@@ -1459,6 +1477,9 @@
       // Only draw if on canvas
       const margin = 100;
       if (x < -margin || x > W + margin || y < -margin || y > H + margin) return;
+
+      // Skip if too close to diagonal axes
+      if (isNearAxisLine(x, y, 8)) return;
 
       // Aircraft-style indicator: circular target with crosshairs
       const targetRadius = 12;
