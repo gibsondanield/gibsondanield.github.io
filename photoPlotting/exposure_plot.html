@@ -688,6 +688,34 @@
     return rotatedToCanvas(rotAv, rotTv);
   }
 
+  // ============ INVERSE TRANSFORMATION PIPELINE ============
+  // Go backwards from canvas pixels to data coordinates (for fixed axis labels)
+
+  // Inverse Step 3: Canvas pixels -> Rotated data coords
+  function canvasToRotated(canvasX, canvasY) {
+    const current_scale = pixels_per_stop * Math.sqrt(2);
+    const viewport_centerX = VIEWPORT.left + VIEWPORT.width / 2;
+    const viewport_centerY = VIEWPORT.top + VIEWPORT.height / 2;
+    const rotAv = rotAv_center + (canvasX - viewport_centerX - panOffsetX) / current_scale;
+    const rotTv = rotTv_center - (canvasY - viewport_centerY - panOffsetY) / current_scale;
+    return [rotAv, rotTv];
+  }
+
+  // Inverse Step 2: Rotated coords -> Pre-rotation (Av, Tv)
+  function rotatedToPreRot(rotAv, rotTv) {
+    const inv_cos45 = Math.sqrt(2);  // 1 / cos45
+    return [
+      (rotAv + rotTv) / (2 * cos45),  // av
+      (rotTv - rotAv) / (2 * cos45)   // tv
+    ];
+  }
+
+  // Full inverse pipeline: canvas pixels -> photography data coords
+  function canvasToData(canvasX, canvasY) {
+    const [rotAv, rotTv] = canvasToRotated(canvasX, canvasY);
+    return rotatedToPreRot(rotAv, rotTv);
+  }
+
   // Compass is now in fixed screen coordinates, defined in VIEWPORT setup above
   // It stays in the same place regardless of pan/zoom
 
@@ -1200,91 +1228,114 @@
       return f;
     });
 
-    // Font settings
-    ctx.font = "bold 24px monospace";
-    ctx.textAlign = "center";
-    ctx.textBaseline = "middle";
+    // ============ APERTURE LABELS (along bottom edge) ============
+    // Position labels at fixed VIEWPORT.bottom, using canvasToData to find visible values
+    ctx.font = "bold 18px monospace";
+    ctx.fillStyle = COLORS.gridAperture;  // Green for aperture labels
 
-    // Draw ONLY aperture scale labels (single row) - use displayed Av
-    displayed_av.forEach((av_disp, i) => {
-      const tv = Tv_min - 0.8;
-      const [x, y] = dataToCanvas(av_disp, tv);
-      ctx.fillStyle = COLORS.gridAperture;  // Green for aperture labels
-      ctx.save();
-      ctx.translate(x, y);
-      ctx.rotate(Math.PI / 4);  // 45 degrees downward, readable
-      ctx.textAlign = "left";
-      ctx.textBaseline = "middle";
+    // Draw labels at regular intervals along the bottom edge
+    const label_spacing = 60;  // pixels apart
+    for (let px = VIEWPORT.left; px <= VIEWPORT.right; px += label_spacing) {
+      const [av_at_px, tv_at_px] = canvasToData(px, VIEWPORT.bottom);
 
-      let label;
-      if (aperture_label_mode === "fstop") {
-        // Format f-stops without decimals when they're whole numbers
-        const fstop = displayed_fstops[i];
-        if (fstop === Math.round(fstop)) {
-          label = `f/${Math.round(fstop)}`;
-        } else {
-          label = `f/${fstop.toFixed(1)}`;
+      // Find closest standard f-stop or Av value
+      let best_idx = -1;
+      let best_dist = Infinity;
+      displayed_av.forEach((av_val, idx) => {
+        const dist = Math.abs(av_val - av_at_px);
+        if (dist < best_dist) {
+          best_dist = dist;
+          best_idx = idx;
         }
-      } else {
-        label = `${Math.round(av_disp)}`;
-      }
-      ctx.fillText(label, 0, 0);
-      ctx.restore();
-    });
+      });
 
-    // Draw aperture axis label (45° rotated, readable)
-    ctx.font = "bold 24px monospace";
-    let aperture_label_text = aperture_label_mode === "fstop" ? "Aperture (f-stop)" : "Aperture Value (Av)";
-    if (adjustment_mode === "cropfactor") {
-      aperture_label_text += " [FF equiv]";
+      if (best_idx >= 0) {
+        ctx.save();
+        ctx.translate(px, VIEWPORT.bottom + 15);
+        ctx.rotate(Math.PI / 4);
+        ctx.textAlign = "left";
+        ctx.textBaseline = "middle";
+        ctx.fillStyle = COLORS.gridAperture;
+
+        let label;
+        if (aperture_label_mode === "fstop") {
+          const fstop = displayed_fstops[best_idx];
+          if (fstop === Math.round(fstop)) {
+            label = `f/${Math.round(fstop)}`;
+          } else {
+            label = `f/${fstop.toFixed(1)}`;
+          }
+        } else {
+          label = `${Math.round(displayed_av[best_idx])}`;
+        }
+        ctx.fillText(label, 0, 0);
+        ctx.restore();
+      }
     }
-    const av_center = (Av_min + Av_max) / 2;
-    const tv_label_pos = Tv_min - 3.5;
-    const [ax_label_x, ax_label_y] = dataToCanvas(av_center, tv_label_pos);
-    ctx.fillStyle = COLORS.gridAperture;  // Green
+
+    // Draw aperture axis label
+    ctx.font = "bold 20px monospace";
+    let aperture_label_text = aperture_label_mode === "fstop" ? "Aperture (f-stop)" : "Aperture (Av)";
+    if (adjustment_mode === "cropfactor") {
+      aperture_label_text += " [equiv]";
+    }
     ctx.save();
-    ctx.translate(ax_label_x, ax_label_y);
-    ctx.rotate(-Math.PI / 4);  // 45° rotation for readability
+    ctx.translate(VIEWPORT.left - 40, VIEWPORT.bottom + 35);
+    ctx.rotate(Math.PI / 4);
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
+    ctx.fillStyle = COLORS.gridAperture;
     ctx.fillText(aperture_label_text, 0, 0);
     ctx.restore();
 
-    // Draw shutter speed labels
-    ctx.font = "bold 18px monospace";
-    Tv_values.forEach((tv, i) => {
-      const av = Av_min - 0.6;
-      const [x, y] = dataToCanvas(av, tv);
-      ctx.fillStyle = COLORS.gridShutter;  // Cyan (reference)
-      ctx.save();
-      ctx.translate(x, y);
-      ctx.rotate(-Math.PI / 4);  // 45 degrees (top-right to bottom-left)
-      ctx.textAlign = "right";
-      ctx.textBaseline = "middle";
-
-      const t = SHUTTER_SPEEDS[i];
-      let label;
-      if (t >= 1) {
-        label = `${Math.round(t)}`;  // Whole number, no 's'
-      } else {
-        label = `1/${Math.round(1 / t)}`;  // No 's' suffix
-      }
-      ctx.fillText(label, 0, 0);
-      ctx.restore();
-    });
-
-    // Draw shutter speed axis label (45 degrees downward)
-    ctx.font = "bold 24px monospace";
-    const tv_center = (Tv_min + Tv_max) / 2;
-    const av_label_pos = Av_min - 2.5;
-    const [tv_label_x, tv_label_y] = dataToCanvas(av_label_pos, tv_center);
+    // ============ SHUTTER SPEED LABELS (along left edge) ============
+    ctx.font = "bold 16px monospace";
     ctx.fillStyle = COLORS.gridShutter;  // Cyan for shutter labels
+
+    // Draw labels at regular intervals along the left edge
+    for (let py = VIEWPORT.top; py <= VIEWPORT.bottom; py += label_spacing) {
+      const [av_at_py, tv_at_py] = canvasToData(VIEWPORT.left, py);
+
+      // Find closest standard shutter speed
+      let best_idx = -1;
+      let best_dist = Infinity;
+      Tv_values.forEach((tv_val, idx) => {
+        const dist = Math.abs(tv_val - tv_at_py);
+        if (dist < best_dist) {
+          best_dist = dist;
+          best_idx = idx;
+        }
+      });
+
+      if (best_idx >= 0) {
+        ctx.save();
+        ctx.translate(VIEWPORT.left - 15, py);
+        ctx.rotate(-Math.PI / 4);
+        ctx.textAlign = "right";
+        ctx.textBaseline = "middle";
+        ctx.fillStyle = COLORS.gridShutter;
+
+        const t = SHUTTER_SPEEDS[best_idx];
+        let label;
+        if (t >= 1) {
+          label = `${Math.round(t)}s`;
+        } else {
+          label = `1/${Math.round(1 / t)}`;
+        }
+        ctx.fillText(label, 0, 0);
+        ctx.restore();
+      }
+    }
+
+    // Draw shutter speed axis label
+    ctx.font = "bold 20px monospace";
     ctx.save();
-    ctx.translate(tv_label_x, tv_label_y);
-    ctx.rotate(Math.PI / 4);  // 45 degrees downward (readable diagonal)
+    ctx.translate(VIEWPORT.left - 50, VIEWPORT.top - 20);
+    ctx.rotate(-Math.PI / 4);
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
-    ctx.fillText("Shutter Speed (seconds)", 0, 0);
+    ctx.fillStyle = COLORS.gridShutter;
+    ctx.fillText("Shutter Speed", 0, 0);
     ctx.restore();
   }
 
