@@ -1248,10 +1248,9 @@
 
   function drawAxisLabels() {
     ctx.font = "bold 12px monospace";
-    ctx.fillStyle = COLORS.gridAperture;
 
     // ============ APERTURE LABELS (left vertical axis) ============
-    const displayed_av = getDisplayedAvValues();
+    // Get standard f-stop values (or Av values if in that mode)
     const displayed_fstops = F_STOPS.map((f, i) => {
       if (adjustment_mode === "cropfactor") {
         const crop = getCropFactor();
@@ -1260,32 +1259,28 @@
       return f;
     });
 
-    const label_spacing_v = 60;  // pixels apart on vertical axis
-    for (let y = VIEWPORT.top; y <= VIEWPORT.bottom; y += label_spacing_v) {
-      const [av_at_pos, tv_at_pos] = canvasToUnrotatedData(VIEWPORT.left, y);
+    const displayed_av = getDisplayedAvValues();
 
-      let best_idx = -1;
-      let best_dist = Infinity;
-      displayed_av.forEach((av_val, idx) => {
-        const dist = Math.abs(av_val - av_at_pos);
-        if (dist < best_dist) {
-          best_dist = dist;
-          best_idx = idx;
-        }
-      });
+    // Draw a label for each standard f-stop/Av value
+    for (let i = 0; i < F_STOPS.length; i++) {
+      const av_val = displayed_av[i];
+      const [x, y] = avTvToCanvasUnrotated(av_val, (Tv_min + Tv_max) / 2);  // Use center Tv
 
-      if (best_idx >= 0) {
+      // Only draw if within viewport bounds (with margin)
+      const margin = 30;
+      if (y >= VIEWPORT.top - margin && y <= VIEWPORT.bottom + margin) {
         let label;
         if (aperture_label_mode === "fstop") {
-          const fstop = displayed_fstops[best_idx];
+          const fstop = displayed_fstops[i];
           if (fstop === Math.round(fstop)) {
             label = `f/${Math.round(fstop)}`;
           } else {
             label = `f/${fstop.toFixed(1)}`;
           }
         } else {
-          label = `${Math.round(displayed_av[best_idx])}`;
+          label = `${Math.round(av_val)}`;
         }
+
         ctx.textAlign = "right";
         ctx.textBaseline = "middle";
         ctx.fillStyle = COLORS.gridAperture;
@@ -1294,29 +1289,22 @@
     }
 
     // ============ SHUTTER SPEED LABELS (bottom horizontal axis) ============
-    ctx.fillStyle = COLORS.gridShutter;
-    const label_spacing_h = 60;  // pixels apart on horizontal axis
-    for (let x = VIEWPORT.left; x <= VIEWPORT.right; x += label_spacing_h) {
-      const [av_at_pos, tv_at_pos] = canvasToUnrotatedData(x, VIEWPORT.bottom);
+    // Draw a label for each standard shutter speed value
+    for (let i = 0; i < SHUTTER_SPEEDS.length; i++) {
+      const tv_val = Tv_values[i];
+      const [x, y] = avTvToCanvasUnrotated((Av_min + Av_max) / 2, tv_val);  // Use center Av
 
-      let best_idx = -1;
-      let best_dist = Infinity;
-      Tv_values.forEach((tv_val, idx) => {
-        const dist = Math.abs(tv_val - tv_at_pos);
-        if (dist < best_dist) {
-          best_dist = dist;
-          best_idx = idx;
-        }
-      });
-
-      if (best_idx >= 0) {
-        const t = SHUTTER_SPEEDS[best_idx];
+      // Only draw if within viewport bounds (with margin)
+      const margin = 30;
+      if (x >= VIEWPORT.left - margin && x <= VIEWPORT.right + margin) {
+        const t = SHUTTER_SPEEDS[i];
         let label;
         if (t >= 1) {
           label = `${Math.round(t)}s`;
         } else {
           label = `1/${Math.round(1 / t)}`;
         }
+
         ctx.textAlign = "center";
         ctx.textBaseline = "top";
         ctx.fillStyle = COLORS.gridShutter;
