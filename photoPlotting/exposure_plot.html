@@ -1260,64 +1260,57 @@
     const center_tv = (tv_min_visible + tv_max_visible) / 2;
 
     // ============ APERTURE LABELS (left vertical axis) ============
-    // Draw labels for all f-stops that are currently visible
+    // Generate labels for all integer Av values in visible range
     const margin_y = 30;
-    for (let i = 0; i < F_STOPS.length; i++) {
-      const av_val = displayed_av[i];
+    for (let av = Math.ceil(av_min_visible); av <= Math.floor(av_max_visible); av++) {
+      const [x, y] = avTvToCanvasUnrotated(av, center_tv);
 
-      // Only draw if this Av value is visible
-      if (av_val >= av_min_visible - 0.5 && av_val <= av_max_visible + 0.5) {
-        const [x, y] = avTvToCanvasUnrotated(av_val, center_tv);
-
-        // Also check y is on screen
-        if (y >= VIEWPORT.top - margin_y && y <= VIEWPORT.bottom + margin_y) {
-          let label;
-          if (aperture_label_mode === "fstop") {
-            const fstop = displayed_fstops[i];
-            if (fstop === Math.round(fstop)) {
-              label = `f/${Math.round(fstop)}`;
-            } else {
-              label = `f/${fstop.toFixed(1)}`;
-            }
+      // Check y is on screen
+      if (y >= VIEWPORT.top - margin_y && y <= VIEWPORT.bottom + margin_y) {
+        let label;
+        if (aperture_label_mode === "fstop") {
+          // Convert Av to f-stop: Av = 2 * log2(f), so f = 2^(Av/2)
+          const fstop = Math.pow(2, av / 2);
+          if (fstop === Math.round(fstop)) {
+            label = `f/${Math.round(fstop)}`;
           } else {
-            label = `${Math.round(av_val)}`;
+            label = `f/${fstop.toFixed(1)}`;
           }
-
-          ctx.textAlign = "right";
-          ctx.textBaseline = "middle";
-          ctx.fillStyle = COLORS.gridAperture;
-          ctx.fillText(label, VIEWPORT.left - 8, y);
+        } else {
+          label = `${Math.round(av)}`;
         }
+
+        ctx.textAlign = "right";
+        ctx.textBaseline = "middle";
+        ctx.fillStyle = COLORS.gridAperture;
+        ctx.fillText(label, VIEWPORT.left - 8, y);
       }
     }
 
     // ============ SHUTTER SPEED LABELS (bottom horizontal axis) ============
-    // Draw labels for all shutter speeds that are currently visible
+    // Generate labels for all integer Tv values in visible range
     const center_av = (av_min_visible + av_max_visible) / 2;
     const margin_x = 30;
 
-    for (let i = 0; i < SHUTTER_SPEEDS.length; i++) {
-      const tv_val = Tv_values[i];
+    for (let tv = Math.ceil(tv_min_visible); tv <= Math.floor(tv_max_visible); tv++) {
+      const [x, y] = avTvToCanvasUnrotated(center_av, tv);
 
-      // Only draw if this Tv value is visible
-      if (tv_val >= tv_min_visible - 0.5 && tv_val <= tv_max_visible + 0.5) {
-        const [x, y] = avTvToCanvasUnrotated(center_av, tv_val);
-
-        // Also check x is on screen
-        if (x >= VIEWPORT.left - margin_x && x <= VIEWPORT.right + margin_x) {
-          const t = SHUTTER_SPEEDS[i];
-          let label;
-          if (t >= 1) {
-            label = `${Math.round(t)}s`;
-          } else {
-            label = `1/${Math.round(1 / t)}`;
-          }
-
-          ctx.textAlign = "center";
-          ctx.textBaseline = "top";
-          ctx.fillStyle = COLORS.gridShutter;
-          ctx.fillText(label, x, VIEWPORT.bottom + 8);
+      // Check x is on screen
+      if (x >= VIEWPORT.left - margin_x && x <= VIEWPORT.right + margin_x) {
+        // Convert Tv to shutter speed: Tv = log2(1/seconds) = -log2(seconds)
+        // So: seconds = 2^(-Tv)
+        const seconds = Math.pow(2, -tv);
+        let label;
+        if (seconds >= 1) {
+          label = `${Math.round(seconds)}s`;
+        } else {
+          label = `1/${Math.round(1 / seconds)}`;
         }
+
+        ctx.textAlign = "center";
+        ctx.textBaseline = "top";
+        ctx.fillStyle = COLORS.gridShutter;
+        ctx.fillText(label, x, VIEWPORT.bottom + 8);
       }
     }
   }
