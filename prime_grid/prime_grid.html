@@ -136,10 +136,19 @@
             border: 1px solid #ddd;
             box-sizing: border-box;
         }
+        footer {
+            padding: 10px 20px;
+            background-color: #ddd;
+            font-size: 11px;
+            color: #666;
+            border-top: 1px solid #999;
+        }
     </style>
 </head>
 <body>
     <div class="topbar">
+        <button id="recenterBtn" class="button">Recenter</button>
+        <button id="resetBtn" class="button">Reset</button>
         <div class="control-section">
             <label for="rows">Rows on screen:</label>
             <input type="range" id="rows" min="1" max="200" value="30" step="1">
@@ -231,8 +240,7 @@
                 <label for="prime-circular" title="Circular primes: Primes where every rotation of digits gives another prime (e.g., 13, 197, 199)"><span class="color-swatch" style="background-color: rgba(102,51,153,1);"></span>Circular</label>
             </div>
         </fieldset>
-        <button id="recenterBtn" class="button">Recenter</button>
-        <button id="resetBtn" class="button">Reset</button>
+
     </div>
     <div class="main">
         <div class="coordinates" id="coordinates">Hover over cells or scroll to zoom</div>
@@ -981,5 +989,8 @@
         renderVisibleCells();
         // Animation loop starts only when special primes are checked
     </script>
+    <footer>
+        © 2026 Daniel D Gibson
+    </footer>
 </body>
 </html>
