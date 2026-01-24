@@ -385,7 +385,7 @@
   <div id="mainContent">
 
     <div id="plotWrapper" style="display: flex; justify-content: center; padding: 10px 0;">
-      <canvas id="plot" width="1600" height="1200" style="max-width: 98vw; height: auto;"></canvas>
+      <canvas id="plot" width="1600" height="1600" style="max-width: 98vw; height: auto;"></canvas>
     </div>
 
     <div id="formulaDisplay" style="margin-top: 15px; font-size: 16px; color: var(--color-text-normal); line-height: 1.8; padding: 16px; background: linear-gradient(135deg, var(--color-bg-dark) 0%, var(--color-bg-panel-light) 100%); border: 2px solid #00aa88; border-radius: var(--border-radius); width: 100%; max-width: 1200px; box-sizing: border-box; box-shadow: 0 0 12px rgba(0, 170, 136, 0.15), inset 0 1px 0 rgba(0, 255, 136, 0.1);">
@@ -452,7 +452,7 @@
 
   // ============ STATE VARIABLES ============
   // These control what the chart displays and how it renders. Modify these to change behavior.
-  let pixels_per_stop = 45;  // Scaling: pixels per stop in rotated coords (1 stop ≈ 38px at 96 DPI)
+  const pixels_per_stop = 35;  // Fixed zoom level for static plot (pixels per stop)
   let aperture_label_mode = "fstop";  // "fstop" or "av" - what labels show on aperture axis
   let contour_label_mode = "ev";  // "ev", "iso", or "both" - what contour lines represent
   let adjustment_mode = "actual";  // "actual" or "cropfactor" - applies crop factor to Av and ISO calcs
@@ -486,12 +486,9 @@
   // Mouse drag logic. Tracks where user is dragging from and applies offset to rendered content.
   // Static plot: pan offsets are fixed (no user panning/zooming)
   const panOffsetX = 0;
-  const panOffsetY = -450;  // Default: show bottom/center
+  const panOffsetY = -200;  // Centered display for full plot visibility
 
-  // ============ TOUCH STATE ============
-  // Two-finger pinch zoom and single-finger drag on mobile
-  let touchStartDistance = 0;  // Distance between two touch points at start of pinch
-  let touchStartZoom = pixels_per_stop;  // Zoom level when pinch started
+  // Static plot: no touch interaction
 
   // Get crop factor for current sensor
   function getCropFactor() {
@@ -1596,17 +1593,7 @@
     console.error("Render error on load:", err);
   }
 
-  // ============ ZOOM SLIDER ============
-  // Slider: 20-80 pixels per stop. Updates render in real-time.
-  zoomSlider.addEventListener("input", (e) => {
-    pixels_per_stop = parseInt(e.target.value);
-    zoomValue.textContent = `1 stop = ${pixels_per_stop} px`;
-    try {
-      render();
-    } catch (err) {
-      console.error("Render error during zoom:", err);
-    }
-  });
+  // Static plot: zoom is fixed, no slider interaction
 
   // Static plot: no mouse wheel zoom
 
