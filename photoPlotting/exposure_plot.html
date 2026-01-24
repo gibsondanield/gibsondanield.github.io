@@ -298,9 +298,9 @@
         </label>
       </div>
 
-      <!-- Camera Sensor Type -->
+      <!-- Camera Sensor Equivalence -->
       <div class="control-group">
-        <div class="control-group-label">Camera Sensor</div>
+        <div class="control-group-label">Camera Sensor Equivalence</div>
         <label class="control-item">
           <input type="radio" id="sensorMy_MF" name="cameraSensor" value="0.79" style="cursor: pointer;">
           MF (0.79)
@@ -364,13 +364,6 @@
           <input type="checkbox" id="evGradientBg" style="cursor: pointer;">
           EV Gradient Background
         </label>
-      </div>
-
-      <!-- Zoom -->
-      <div class="control-group">
-        <div class="control-group-label">Zoom</div>
-        <input type="range" id="zoomSlider" min="20" max="80" value="45" step="5" style="width: 100%; cursor: pointer;">
-        <span id="zoomValue" style="color: #aaa; font-size: 13px;">1 stop = 45 px</span>
       </div>
 
       <!-- Dynamic Slider -->
@@ -522,8 +515,8 @@
   // ============ COMPASS INDICATOR ============
   // Fixed position in lower left of viewport
   const COMPASS = {
-    x: VIEWPORT.left + 80,   // Left side of viewport
-    y: VIEWPORT.bottom - 80, // Near bottom
+    x: VIEWPORT.right - 80,  // Right side of viewport
+    y: VIEWPORT.top + 80,    // Upper area
     radius: 50,
     arrowLength: 35,
     fontSize: "12px",
@@ -693,10 +686,7 @@
     ctx.fillStyle = "#0a0f1a";
     ctx.fillRect(0, 0, W, H);
 
-    // Draw viewport borders (light outline)
-    ctx.strokeStyle = "rgba(0, 204, 68, 0.3)";
-    ctx.lineWidth = 1;
-    ctx.strokeRect(VIEWPORT.left, VIEWPORT.top, VIEWPORT.width, VIEWPORT.height);
+    // Static plot: no viewport border
   }
 
   // Draw fixed axes at viewport edges (rotated 45 degrees)
