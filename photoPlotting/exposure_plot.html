@@ -319,19 +319,6 @@
         </label>
       </div>
 
-      <!-- Adjustment Mode -->
-      <div class="control-group">
-        <div class="control-group-label">Adjustment Mode</div>
-        <label class="control-item">
-          <input type="radio" id="adjustmentActual" name="adjustmentMode" value="actual" checked style="cursor: pointer;">
-          Actual
-        </label>
-        <label class="control-item">
-          <input type="radio" id="adjustmentCropFactor" name="adjustmentMode" value="cropfactor" style="cursor: pointer;">
-          After Crop Factor
-        </label>
-      </div>
-
       <!-- Reference Points -->
       <div class="control-group">
         <div class="control-group-label">Reference Points</div>
@@ -400,8 +387,6 @@
   const labelEV = document.getElementById("labelEV");
   const labelISO = document.getElementById("labelISO");
   const labelBoth = document.getElementById("labelBoth");
-  const adjustmentActual = document.getElementById("adjustmentActual");
-  const adjustmentCropFactor = document.getElementById("adjustmentCropFactor");
   const sensorMy_MF = document.getElementById("sensorMy_MF");
   const sensorMy_FF = document.getElementById("sensorMy_FF");
   const sensorMy_APS = document.getElementById("sensorMy_APS");
@@ -1650,26 +1635,7 @@
   });
 
   // ============ ADJUSTMENT MODE (Actual vs After Crop Factor) ============
-  // Toggle between native sensor values and full-frame equivalent values
-  adjustmentActual.addEventListener("change", () => {
-    adjustment_mode = "actual";  // Show native values (no equivalizing)
-    updateFormula();
-    try {
-      render();
-    } catch (err) {
-      console.error("Render error during adjustment mode change:", err);
-    }
-  });
-
-  adjustmentCropFactor.addEventListener("change", () => {
-    adjustment_mode = "cropfactor";  // Show full-frame equivalent (apply crop factor)
-    updateFormula();
-    try {
-      render();
-    } catch (err) {
-      console.error("Render error during adjustment mode change:", err);
-    }
-  });
+  // Crop factor is always applied - no adjustment mode toggle
 
   // ============ CAMERA SENSOR SELECTION ============
   // Set the crop factor for the selected sensor. Affects aperture/ISO equivalents.
