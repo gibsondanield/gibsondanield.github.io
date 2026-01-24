@@ -430,8 +430,8 @@
   // ============ RENDERING CONSTANTS ============
   // All visual parameters as constants for easy tweaking
   const COLORS = {
-    gridAperture: "#00aaff",
-    gridShutter: "#00cc44",
+    gridAperture: "#00cc44",
+    gridShutter: "#00aaff",
     contourEv: "#ff00ff",
     labelEv: "#ffff00",
     labelEvAlt: "#ffcc00",
@@ -484,11 +484,9 @@
 
   // ============ PANNING STATE ============
   // Mouse drag logic. Tracks where user is dragging from and applies offset to rendered content.
-  let isPanning = false;
-  let panStartX = 0;
-  let panStartY = 0;
-  let panOffsetX = 0;
-  let panOffsetY = -450;  // Default: show bottom/center. Positive = pan down, negative = pan up
+  // Static plot: pan offsets are fixed (no user panning/zooming)
+  const panOffsetX = 0;
+  const panOffsetY = -450;  // Default: show bottom/center
 
   // ============ TOUCH STATE ============
   // Two-finger pinch zoom and single-finger drag on mobile
@@ -688,61 +686,6 @@
     return rotatedToCanvas(rotAv, rotTv);
   }
 
-  // Direct mapping without rotation (for EV contours which should be at 45°)
-  // Maps: Tv → x (horizontal), Av → y (vertical, inverted for canvas coords)
-  function avTvToCanvasUnrotated(av, tv) {
-    const center_av = (Av_min + Av_max) / 2;
-    const center_tv = (Tv_min + Tv_max) / 2;
-    const current_scale = pixels_per_stop * Math.sqrt(2);
-    const viewport_centerX = VIEWPORT.left + VIEWPORT.width / 2;
-    const viewport_centerY = VIEWPORT.top + VIEWPORT.height / 2;
-
-    const x = viewport_centerX + (tv - center_tv) * current_scale + panOffsetX;      // Tv → x
-    const y = viewport_centerY - (av - center_av) * current_scale + panOffsetY;      // Av → y (inverted)
-    return [x, y];
-  }
-
-  // Inverse of unrotated mapping (for axis labels)
-  function canvasToUnrotatedData(x, y) {
-    const center_av = (Av_min + Av_max) / 2;
-    const center_tv = (Tv_min + Tv_max) / 2;
-    const current_scale = pixels_per_stop * Math.sqrt(2);
-    const viewport_centerX = VIEWPORT.left + VIEWPORT.width / 2;
-    const viewport_centerY = VIEWPORT.top + VIEWPORT.height / 2;
-
-    const tv = center_tv + (x - viewport_centerX - panOffsetX) / current_scale;      // x → Tv
-    const av = center_av - (y - viewport_centerY - panOffsetY) / current_scale;      // y → Av
-    return [av, tv];
-  }
-
-  // ============ INVERSE TRANSFORMATION PIPELINE ============
-  // Go backwards from canvas pixels to data coordinates (for fixed axis labels)
-
-  // Inverse Step 3: Canvas pixels -> Rotated data coords
-  function canvasToRotated(canvasX, canvasY) {
-    const current_scale = pixels_per_stop * Math.sqrt(2);
-    const viewport_centerX = VIEWPORT.left + VIEWPORT.width / 2;
-    const viewport_centerY = VIEWPORT.top + VIEWPORT.height / 2;
-    const rotAv = rotAv_center + (canvasX - viewport_centerX - panOffsetX) / current_scale;
-    const rotTv = rotTv_center - (canvasY - viewport_centerY - panOffsetY) / current_scale;
-    return [rotAv, rotTv];
-  }
-
-  // Inverse Step 2: Rotated coords -> Pre-rotation (Av, Tv)
-  function rotatedToPreRot(rotAv, rotTv) {
-    const inv_cos45 = Math.sqrt(2);  // 1 / cos45
-    return [
-      (rotAv + rotTv) / (2 * cos45),  // av
-      (rotTv - rotAv) / (2 * cos45)   // tv
-    ];
-  }
-
-  // Full inverse pipeline: canvas pixels -> photography data coords
-  function canvasToData(canvasX, canvasY) {
-    const [rotAv, rotTv] = canvasToRotated(canvasX, canvasY);
-    return rotatedToPreRot(rotAv, rotTv);
-  }
-
   // Compass is now in fixed screen coordinates, defined in VIEWPORT setup above
   // It stays in the same place regardless of pan/zoom
 
@@ -911,38 +854,47 @@
   }
 
   // Draw the reference grid: aperture lines (green) and shutter speed lines (cyan).
-  // Gridlines span the entire viewport, generated based on visible data range.
+  // After rotation, these lines are curved (rotated curves), but they show the base Av/Tv coordinates.
   function drawGrid() {
-    // Find visible Av/Tv range by converting viewport corners to data coords
-    const [av_top, tv_top] = canvasToUnrotatedData(VIEWPORT.left, VIEWPORT.top);
-    const [av_bottom, tv_bottom] = canvasToUnrotatedData(VIEWPORT.right, VIEWPORT.bottom);
-
-    const av_min_visible = Math.min(av_top, av_bottom);
-    const av_max_visible = Math.max(av_top, av_bottom);
-    const tv_min_visible = Math.min(tv_top, tv_bottom);
-    const tv_max_visible = Math.max(tv_top, tv_bottom);
-
     ctx.lineWidth = LINE_WIDTHS.grid;
     ctx.globalAlpha = 0.8;
 
-    // Aperture grid: Av = constant (horizontal lines spanning viewport)
+    // Aperture grid: Av = constant (1-stop increments)
+    // Green = safe/approachable. After rotation, these become diagonal curves.
     ctx.strokeStyle = COLORS.gridAperture;
-    for (let av = Math.ceil(av_min_visible); av <= Math.floor(av_max_visible); av++) {
-      const [x, y] = avTvToCanvasUnrotated(av, (tv_min_visible + tv_max_visible) / 2);
-      ctx.beginPath();
-      ctx.moveTo(VIEWPORT.left, y);
-      ctx.lineTo(VIEWPORT.right, y);
-      ctx.stroke();
+    for (let av = Math.ceil(Av_min); av <= Math.floor(Av_max); av++) {
+      const points = [];
+      for (let tv = Tv_min; tv <= Tv_max; tv += 0.1) {
+        points.push(dataToCanvas(av, tv));
+      }
+
+      if (points.length > 1) {
+        ctx.beginPath();
+        ctx.moveTo(points[0][0], points[0][1]);
+        for (let i = 1; i < points.length; i++) {
+          ctx.lineTo(points[i][0], points[i][1]);
+        }
+        ctx.stroke();
+      }
     }
 
-    // Shutter speed grid: Tv = constant (vertical lines spanning viewport)
+    // Shutter speed grid: Tv = constant (1-stop increments)
+    // Cyan = reference/info. These also curve after rotation.
     ctx.strokeStyle = COLORS.gridShutter;
-    for (let tv = Math.ceil(tv_min_visible); tv <= Math.floor(tv_max_visible); tv++) {
-      const [x, y] = avTvToCanvasUnrotated((av_min_visible + av_max_visible) / 2, tv);
-      ctx.beginPath();
-      ctx.moveTo(x, VIEWPORT.top);
-      ctx.lineTo(x, VIEWPORT.bottom);
-      ctx.stroke();
+    for (let tv = Math.ceil(Tv_min); tv <= Math.floor(Tv_max); tv++) {
+      const points = [];
+      for (let av = Av_min; av <= Av_max; av += 0.1) {
+        points.push(dataToCanvas(av, tv));
+      }
+
+      if (points.length > 1) {
+        ctx.beginPath();
+        ctx.moveTo(points[0][0], points[0][1]);
+        for (let i = 1; i < points.length; i++) {
+          ctx.lineTo(points[i][0], points[i][1]);
+        }
+        ctx.stroke();
+      }
     }
 
     ctx.globalAlpha = 1.0;
@@ -1004,14 +956,13 @@
         const [av1, tv1] = points[0];
         const [av2, tv2] = points[1];
 
-        const [x1, y1] = avTvToCanvasUnrotated(av1, tv1);
-        const [x2, y2] = avTvToCanvasUnrotated(av2, tv2);
-
         // Magenta = primary exposure reference (fighter jet HUD vibes 🎯)
-        // At 45° angle since Av + Tv = constant has slope -1
         ctx.strokeStyle = COLORS.contourEv;
         ctx.lineWidth = LINE_WIDTHS.contour;
         ctx.globalAlpha = 0.8;
+
+        const [x1, y1] = dataToCanvas(av1, tv1);
+        const [x2, y2] = dataToCanvas(av2, tv2);
 
         ctx.beginPath();
         ctx.moveTo(x1, y1);
@@ -1074,7 +1025,7 @@
       // Only render if we found a reasonably close intersection
       if (label_point && best_distance < 0.15) {
         const [av_label, tv_label] = label_point;
-        const [x, y] = avTvToCanvasUnrotated(av_label, tv_label);
+        const [x, y] = dataToCanvas(av_label, tv_label);
 
         // Keep labels on canvas (with generous bounds)
         const margin = 100;
@@ -1237,97 +1188,129 @@
   }
 
   function drawAxisLabels() {
-    ctx.font = "bold 12px monospace";
-
-    // Find visible Av/Tv range
-    const [av_top, tv_top] = canvasToUnrotatedData(VIEWPORT.left, VIEWPORT.top);
-    const [av_bottom, tv_bottom] = canvasToUnrotatedData(VIEWPORT.right, VIEWPORT.bottom);
-
-    const av_min_visible = Math.min(av_top, av_bottom);
-    const av_max_visible = Math.max(av_top, av_bottom);
-    const tv_min_visible = Math.min(tv_top, tv_bottom);
-    const tv_max_visible = Math.max(tv_top, tv_bottom);
-
+    // Get displayed aperture values (may be equivalized to full frame)
+    const displayed_av = getDisplayedAvValues();
     const displayed_fstops = F_STOPS.map((f, i) => {
       if (adjustment_mode === "cropfactor") {
         const crop = getCropFactor();
-        return f / crop;
+        return f / crop;  // Equivalent f-stop
       }
       return f;
     });
 
-    const displayed_av = getDisplayedAvValues();
-    const center_tv = (tv_min_visible + tv_max_visible) / 2;
+    // Font settings
+    ctx.font = "bold 24px monospace";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
 
-    // ============ APERTURE LABELS (left vertical axis) ============
-    // Generate labels for all integer Av values in visible range
-    const margin_y = 30;
-    for (let av = Math.ceil(av_min_visible); av <= Math.floor(av_max_visible); av++) {
-      const [x, y] = avTvToCanvasUnrotated(av, center_tv);
+    // Draw ONLY aperture scale labels (single row) - use displayed Av
+    displayed_av.forEach((av_disp, i) => {
+      const tv = Tv_min - 0.8;
+      const [x, y] = dataToCanvas(av_disp, tv);
+      ctx.fillStyle = COLORS.gridAperture;  // Green for aperture labels
+      ctx.save();
+      ctx.translate(x, y);
+      ctx.rotate(Math.PI / 4);  // 45 degrees downward, readable
+      ctx.textAlign = "left";
+      ctx.textBaseline = "middle";
 
-      // Check y is on screen
-      if (y >= VIEWPORT.top - margin_y && y <= VIEWPORT.bottom + margin_y) {
-        let label;
-        if (aperture_label_mode === "fstop") {
-          // Convert Av to f-stop: Av = 2 * log2(f), so f = 2^(Av/2)
-          const fstop = Math.pow(2, av / 2);
-          if (fstop === Math.round(fstop)) {
-            label = `f/${Math.round(fstop)}`;
-          } else {
-            label = `f/${fstop.toFixed(1)}`;
-          }
+      let label;
+      if (aperture_label_mode === "fstop") {
+        // Format f-stops without decimals when they're whole numbers
+        const fstop = displayed_fstops[i];
+        if (fstop === Math.round(fstop)) {
+          label = `f/${Math.round(fstop)}`;
         } else {
-          label = `${Math.round(av)}`;
+          label = `f/${fstop.toFixed(1)}`;
         }
-
-        ctx.textAlign = "right";
-        ctx.textBaseline = "middle";
-        ctx.fillStyle = COLORS.gridAperture;
-        ctx.fillText(label, VIEWPORT.left - 8, y);
+      } else {
+        label = `${Math.round(av_disp)}`;
       }
+      ctx.fillText(label, 0, 0);
+      ctx.restore();
+    });
+
+    // Draw aperture axis label (45° rotated, readable)
+    ctx.font = "bold 24px monospace";
+    let aperture_label_text = aperture_label_mode === "fstop" ? "Aperture (f-stop)" : "Aperture Value (Av)";
+    if (adjustment_mode === "cropfactor") {
+      aperture_label_text += " [FF equiv]";
     }
+    const av_center = (Av_min + Av_max) / 2;
+    const tv_label_pos = Tv_min - 3.5;
+    const [ax_label_x, ax_label_y] = dataToCanvas(av_center, tv_label_pos);
+    ctx.fillStyle = COLORS.gridAperture;  // Green
+    ctx.save();
+    ctx.translate(ax_label_x, ax_label_y);
+    ctx.rotate(-Math.PI / 4);  // 45° rotation for readability
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillText(aperture_label_text, 0, 0);
+    ctx.restore();
 
-    // ============ SHUTTER SPEED LABELS (bottom horizontal axis) ============
-    // Generate labels for all integer Tv values in visible range
-    const center_av = (av_min_visible + av_max_visible) / 2;
-    const margin_x = 30;
+    // Draw shutter speed labels
+    ctx.font = "bold 18px monospace";
+    Tv_values.forEach((tv, i) => {
+      const av = Av_min - 0.6;
+      const [x, y] = dataToCanvas(av, tv);
+      ctx.fillStyle = COLORS.gridShutter;  // Cyan (reference)
+      ctx.save();
+      ctx.translate(x, y);
+      ctx.rotate(-Math.PI / 4);  // 45 degrees (top-right to bottom-left)
+      ctx.textAlign = "right";
+      ctx.textBaseline = "middle";
 
-    for (let tv = Math.ceil(tv_min_visible); tv <= Math.floor(tv_max_visible); tv++) {
-      const [x, y] = avTvToCanvasUnrotated(center_av, tv);
-
-      // Check x is on screen
-      if (x >= VIEWPORT.left - margin_x && x <= VIEWPORT.right + margin_x) {
-        // Convert Tv to shutter speed: Tv = log2(1/seconds) = -log2(seconds)
-        // So: seconds = 2^(-Tv)
-        const seconds = Math.pow(2, -tv);
-        let label;
-        if (seconds >= 1) {
-          label = `${Math.round(seconds)}s`;
-        } else {
-          label = `1/${Math.round(1 / seconds)}`;
-        }
-
-        ctx.textAlign = "center";
-        ctx.textBaseline = "top";
-        ctx.fillStyle = COLORS.gridShutter;
-        ctx.fillText(label, x, VIEWPORT.bottom + 8);
+      const t = SHUTTER_SPEEDS[i];
+      let label;
+      if (t >= 1) {
+        label = `${Math.round(t)}`;  // Whole number, no 's'
+      } else {
+        label = `1/${Math.round(1 / t)}`;  // No 's' suffix
       }
-    }
+      ctx.fillText(label, 0, 0);
+      ctx.restore();
+    });
+
+    // Draw shutter speed axis label (45 degrees downward)
+    ctx.font = "bold 24px monospace";
+    const tv_center = (Tv_min + Tv_max) / 2;
+    const av_label_pos = Av_min - 2.5;
+    const [tv_label_x, tv_label_y] = dataToCanvas(av_label_pos, tv_center);
+    ctx.fillStyle = COLORS.gridShutter;  // Cyan for shutter labels
+    ctx.save();
+    ctx.translate(tv_label_x, tv_label_y);
+    ctx.rotate(Math.PI / 4);  // 45 degrees downward (readable diagonal)
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillText("Shutter Speed (seconds)", 0, 0);
+    ctx.restore();
   }
 
   function drawAxisLines() {
-    // Vertical axis (aperture) - left side
-    ctx.strokeStyle = COLORS.gridAperture;
+    ctx.strokeStyle = COLORS.gridAperture;  // Use green for axis lines
     ctx.lineWidth = LINE_WIDTHS.axis;
+
+    // Left edge (fixed at VIEWPORT.left)
     ctx.beginPath();
     ctx.moveTo(VIEWPORT.left, VIEWPORT.top);
     ctx.lineTo(VIEWPORT.left, VIEWPORT.bottom);
     ctx.stroke();
 
-    // Horizontal axis (shutter speed) - bottom
-    ctx.strokeStyle = COLORS.gridShutter;
+    // Bottom edge (fixed at VIEWPORT.bottom)
     ctx.beginPath();
     ctx.moveTo(VIEWPORT.left, VIEWPORT.bottom);
+    ctx.lineTo(VIEWPORT.right, VIEWPORT.bottom);
+    ctx.stroke();
+
+    // Top edge (for visual framing)
+    ctx.beginPath();
+    ctx.moveTo(VIEWPORT.left, VIEWPORT.top);
+    ctx.lineTo(VIEWPORT.right, VIEWPORT.top);
+    ctx.stroke();
+
+    // Right edge (for visual framing)
+    ctx.beginPath();
+    ctx.moveTo(VIEWPORT.right, VIEWPORT.top);
     ctx.lineTo(VIEWPORT.right, VIEWPORT.bottom);
     ctx.stroke();
   }
@@ -1625,135 +1608,11 @@
     }
   });
 
-  // ============ MOUSE WHEEL ZOOM ============
-  // Scroll up = zoom in (smaller scale = more pixels per stop)
-  // Scroll down = zoom out (larger scale = fewer pixels per stop)
-  canvas.addEventListener("wheel", (e) => {
-    e.preventDefault();
+  // Static plot: no mouse wheel zoom
 
-    const zoomStep = 5;
-    const delta = e.deltaY > 0 ? -zoomStep : zoomStep;  // deltaY positive = scroll down
-    const new_zoom = Math.max(20, Math.min(80, pixels_per_stop + delta));
+  // Static plot: no mouse drag panning
 
-    if (new_zoom !== pixels_per_stop) {
-      pixels_per_stop = new_zoom;
-      zoomValue.textContent = `1 stop = ${pixels_per_stop} px`;
-      zoomSlider.value = pixels_per_stop;
-      try {
-        render();
-      } catch (err) {
-        console.error("Render error during mouse wheel zoom:", err);
-      }
-    }
-  }, { passive: false });
-
-  // ============ CANVAS PANNING (MOUSE DRAG) ============
-  // Click-drag to pan around the chart. Tracks pan offset as you drag.
-  canvas.addEventListener("mousedown", (e) => {
-    isPanning = true;
-    panStartX = e.offsetX;
-    panStartY = e.offsetY;
-  });
-
-  canvas.addEventListener("mousemove", (e) => {
-    if (isPanning) {
-      const dx = e.offsetX - panStartX;
-      const dy = e.offsetY - panStartY;
-      panOffsetX += dx;
-      panOffsetY += dy;
-      panStartX = e.offsetX;
-      panStartY = e.offsetY;
-      try {
-        render();
-      } catch (err) {
-        console.error("Render error during pan:", err);
-      }
-    }
-  });
-
-  canvas.addEventListener("mouseup", () => {
-    isPanning = false;
-  });
-
-  canvas.addEventListener("mouseleave", () => {
-    isPanning = false;  // Stop panning if mouse leaves canvas
-  });
-
-  // ============ MOBILE TOUCH SUPPORT ============
-  // Single-finger drag to pan, two-finger pinch to zoom
-  canvas.addEventListener("touchstart", (e) => {
-    if (e.touches.length === 1) {
-      // Single finger drag - same as mouse drag
-      const touch = e.touches[0];
-      isPanning = true;
-      panStartX = touch.clientX - canvas.getBoundingClientRect().left;
-      panStartY = touch.clientY - canvas.getBoundingClientRect().top;
-    } else if (e.touches.length === 2) {
-      // Two finger pinch setup
-      isPanning = false;
-      const dx = e.touches[0].clientX - e.touches[1].clientX;
-      const dy = e.touches[0].clientY - e.touches[1].clientY;
-      touchStartDistance = Math.sqrt(dx * dx + dy * dy);
-      touchStartZoom = pixels_per_stop;
-    }
-    e.preventDefault();
-  });
-
-  canvas.addEventListener("touchmove", (e) => {
-    if (e.touches.length === 1 && isPanning) {
-      // Single finger drag - pan the chart
-      const touch = e.touches[0];
-      const rect = canvas.getBoundingClientRect();
-      const touchX = touch.clientX - rect.left;
-      const touchY = touch.clientY - rect.top;
-      const dx = touchX - panStartX;
-      const dy = touchY - panStartY;
-      panOffsetX += dx;
-      panOffsetY += dy;
-      panStartX = touchX;
-      panStartY = touchY;
-      try {
-        render();
-      } catch (err) {
-        console.error("Render error during touch pan:", err);
-      }
-    } else if (e.touches.length === 2) {
-      // Two finger pinch zoom
-      const dx = e.touches[0].clientX - e.touches[1].clientX;
-      const dy = e.touches[0].clientY - e.touches[1].clientY;
-      const currentDistance = Math.sqrt(dx * dx + dy * dy);
-      const zoomRatio = currentDistance / touchStartDistance;
-      const newZoom = Math.max(20, Math.min(80, touchStartZoom * zoomRatio));
-
-      if (Math.abs(newZoom - pixels_per_stop) > 1) {
-        pixels_per_stop = Math.round(newZoom);
-        zoomValue.textContent = `1 stop = ${pixels_per_stop} px`;
-        zoomSlider.value = pixels_per_stop;
-        try {
-          render();
-        } catch (err) {
-          console.error("Render error during pinch zoom:", err);
-        }
-      }
-    }
-    e.preventDefault();
-  });
-
-  canvas.addEventListener("touchend", (e) => {
-    if (e.touches.length === 0) {
-      isPanning = false;
-      touchStartDistance = 0;
-    } else if (e.touches.length === 1) {
-      // One finger lifted during pinch, reset to drag mode
-      const touch = e.touches[0];
-      const rect = canvas.getBoundingClientRect();
-      isPanning = true;
-      panStartX = touch.clientX - rect.left;
-      panStartY = touch.clientY - rect.top;
-      touchStartDistance = 0;
-    }
-    e.preventDefault();
-  });
+  // Static plot: no touch panning or pinch zoom
 
   // ============ APERTURE LABEL MODE ============
   // Toggle between showing aperture as f-stops or as Av (numerical aperture values)
