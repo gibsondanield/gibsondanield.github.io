@@ -395,8 +395,6 @@
   // but it works and future-you will understand exactly what each one is. Ship it.
   const canvas = document.getElementById("plot");
   const ctx = canvas.getContext("2d");
-  const zoomSlider = document.getElementById("zoomSlider");
-  const zoomValue = document.getElementById("zoomValue");
   const labelFStop = document.getElementById("labelFStop");
   const labelAv = document.getElementById("labelAv");
   const labelEV = document.getElementById("labelEV");
@@ -1909,7 +1907,6 @@
   // Initialize
   updateDynamicSlider();
   updateFormula();
-  zoomValue.textContent = `1 stop = ${pixels_per_stop} px`;
 </script>
 
 <footer>
