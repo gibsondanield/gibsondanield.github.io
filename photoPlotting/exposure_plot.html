@@ -895,8 +895,8 @@
       ev_offset = scene_ev_slider - 15;  // 15 is reference (Sunny 16)
     }
 
-    // ND filter reduces light, requiring brighter exposure
-    ev_offset += nd_filter_stops;
+    // ND filter blocks light, scene appears darker
+    ev_offset -= nd_filter_stops;
 
     // Draw contours from EV -5 to 20 (standard range for photography)
     for (let ev = EV_MIN; ev <= 20; ev++) {
@@ -970,8 +970,8 @@
       ev_offset = scene_ev_slider - 15;
     }
 
-    // ND filter reduces light, requiring brighter exposure
-    ev_offset += nd_filter_stops;
+    // ND filter blocks light, scene appears darker
+    ev_offset -= nd_filter_stops;
 
     // Reference diagonal line: from f/1 @ 30s (bottom-left) to f/64 @ 1/8000s (top-right)
     // We'll place labels along the contours where they cross this diagonal.
@@ -1448,8 +1448,8 @@
       ev_offset = scene_ev_slider - 15;
     }
 
-    // ND filter reduces light, requiring brighter exposure
-    ev_offset += nd_filter_stops;
+    // ND filter blocks light, scene appears darker
+    ev_offset -= nd_filter_stops;
 
     // EV-mapped gradient bar on the right side
     const margin = 20;
