@@ -359,6 +359,13 @@
         <input type="range" id="dynamicSlider" min="1" max="100" value="50" style="width: 100%; cursor: pointer;">
         <span id="dynamicValue" style="color: #aaa; font-size: 13px;">100</span>
       </div>
+
+      <!-- ND Filter -->
+      <div class="control-group">
+        <div class="control-group-label">ND Filter</div>
+        <input type="range" id="ndFilterSlider" min="0" max="10" value="0" step="1" style="width: 100%; cursor: pointer;">
+        <span id="ndFilterValue" style="color: #aaa; font-size: 13px;">None</span>
+      </div>
     </div>
   </div>
 
@@ -394,6 +401,8 @@
   const dynamicSlider = document.getElementById("dynamicSlider");
   const dynamicLabel = document.getElementById("dynamicLabel");
   const dynamicValue = document.getElementById("dynamicValue");
+  const ndFilterSlider = document.getElementById("ndFilterSlider");
+  const ndFilterValue = document.getElementById("ndFilterValue");
   const formula1 = document.getElementById("formula1");
   const formula2 = document.getElementById("formula2");
   const refPointSunny16 = document.getElementById("refPointSunny16");
@@ -435,6 +444,7 @@
   let crop_factor = 1.0;  // Camera sensor crop factor (1.0 = Full Frame, 1.5 = APS-C, etc.)
   let scene_ev_slider = 15;  // Current scene brightness (EV). Default 15 = Sunny 16
   let iso_slider = 100;  // Current ISO. Used as reference when in EV mode
+  let nd_filter_stops = 0;  // ND filter in stops (0-10)
 
   // ============ REFERENCE POINTS ============
   // Photography-specific points to highlight on the chart. Format: {name, Av, Tv, description}
@@ -885,6 +895,9 @@
       ev_offset = scene_ev_slider - 15;  // 15 is reference (Sunny 16)
     }
 
+    // ND filter reduces light, requiring brighter exposure
+    ev_offset += nd_filter_stops;
+
     // Draw contours from EV -5 to 20 (standard range for photography)
     for (let ev = EV_MIN; ev <= 20; ev++) {
       const ev_shifted = ev + ev_offset;
@@ -956,6 +969,9 @@
     } else {
       ev_offset = scene_ev_slider - 15;
     }
+
+    // ND filter reduces light, requiring brighter exposure
+    ev_offset += nd_filter_stops;
 
     // Reference diagonal line: from f/1 @ 30s (bottom-left) to f/64 @ 1/8000s (top-right)
     // We'll place labels along the contours where they cross this diagonal.
@@ -1432,6 +1448,9 @@
       ev_offset = scene_ev_slider - 15;
     }
 
+    // ND filter reduces light, requiring brighter exposure
+    ev_offset += nd_filter_stops;
+
     // EV-mapped gradient bar on the right side
     const margin = 20;
     const bar_x = W - margin - 20;
@@ -1740,6 +1759,22 @@
       render();
     } catch (err) {
       console.error("Render error during slider:", err);
+    }
+  });
+
+  // ============ ND FILTER SLIDER ============
+  ndFilterSlider.addEventListener("input", (e) => {
+    nd_filter_stops = parseInt(e.target.value);
+    if (nd_filter_stops === 0) {
+      ndFilterValue.textContent = "None";
+    } else {
+      ndFilterValue.textContent = `${nd_filter_stops} stops`;
+    }
+    updateFormula();
+    try {
+      render();
+    } catch (err) {
+      console.error("Render error during ND filter change:", err);
     }
   });
 
