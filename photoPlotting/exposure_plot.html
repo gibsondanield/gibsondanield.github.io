@@ -498,11 +498,11 @@
   // ============ COMPASS INDICATOR ============
   // Fixed position in lower left of viewport
   const COMPASS = {
-    x: VIEWPORT.right - 80,  // Right side of viewport
-    y: VIEWPORT.top + 80,    // Upper area
-    radius: 50,
-    arrowLength: 35,
-    fontSize: "12px",
+    x: VIEWPORT.right - 120,  // Closer to chart area
+    y: VIEWPORT.top + 120,    // Further down, closer to chart
+    radius: 40,
+    arrowLength: 25,
+    fontSize: "11px",
     fontColor: COLORS.labelEv,
     arrowColor: COLORS.gridAperture,
     arrowWidth: 1.5
@@ -1257,32 +1257,7 @@
   }
 
   function drawAxisLines() {
-    ctx.strokeStyle = COLORS.gridAperture;  // Use green for axis lines
-    ctx.lineWidth = LINE_WIDTHS.axis;
-
-    // Left edge (fixed at VIEWPORT.left)
-    ctx.beginPath();
-    ctx.moveTo(VIEWPORT.left, VIEWPORT.top);
-    ctx.lineTo(VIEWPORT.left, VIEWPORT.bottom);
-    ctx.stroke();
-
-    // Bottom edge (fixed at VIEWPORT.bottom)
-    ctx.beginPath();
-    ctx.moveTo(VIEWPORT.left, VIEWPORT.bottom);
-    ctx.lineTo(VIEWPORT.right, VIEWPORT.bottom);
-    ctx.stroke();
-
-    // Top edge (for visual framing)
-    ctx.beginPath();
-    ctx.moveTo(VIEWPORT.left, VIEWPORT.top);
-    ctx.lineTo(VIEWPORT.right, VIEWPORT.top);
-    ctx.stroke();
-
-    // Right edge (for visual framing)
-    ctx.beginPath();
-    ctx.moveTo(VIEWPORT.right, VIEWPORT.top);
-    ctx.lineTo(VIEWPORT.right, VIEWPORT.bottom);
-    ctx.stroke();
+    // Static plot: no viewport border, axes defined by gridlines
   }
 
   // Draw exposure compass: aircraft-style indicator showing exposure/aperture trade-offs.
