@@ -446,7 +446,7 @@
   const pixels_per_stop = 35;  // Fixed zoom level for static plot (pixels per stop)
   let aperture_label_mode = "fstop";  // "fstop" or "av" - what labels show on aperture axis
   let contour_label_mode = "ev";  // "ev", "iso", or "both" - what contour lines represent
-  let adjustment_mode = "actual";  // "actual" or "cropfactor" - applies crop factor to Av and ISO calcs
+  let adjustment_mode = "cropfactor";  // Always apply crop factor equivalence
   let crop_factor = 1.0;  // Camera sensor crop factor (1.0 = Full Frame, 1.5 = APS-C, etc.)
   let scene_ev_slider = 15;  // Current scene brightness (EV). Default 15 = Sunny 16
   let iso_slider = 100;  // Current ISO. Used as reference when in EV mode
