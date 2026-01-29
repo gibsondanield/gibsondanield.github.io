@@ -481,11 +481,10 @@
     return crop_factor;
   }
 
-  // Calculate displayed Av values based on adjustment mode
+  // Return native Av values - apertures don't move with crop factor
+  // Crop factor affects EV/ISO calculations instead
   function getDisplayedAvValues() {
-    const crop_adjustment = adjustment_mode === "cropfactor" ? getCropFactor() : 1.0;
-    // Av_adjusted = Av_native + 2*log2(crop_adjustment)
-    return Av_values.map(av => av + 2 * Math.log2(crop_adjustment));
+    return Av_values;
   }
 
   const W = canvas.width;
@@ -1155,15 +1154,9 @@
   }
 
   function drawAxisLabels() {
-    // Get displayed aperture values (may be equivalized to full frame)
+    // Apertures are always native values - crop factor affects EV/ISO instead
     const displayed_av = getDisplayedAvValues();
-    const displayed_fstops = F_STOPS.map((f, i) => {
-      if (adjustment_mode === "cropfactor") {
-        const crop = getCropFactor();
-        return f / crop;  // Equivalent f-stop
-      }
-      return f;
-    });
+    const displayed_fstops = F_STOPS;  // Native f-stops, no crop adjustment
 
     // Font settings
     ctx.font = "bold 24px monospace";
@@ -1199,10 +1192,7 @@
 
     // Draw aperture axis label (45° rotated, readable)
     ctx.font = "bold 24px monospace";
-    let aperture_label_text = aperture_label_mode === "fstop" ? "Aperture (f-stop)" : "Aperture Value (Av)";
-    if (adjustment_mode === "cropfactor") {
-      aperture_label_text += " [FF equiv]";
-    }
+    const aperture_label_text = aperture_label_mode === "fstop" ? "Aperture (f-stop)" : "Aperture Value (Av)";
     const av_center = (Av_min + Av_max) / 2;
     const tv_label_pos = Tv_min - 3.5;
     const [ax_label_x, ax_label_y] = dataToCanvas(av_center, tv_label_pos);
