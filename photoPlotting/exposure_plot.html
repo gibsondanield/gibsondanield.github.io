@@ -717,119 +717,19 @@
     ctx.fillRect(ax_start_x - markerSize / 2, ax_start_y - markerSize / 2, markerSize, markerSize);
   }
 
-  // Draw EV gradient background: black at bottom to white at top.
-  // Polygon bounded by the EV contour lines and the plot rectangle edges.
+  // Draw EV gradient background: black at bottom (dark scenes) to white at top (bright scenes).
+  // Simple vertical gradient across the viewport since EV lines are horizontal after rotation.
   function drawEvGradientBackground() {
     if (!showEvGradientBg || contour_label_mode !== "ev") return;  // Only in EV mode
 
-    const ev_bottom = EV_RANGE.gradientBottom;
-    const ev_top = EV_RANGE.gradientTop;
+    // Simple vertical gradient filling the viewport
+    // Dark (low EV) at bottom, bright (high EV) at top
+    const gradient = ctx.createLinearGradient(0, VIEWPORT.bottom, 0, VIEWPORT.top);
+    gradient.addColorStop(0, "rgba(0, 0, 0, 0.7)");    // Dark at bottom
+    gradient.addColorStop(1, "rgba(255, 255, 255, 0.7)");  // Light at top
 
-    // Find all intersection points of EV contours with plot boundaries
-    // EV line: Tv = -Av + EV, so for a given boundary we solve for the other coordinate
-    const points = [];
-
-    // Helper: clamp a point to be on the boundary if it's close
-    function addPointIfValid(av, tv) {
-      if (av >= Av_min && av <= Av_max && tv >= Tv_min && tv <= Tv_max) {
-        points.push(dataToCanvas(av, tv));
-        return true;
-      }
-      return false;
-    }
-
-    // Trace the polygon boundary:
-    // Start from bottom-left, go around the region between EV_bottom and EV_top
-
-    // 1. Start at intersection of EV_bottom with left edge (Av_min)
-    let tv = -Av_min + ev_bottom;
-    if (tv >= Tv_min && tv <= Tv_max) {
-      points.push(dataToCanvas(Av_min, tv));
-    } else if (tv < Tv_min) {
-      // EV_bottom intersects bottom edge instead
-      let av = -Tv_min + ev_bottom;
-      if (av >= Av_min && av <= Av_max) {
-        points.push(dataToCanvas(av, Tv_min));
-      }
-    }
-
-    // 2. Follow EV_bottom line from left to right, or along plot edges
-    // Go to where EV_bottom hits the right edge
-    tv = -Av_max + ev_bottom;
-    if (tv >= Tv_min && tv <= Tv_max) {
-      points.push(dataToCanvas(Av_max, tv));
-    } else if (tv < Tv_min) {
-      // EV_bottom hits bottom edge at the right
-      let av = -Tv_min + ev_bottom;
-      if (av >= Av_min && av <= Av_max) {
-        points.push(dataToCanvas(av, Tv_min));
-      }
-      // Then go to bottom-right corner
-      points.push(dataToCanvas(Av_max, Tv_min));
-    }
-
-    // 3. Now follow EV_top from right to left
-    // Start at right edge (Av_max)
-    tv = -Av_max + ev_top;
-    if (tv >= Tv_min && tv <= Tv_max) {
-      points.push(dataToCanvas(Av_max, tv));
-    } else if (tv > Tv_max) {
-      // EV_top intersects top edge
-      let av = -Tv_max + ev_top;
-      if (av >= Av_min && av <= Av_max) {
-        points.push(dataToCanvas(av, Tv_max));
-      }
-      points.push(dataToCanvas(Av_max, Tv_max));
-    }
-
-    // 4. Follow EV_top to the left edge
-    tv = -Av_min + ev_top;
-    if (tv >= Tv_min && tv <= Tv_max) {
-      points.push(dataToCanvas(Av_min, tv));
-    } else if (tv > Tv_max) {
-      // EV_top intersects top edge at the left
-      let av = -Tv_max + ev_top;
-      if (av >= Av_min && av <= Av_max) {
-        points.push(dataToCanvas(av, Tv_max));
-      }
-      points.push(dataToCanvas(Av_min, Tv_max));
-    }
-
-    // Draw polygon with gradient
-    if (points.length >= 3) {
-      // Get Y range for gradient (in rotated space: EV = Av + Tv)
-      // Extend gradient to full viewport height to ensure white fills to top
-      const [_x_bottom, y_bottom] = dataToCanvas(0, ev_bottom);
-      const y_top_viewport = VIEWPORT.top;  // Extend to full viewport top
-
-      const gradient = ctx.createLinearGradient(0, y_bottom, 0, y_top_viewport);
-      gradient.addColorStop(0, "#000000");  // Black at EV bottom
-      gradient.addColorStop(1, "#ffffff");  // White at EV top and beyond
-
-      ctx.fillStyle = gradient;
-      ctx.beginPath();
-      ctx.moveTo(points[0][0], points[0][1]);
-      for (let i = 1; i < points.length; i++) {
-        ctx.lineTo(points[i][0], points[i][1]);
-      }
-
-      // Extend polygon to viewport top to ensure white fills entire top region
-      // Go from last point up to viewport top along right edge, then across top to left edge
-      const lastPoint = points[points.length - 1];
-      const [rightEdgeX, _ry] = dataToCanvas(Av_max, Tv_max);  // Right edge x-coord in rotated space
-      const [leftEdgeX, _ly] = dataToCanvas(Av_min, Tv_max);   // Left edge x-coord in rotated space
-
-      ctx.lineTo(rightEdgeX, VIEWPORT.top);   // Go up to viewport top-right
-      ctx.lineTo(leftEdgeX, VIEWPORT.top);    // Go across top
-
-      ctx.closePath();
-      ctx.fill();
-
-      // Subtle outline
-      ctx.strokeStyle = "rgba(100, 100, 100, 0.2)";
-      ctx.lineWidth = 0.5;
-      ctx.stroke();
-    }
+    ctx.fillStyle = gradient;
+    ctx.fillRect(VIEWPORT.left, VIEWPORT.top, VIEWPORT.width, VIEWPORT.height);
   }
 
   // Draw the reference grid: aperture lines (green) and shutter speed lines (cyan).
