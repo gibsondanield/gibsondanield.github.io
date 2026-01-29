@@ -292,10 +292,6 @@
           <input type="radio" id="labelISO" name="contourLabel" value="iso" style="cursor: pointer;">
           ISO
         </label>
-        <label class="control-item">
-          <input type="radio" id="labelBoth" name="contourLabel" value="both" style="cursor: pointer;">
-          EV+ISO
-        </label>
       </div>
 
       <!-- Camera Sensor Equivalence -->
@@ -393,7 +389,6 @@
   const labelAv = document.getElementById("labelAv");
   const labelEV = document.getElementById("labelEV");
   const labelISO = document.getElementById("labelISO");
-  const labelBoth = document.getElementById("labelBoth");
   const sensorMy_MF = document.getElementById("sensorMy_MF");
   const sensorMy_FF = document.getElementById("sensorMy_FF");
   const sensorMy_APS = document.getElementById("sensorMy_APS");
@@ -439,7 +434,7 @@
   // These control what the chart displays and how it renders. Modify these to change behavior.
   const pixels_per_stop = 35;  // Fixed zoom level for static plot (pixels per stop)
   let aperture_label_mode = "fstop";  // "fstop" or "av" - what labels show on aperture axis
-  let contour_label_mode = "ev";  // "ev", "iso", or "both" - what contour lines represent
+  let contour_label_mode = "ev";  // "ev" or "iso" - what contour lines represent
   let adjustment_mode = "cropfactor";  // Always apply crop factor equivalence
   let crop_factor = 1.0;  // Camera sensor crop factor (1.0 = Full Frame, 1.5 = APS-C, etc.)
   let scene_ev_slider = 15;  // Current scene brightness (EV). Default 15 = Sunny 16
@@ -1033,7 +1028,7 @@
               label_text = `EV${Math.round(ev)}`;
               description = EV_CONDITIONS[ev] || "";
             }
-          } else if (contour_label_mode === "iso" || contour_label_mode === "both") {
+          } else if (contour_label_mode === "iso") {
             // ISO mode: Show ISO needed for this EV at metered scene
             let iso_value = 100 * Math.pow(2, scene_ev_slider - ev_shifted);
 
@@ -1049,18 +1044,8 @@
             if (iso_common < MIN_ISO || iso_common > MAX_ISO) {
               skip_label = true;
             } else {
-              if (contour_label_mode === "both") {
-                // In both mode, show both EV and ISO
-                if (ev > EV_MAX) {
-                  skip_label = true;
-                } else {
-                  label_text = `EV${Math.round(ev)} / ISO${iso_common}`;
-                  description = "";
-                }
-              } else {
-                label_text = iso_common.toString();
-                description = "";
-              }
+              label_text = iso_common.toString();
+              description = "";
             }
           }
 
@@ -1081,11 +1066,9 @@
             ctx.fillStyle = "rgba(20, 20, 30, 0.95)";
 
             // Determine alignment based on mode
-            const is_ev_mode = contour_label_mode === "ev";
             const is_iso_mode = contour_label_mode === "iso";
-            const is_both_mode = contour_label_mode === "both";
 
-            // For ISO mode: right justify. For EV mode: left justify. For both: center
+            // For ISO mode: right justify. For EV mode: left justify.
             if (is_iso_mode) {
               // Right justify: box extends leftward
               ctx.fillRect(x - boxWidth, y - boxHeight/2, boxWidth, boxHeight);
@@ -1093,13 +1076,6 @@
               ctx.fillStyle = "#ff00ff";
               ctx.textAlign = "right";
               ctx.fillText(label_text, x - 6, y);
-            } else if (is_both_mode) {
-              // Center justify for both mode
-              ctx.fillRect(x - boxWidth/2, y - boxHeight/2, boxWidth, boxHeight);
-              ctx.font = "bold 14px monospace";
-              ctx.fillStyle = "#ffff00";
-              ctx.textAlign = "center";
-              ctx.fillText(label_text, x, y);
             } else {
               // Left justify: box extends rightward (EV mode)
               ctx.fillRect(x, y - boxHeight/2, boxWidth, boxHeight);
@@ -1564,7 +1540,7 @@
       // In EV mode: ISO is fixed by slider, show what ISO would be needed
       iso_value = iso_slider;
     } else {
-      // In ISO/both mode: calculate ISO needed for this exposure at scene EV
+      // In ISO mode: calculate ISO needed for this exposure at scene EV
       iso_value = 100 * Math.pow(2, scene_ev_slider - ev_at_point);
       if (adjustment_mode === "cropfactor") {
         iso_value = iso_value * crop_factor;
@@ -1758,18 +1734,6 @@
     }
   });
 
-  labelBoth.addEventListener("change", () => {
-    contour_label_mode = "both";  // Show both EV and ISO on labels
-    dynamicLabel.textContent = "Scene EV:";
-    updateDynamicSlider();
-    updateFormula();
-    try {
-      render();
-    } catch (err) {
-      console.error("Render error during contour label mode change:", err);
-    }
-  });
-
   // ============ ADJUSTMENT MODE (Actual vs After Crop Factor) ============
   // Crop factor is always applied - no adjustment mode toggle
 
@@ -1863,7 +1827,7 @@
       const n = Math.log2(iso_slider / 100);
       dynamicSlider.value = Math.round(n);
       dynamicValue.textContent = iso_slider;
-    } else if (contour_label_mode === "iso" || contour_label_mode === "both") {
+    } else if (contour_label_mode === "iso") {
       // ISO/Both mode: slider is scene EV selector (-5 to 20)
       dynamicLabel.textContent = "Scene EV:";
       dynamicSlider.min = "-5";
@@ -1886,7 +1850,7 @@
       const n = parseInt(e.target.value);
       iso_slider = Math.round(100 * Math.pow(2, n));
       dynamicValue.textContent = iso_slider;
-    } else if (contour_label_mode === "iso" || contour_label_mode === "both") {
+    } else if (contour_label_mode === "iso") {
       // ISO/Both mode: slider value is scene EV directly
       scene_ev_slider = parseInt(e.target.value);
       const description = getEVDescription(scene_ev_slider);
@@ -1987,7 +1951,7 @@
           formula_text = `$$\\mathrm{EV} = A_v + T_v$$`;
         }
       }
-    } else if (contour_label_mode === "iso" || contour_label_mode === "both") {
+    } else if (contour_label_mode === "iso") {
       // ISO mode - we are calculating ISO
       // Include crop factor adjustment if iso_mode is "equiv"
       let iso_formula_suffix = adjustment_mode === "cropfactor" ? ` + 2\\log_2 C` : "";
@@ -2026,27 +1990,14 @@
       } else {
         guidance_text += " (showing native sensor values).";
       }
-    } else if (contour_label_mode === "iso") {
-      // ISO mode only
+    } else {
+      // ISO mode
       const scene_desc = getEVDescription(scene_ev_slider);
       guidance_text += `Scene EV is ${scene_ev_slider}${scene_desc ? ` (${scene_desc})` : ""}. Magenta lines show the ISO you need for proper exposure with each aperture/shutter combination`;
       if (adjustment_mode === "cropfactor") {
         guidance_text += " (includes crop factor adjustment).";
       } else {
         guidance_text += " (native sensor sensitivity).";
-      }
-    } else {
-      // Both mode - show both descriptions
-      guidance_text += "Magenta lines show constant exposure (EV). Scene EV is " + scene_ev_slider;
-      const scene_desc = getEVDescription(scene_ev_slider);
-      if (scene_desc) {
-        guidance_text += ` (${scene_desc})`;
-      }
-      guidance_text += ". Numbers on lines show both EV and required ISO for that exposure";
-      if (adjustment_mode === "cropfactor") {
-        guidance_text += " (includes crop factor).";
-      } else {
-        guidance_text += " (native values).";
       }
     }
 
