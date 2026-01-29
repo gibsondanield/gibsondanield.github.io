@@ -362,13 +362,14 @@
         <input type="range" id="ndFilterSlider" min="0" max="10" value="0" step="1" style="width: 100%; cursor: pointer;">
         <span id="ndFilterValue" style="color: #aaa; font-size: 13px;">None</span>
       </div>
+
     </div>
   </div>
 
   <div id="mainContent">
 
     <div id="plotWrapper" style="display: flex; justify-content: flex-start; padding: 10px 0;">
-      <canvas id="plot" width="1600" height="1600" style="max-width: calc(98vw - 200px); height: auto;"></canvas>
+      <canvas id="plot" width="1400" height="1100" style="max-width: calc(98vw - 200px); height: auto;"></canvas>
     </div>
 
     <div id="formulaDisplay" style="margin-top: 15px; font-size: 16px; color: var(--color-text-normal); line-height: 1.8; padding: 16px; background: linear-gradient(135deg, var(--color-bg-dark) 0%, var(--color-bg-panel-light) 100%); border: 2px solid #00aa88; border-radius: var(--border-radius); width: 100%; max-width: 1200px; box-sizing: border-box; box-shadow: 0 0 12px rgba(0, 170, 136, 0.15), inset 0 1px 0 rgba(0, 255, 136, 0.1);">
@@ -470,8 +471,8 @@
   // ============ PANNING STATE ============
   // Mouse drag logic. Tracks where user is dragging from and applies offset to rendered content.
   // Static plot: pan offsets are fixed (no user panning/zooming)
-  const panOffsetX = -100;  // Shift plot left within canvas
-  const panOffsetY = -350;  // Shifted up, top grid intersections cut off
+  const panOffsetX = 50;    // Adjusted to keep left edge anchored with smaller canvas
+  const panOffsetY = -150;  // Adjusted to keep top edge anchored with smaller canvas
 
   // Static plot: no touch interaction
 
