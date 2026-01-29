@@ -1508,23 +1508,23 @@
   // ============ MOUSEOVER GRIDLINE SNAP ============
   // Convert canvas coordinates back to data space
   function canvasToData(canvasX, canvasY) {
-    // This is the reverse of dataToCanvas
-    // dataToCanvas: [rotAv, rotTv] -> canvas via rotation transformation
-    // We need to invert that
-    const rotAv_center = (rotAv_min + rotAv_max) / 2;
-    const rotTv_center = (rotTv_min_rot + rotTv_max_rot) / 2;
+    // This is the reverse of dataToCanvas which does:
+    // 1. preRotToRotated: (av, tv) -> (rotAv, rotTv) via 45° rotation
+    // 2. rotatedToCanvas: (rotAv, rotTv) -> (x, y) via linear mapping
+
     const current_scale = pixels_per_stop * Math.sqrt(2);
+    const viewport_centerX = VIEWPORT.left + VIEWPORT.width / 2;
+    const viewport_centerY = VIEWPORT.top + VIEWPORT.height / 2;
 
-    // Remove viewport centering and pan offset
-    const dx = canvasX - viewport_centerX;
-    const dy = viewport_centerY - canvasY;  // Invert Y
+    // Inverse of rotatedToCanvas (simple linear mapping, no rotation matrix here)
+    // Forward: x = viewport_centerX + panOffsetX + (rotAv - rotAv_center) * scale
+    // Forward: y = viewport_centerY + panOffsetY - (rotTv - rotTv_center) * scale
+    const rotAv = rotAv_center + (canvasX - viewport_centerX - panOffsetX) / current_scale;
+    const rotTv = rotTv_center + (viewport_centerY + panOffsetY - canvasY) / current_scale;
 
-    // Unrotate: rotate back by -45 degrees
-    const angle = -Math.PI / 4;
-    const rotAv = rotAv_center + (dx * Math.cos(angle) - dy * Math.sin(angle)) / current_scale;
-    const rotTv = rotTv_center + (dx * Math.sin(angle) + dy * Math.cos(angle)) / current_scale;
-
-    // Unrotate the 45-degree Av/Tv rotation: (rotAv, rotTv) -> (Av, Tv)
+    // Inverse of preRotToRotated
+    // Forward: rotAv = (av - tv) / sqrt(2), rotTv = (av + tv) / sqrt(2)
+    // Inverse: av = (rotAv + rotTv) / sqrt(2), tv = (rotTv - rotAv) / sqrt(2)
     const av = (rotAv + rotTv) / Math.sqrt(2);
     const tv = (rotTv - rotAv) / Math.sqrt(2);
 
@@ -1921,8 +1921,11 @@
   // Snap to nearest gridline intersection and display aircraft HUD
   canvas.addEventListener("mousemove", (e) => {
     const rect = canvas.getBoundingClientRect();
-    mouseX = e.clientX - rect.left;
-    mouseY = e.clientY - rect.top;
+    // Scale mouse coords to canvas internal coords (canvas may be CSS-scaled)
+    const scaleX = canvas.width / rect.width;
+    const scaleY = canvas.height / rect.height;
+    mouseX = (e.clientX - rect.left) * scaleX;
+    mouseY = (e.clientY - rect.top) * scaleY;
 
     // Only snap if mouse is within viewport
     if (mouseX >= VIEWPORT.left && mouseX <= VIEWPORT.right &&
