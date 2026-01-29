@@ -512,8 +512,8 @@
   // ============ COMPASS INDICATOR ============
   // Fixed position in lower left of viewport
   const COMPASS = {
-    x: VIEWPORT.right - 120,  // Closer to chart area
-    y: VIEWPORT.top + 120,    // Further down, closer to chart
+    x: VIEWPORT.right - 120 - (W * 0.15),  // Moved left 15% of canvas width
+    y: VIEWPORT.top + 120,
     radius: 40,
     arrowLength: 25,
     fontSize: "11px",
