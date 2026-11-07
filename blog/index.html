@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Blog</title>
+  <style>
+    :root{
+      --bg: #000;
+      --fg: #fff;
+      --muted: #9a9a95;
+      --link: #4da6ff;
+      --link-hover: #82c7ff;
+    }
+    body{ background: var(--bg); color: var(--fg); font-family: sans-serif; margin: 0; padding: 2rem; }
+    h1{ margin-bottom: 1rem; }
+    ul{ list-style: none; padding: 0; }
+    li{ margin: 1rem 0; }
+    a{ color: var(--link); text-decoration: none; font-size: 1.25rem; }
+    a:hover{ text-decoration: underline; color: var(--link-hover); }
+    .date{ color: var(--muted); font-size: 0.95rem; margin-left: 0.5rem; }
+    .back{ font-size: 1rem; }
+  </style>
+</head>
+<body>
+  <p><a class="back" href="/">← home</a></p>
+  <h1>Blog</h1>
+  <ul>
+    <li><a href="/blog/wine_cellar/">Reverse-engineering the wine cellar</a><span class="date">2026-11</span></li>
+  </ul>
+</body>
+</html>

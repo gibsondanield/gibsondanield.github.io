@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Reverse-engineering the wine cellar</title>
+  <meta name="description" content="Following up the sixteen-bottles wine riddle: why an LP can't find the probabilities, what the principle of indifference has to do with permanents, and a better approximation than max-entropy."/>
+  <style>
+    :root{
+      --bg: #000;
+      --fg: #fff;
+      --fg2: #c3c2b7;
+      --muted: #9a9a95;
+      --rule: #2c2c2a;
+      --panel: #121211;
+      --link: #4da6ff;
+      --link-hover: #82c7ff;
+      --accent: #3987e5;
+    }
+    body{ background: var(--bg); color: var(--fg); font-family: sans-serif; margin: 0; padding: 2rem 1rem; }
+    main{ max-width: 46rem; margin: 0 auto; line-height: 1.65; font-size: 1.05rem; }
+    h1{ font-size: 2rem; line-height: 1.2; margin: 1.5rem 0 0.25rem; }
+    h2{ font-size: 1.35rem; margin: 2.75rem 0 0.5rem; }
+    p, li{ color: var(--fg2); }
+    strong{ color: var(--fg); }
+    a{ color: var(--link); text-decoration: none; }
+    a:hover{ text-decoration: underline; color: var(--link-hover); }
+    .back{ font-size: 1rem; }
+    .byline{ color: var(--muted); font-size: 0.95rem; margin: 0 0 2rem; }
+    .preface{ border-left: 3px solid var(--accent); background: var(--panel); padding: 0.9rem 1.1rem; margin: 0 0 2rem; }
+    .preface p{ margin: 0; color: var(--fg); }
+    code, .math{ font-family: ui-monospace, "DejaVu Sans Mono", monospace; font-size: 0.92em; color: var(--fg); }
+    .display{ display: block; background: var(--panel); padding: 0.75rem 1rem; margin: 1rem 0; overflow-x: auto; white-space: pre; }
+    figure{ margin: 2rem 0; }
+    figure img{ width: 100%; height: auto; display: block; }
+    figcaption{ color: var(--muted); font-size: 0.9rem; margin-top: 0.5rem; }
+    .table-wrap{ overflow-x: auto; margin: 1.25rem 0; }
+    table{ border-collapse: collapse; width: 100%; font-size: 0.95rem; }
+    th, td{ padding: 0.45rem 0.7rem; border-bottom: 1px solid var(--rule); text-align: right; white-space: nowrap; }
+    th:first-child, td:first-child{ text-align: left; }
+    th{ color: var(--fg); font-weight: 600; }
+    td{ color: var(--fg2); font-variant-numeric: tabular-nums; }
+    td.best{ color: var(--fg); font-weight: 600; }
+    tr.floor td{ color: var(--muted); font-style: italic; }
+    .note{ color: var(--muted); font-size: 0.9rem; }
+    hr{ border: 0; border-top: 1px solid var(--rule); margin: 3rem 0 1.5rem; }
+  </style>
+</head>
+<body>
+<main>
+  <p><a class="back" href="/blog/">← blog</a></p>
+
+  <div class="preface">
+    <p>Without LLMs, nothing would get done. Here is a project that sat around for a year before pushing it. The following is written by claude Opus 5.5, and is meant to convey info rather than be about human experience (though my thought process is mentioned along the way).</p>
+  </div>
+
+  <h1>Reverse-engineering the wine cellar</h1>
+  <p class="byline">Daniel Gibson · November 2026 · <a href="https://github.com/gibsondanield/doubly_stochastic_matrix_solving">code</a></p>
+
+  <h2>The riddle</h2>
+  <p>This builds on Chris KW's <a href="https://chriskw.xyz/2025/08/11/Wine/">Sixteen bottles of wine riddle</a>; read that first, it's short and good. The gist: there are 2<sup>n</sup> bottles, each from a different year, and n measuring devices. Each device reports one bit of a bottle's year. You can't mix wines, so every measurement is one bit of one bottle. Identify every bottle in as few measurements as possible. Chris's post covers the pen-and-paper divide-and-conquer strategy (49 measurements for 16 bottles), the information content, and a greedy expected-information-gain strategy that averages <strong>15.48 measurements on 8 bottles</strong>.</p>
+  <p>Two things in that post are the starting point here. First, the post notes that computing the probability of each bottle being each year "boils down to computing the permanent of certain matrices", which is intractable at 16 bottles. Second, it suggests approximating it by putting the grid into cvxpy with doubly stochastic constraints and maximizing entropy, and asks: <em>"If someone smarter than me knows of a better approximation it would be handy for a different problem I've been staring at."</em></p>
+  <p>This post is about that probability grid: how Daniel ended up approaching it from the other direction, why the obvious formulation fails, and an approximation that beats max-entropy.</p>
+  <p>Everything below uses 8 bottles and 3 detectors. The floor for any strategy is log<sub>2</sub>(8!) ≈ <strong>15.3</strong> measurements on average, since there are 8! possible arrangements and each measurement reveals at most one bit.</p>
+
+  <h2>Baselines</h2>
+  <p>Measuring every cell takes 24. Simple constraint propagation already helps: every detector column is exactly half zeros, and every bottle's code is unique, so once a column has its four zeros the rest are ones, and a bottle with one unknown bit can sometimes be resolved by elimination. Over 20 shuffled cellars that averages <strong>17.15</strong> measurements (range 15–19).</p>
+
+  <h2>Solving probabilities by hand, without knowing why</h2>
+  <p>Working small cases on paper, Daniel noticed that the full probability grid could sometimes be filled in exactly, not just the forced bits. Take 4 bottles and 2 detectors, and suppose the only thing measured so far is that bottle 0's high bit is 0. Then bottle 0 is 50/50 between codes 0 and 1, and every other bottle is 1/6, 1/6, 1/3, 1/3. Those numbers came out of the arithmetic, but it wasn't clear why the method worked, or why it only sometimes worked.</p>
+
+  <figure>
+    <picture>
+      <source media="(max-width: 640px)" srcset="indifference_4x4_tall.svg"/>
+      <img src="indifference_4x4.svg" alt="Three 4 by 4 grids of bottles against codes. A: the hand-solved probabilities, 1/2 1/2 0 0 for bottle 0 and 1/6 1/6 1/3 1/3 for the others. B: the same cells grouped into three symmetry classes a, b, c, with the equations a plus a equals 1, a plus 3b equals 1, 2b plus 2c equals 1. C: the number of consistent arrangements passing through each cell, 6 6 0 0 and 2 2 4 4, out of 12."/>
+    </picture>
+    <figcaption>A: the probabilities as worked out on paper. B: cells that nothing distinguishes must be equal; row and column sums then leave one answer. C: what the probabilities actually are, the fraction of the 12 consistent arrangements passing through each cell.</figcaption>
+  </figure>
+
+  <p>The reason is the <strong>principle of indifference</strong>: if nothing you know distinguishes two possibilities, they get equal probability. In panel B, bottle 0's two possible codes are interchangeable, so they share a value <span class="math">a</span>. Bottles 1–3 are interchangeable with each other, and so are codes 0 and 1 (from their point of view), giving <span class="math">b</span>, and likewise <span class="math">c</span>. Each row and column of the grid must sum to 1, so three unknowns and three equations give the answer.</p>
+  <p>That observation is what inspired the next attempt: write the sums down as linear constraints, add the "these must be equal" symmetries, and let a solver do what was being done by hand.</p>
+
+  <h2>Attempt one: a linear program</h2>
+  <p>The probability grid P is a <strong>doubly stochastic matrix</strong>: non-negative, with every row and column summing to 1. Each measurement forces some cells to zero. So the plan was:</p>
+  <ul>
+    <li>Encode the row and column sums as <span class="math">Ax = b</span> with <span class="math">0 ≤ x ≤ 1</span>.</li>
+    <li>Detect symmetries automatically (automorphisms of the constraint graph, found with nauty) and add them as equality constraints.</li>
+    <li>For each cell, minimize and maximize it. If the min equals the max, the cell is determined.</li>
+  </ul>
+  <p>On the hand-solvable examples this works exactly. On anything else, it doesn't. Here is how many cells the LP can pin down, on five partially measured 8-bottle cellars from the test suite:</p>
+
+  <div class="table-wrap">
+  <table>
+    <thead><tr><th>cellar</th><th>consistent arrangements</th><th>cells the LP determines</th><th>widest feasible range</th></tr></thead>
+    <tbody>
+      <tr><td>1</td><td>10,080</td><td>0 / 56</td><td>0 to 1</td></tr>
+      <tr><td>2</td><td>480</td><td>12 / 48</td><td>0 to 1</td></tr>
+      <tr><td>3</td><td>5,040</td><td>0 / 52</td><td>0 to 1</td></tr>
+      <tr><td>4</td><td>368</td><td>0 / 40</td><td>0 to 1</td></tr>
+      <tr><td>5</td><td>176</td><td>0 / 32</td><td>0 to 1</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <p>The constraints describe a polytope of possible grids, and it's wide: most cells can be anything between 0 and 1. The true grid is one specific point inside it, and linear constraints have no way of singling it out. Symmetry only rescues the cases where it happens to collapse the polytope to a point.</p>
+  <p>The LP still earns its place for one reason. A cell that the LP can make nonzero always has at least one real arrangement passing through it (Birkhoff–von Neumann: every doubly stochastic matrix is a mixture of permutation matrices). So the LP gets <strong>which cells are forced</strong> exactly right, and that is all that is needed to finish solving the cellar. For the probabilities themselves, filling in with the average of the LP's extreme solutions gives a valid grid, but it is off by up to <strong>0.41</strong> in a cell.</p>
+
+  <h2>Indifference at the right level</h2>
+  <p>The hand method was right, but it applied indifference to the wrong objects. The correct statement is that every <em>arrangement</em> of the cellar consistent with the measurements is equally likely. Panel C shows what that means: P(bottle i has code j) is the number of consistent arrangements with bottle i at code j, divided by the total number. Counting perfect matchings in a 0/1 matrix is exactly the permanent, so:</p>
+  <span class="math display">P[i, j] = perm(M with row i and column j removed) / perm(M)</span>
+  <p>where M is the 0/1 matrix of cells still allowed. This matches brute-force enumeration on every test cellar. Symmetry was a shortcut through this counting that only sometimes exists. Permanents are #P-hard in general, which is why Chris calls 16 bottles intractable; at 8 bottles they're instant.</p>
+
+  <h2>Can the LP be forced to be indifferent?</h2>
+  <p>Daniel's next thought was the obvious numerical hack: add a small "make everything as equal as possible" term to the objective. A linear term can't do it, because an LP optimum always sits at a corner of the polytope, and corners are the most <em>unequal</em> points. It needs a strictly convex objective, which makes it a convex program instead of an LP. Three candidates, each solved under the same constraints and compared with the exact permanent answer:</p>
+
+  <div class="table-wrap">
+  <table>
+    <thead><tr><th>cellar</th><th>least squares (most equal)</th><th>max entropy</th><th>Bethe</th></tr></thead>
+    <tbody>
+      <tr><td>1</td><td>0.019</td><td>0.005</td><td class="best">0.000</td></tr>
+      <tr><td>2</td><td>0.000</td><td>0.000</td><td class="best">0.000</td></tr>
+      <tr><td>3</td><td>0.045</td><td>0.013</td><td class="best">0.002</td></tr>
+      <tr><td>4</td><td>0.056</td><td>0.012</td><td class="best">0.004</td></tr>
+      <tr><td>5</td><td>0.064</td><td>0.040</td><td class="best">0.029</td></tr>
+    </tbody>
+  </table>
+  </div>
+  <p class="note">Largest error in any cell compared with the exact probabilities. For comparison, the LP-average fill-in is off by up to 0.41.</p>
+
+  <ul>
+    <li><strong>Max entropy</strong> is Chris's cvxpy suggestion, and it is also what Sinkhorn scaling (alternately normalizing rows and columns) converges to, so it doesn't even need a solver. It's good. But it applies indifference to <em>cells</em>, which is not the same as indifference over <em>arrangements</em>; the two only agree when symmetry pins everything down, which is exactly when the hand method worked.</li>
+    <li><strong>Bethe</strong> minimizes <span class="math">Σ p log p − (1 − p) log(1 − p)</span> over the same polytope. It comes from the belief-propagation approximation to the permanent, and Vontobel showed it is convex on doubly stochastic matrices, so it is still one tractable optimization. It is several times more accurate than max entropy here.</li>
+  </ul>
+  <p>No convex objective can be exact in general: if one reproduced the permanent ratios exactly, it would compute permanents in polynomial time. "Very close, never exact" is the best possible outcome, and Bethe is the answer to Chris's request for a better approximation.</p>
+
+  <h2>Results, and a backwards-looking greedy that isn't</h2>
+  <p>The greedy strategy scores every unknown cell by imagining both outcomes, computing the remaining entropy of the grid after each, and adding the two together. The original code picks the cell with the <em>highest</em> total, which looks backwards: surely you want the measurement that leaves the <em>least</em> uncertainty? So a copy that picks the lowest total was added, and both were run on 20 shuffled cellars:</p>
+
+  <div class="table-wrap">
+  <table>
+    <thead><tr><th>strategy</th><th>mean</th><th>min</th><th>max</th></tr></thead>
+    <tbody>
+      <tr><td>measure everything</td><td>24.00</td><td>24</td><td>24</td></tr>
+      <tr><td>constraint propagation</td><td>17.15</td><td>15</td><td>19</td></tr>
+      <tr><td>greedy, highest total</td><td class="best">15.90</td><td>13</td><td>17</td></tr>
+      <tr><td>greedy, lowest total</td><td>16.70</td><td>12</td><td>20</td></tr>
+      <tr class="floor"><td>floor: log<sub>2</sub>(8!)</td><td>15.3</td><td></td><td></td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <p>"Highest" wins on average (11 cellars to 5, with 4 ties). The reason is that the two outcomes aren't weighted by how likely they are. If an outcome has probability q, observing it leaves about H + log<sub>2</sub> q bits of uncertainty, so the unweighted total is</p>
+  <span class="math display">2H + log₂ q + log₂(1 − q)</span>
+  <p>which is largest at q = ½. Maximizing the total picks the most balanced measurement, which is the right thing to do. Minimizing it chases long shots: measurements where one outcome is unlikely but very informative. That shows up in the spread. "Lowest" has both the single best run (12) and the worst (20), with a standard deviation of 1.75 against 1.07.</p>
+  <p>Swapping exact probabilities into this greedy doesn't help: it averages 15.90 on the same 20 cellars either way. Chris's greedy, which weights the outcomes properly, averages 15.48. So this greedy's shortfall comes from the unweighted scoring rule, not from the probabilities.</p>
+
+  <h2>A simpler greedy: measure the bit closest to 50/50</h2>
+  <p>The weighting argument above points to a much simpler rule. If every consistent arrangement is equally likely, measuring a bit that is 1 with probability q gains exactly</p>
+  <span class="math display">H₂(q) = −q log₂ q − (1 − q) log₂(1 − q)</span>
+  <p>bits, which is largest at q = ½. So the best single measurement is simply the unknown bit whose probability is closest to 50/50. There's no need to imagine both outcomes for every candidate cell: it takes one probability solve per step instead of two per candidate, which in practice means 0.2 seconds per cellar instead of 12–25.</p>
+
+  <div class="table-wrap">
+  <table>
+    <thead><tr><th>50/50 rule, 200 shuffled cellars</th><th>mean</th><th>min</th><th>max</th><th>std dev</th></tr></thead>
+    <tbody>
+      <tr><td>with LP-average probabilities</td><td>15.77 ± 0.08</td><td>12</td><td>19</td><td>1.16</td></tr>
+      <tr><td>with exact (permanent) probabilities</td><td class="best">15.43 ± 0.05</td><td>14</td><td>17</td><td>0.67</td></tr>
+      <tr class="floor"><td>floor: log<sub>2</sub>(8!)</td><td>15.3</td><td></td><td></td><td></td></tr>
+    </tbody>
+  </table>
+  </div>
+  <p class="note">± is the standard error of the mean.</p>
+
+  <p>With exact probabilities, the one-line rule matches Chris's full expected-information-gain greedy (15.48) and lands 0.13 measurements above the theoretical floor. Here the probabilities do matter: the LP fill-in costs a third of a measurement on average and nearly doubles the spread, presumably because it misjudges which bits are closest to 50/50.</p>
+
+  <h2>What's next</h2>
+  <ul>
+    <li><strong>Sixteen bottles.</strong> Chris calls the 16×16 grid intractable, and enumerating arrangements is. But Ryser's formula computes a permanent in about 2<sup>n</sup>·n² operations, and a full 16×16 probability grid takes about a second that way. So the exact 50/50 rule should run on the original 16-bottle riddle at roughly a minute per cellar. Beyond that, at 32 bottles, Bethe probabilities are the way forward.</li>
+    <li><strong>Lookahead.</strong> Rollout is a cheap option: take the top few candidates by H<sub>2</sub>, simulate the 50/50 rule to the end for each over a sample of consistent arrangements, and pick the best. For an exactly optimal 8-bottle strategy (one of Chris's open questions), dynamic programming over knowledge states, merged under relabelling bottles and the 48 symmetries of the 3-bit codes, with log<sub>2</sub>(remaining arrangements) as a pruning bound, looks feasible but hasn't been tried.</li>
+  </ul>
+
+  <hr/>
+  <p class="note">References: Chris KW, <a href="https://chriskw.xyz/2025/08/11/Wine/">Sixteen bottles of wine riddle</a> (2025) and its <a href="https://news.ycombinator.com/item?id=44933019">HN discussion</a>; P. O. Vontobel, "The Bethe permanent of a nonnegative matrix", IEEE Trans. Inf. Theory (2013); H. J. Ryser, <em>Combinatorial Mathematics</em> (1963).</p>
+</main>
+</body>
+</html>
