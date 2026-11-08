@@ -27,12 +27,13 @@ body{
   font-size: 1.0625rem;
   line-height: 1.7;
   margin: 0;
-  padding: 2.5rem 1rem 3rem;
+  padding: 2.5rem clamp(1rem, 6vw, 5rem) 3rem;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
 }
 
-main, .site-footer{ max-width: var(--measure); margin: 0 auto; }
+/* Flush-left column: capped width, pinned to the left edge rather than centred. */
+main, .site-footer{ max-width: var(--measure); margin: 0; }
 
 /* ---------- type ---------- */
 
