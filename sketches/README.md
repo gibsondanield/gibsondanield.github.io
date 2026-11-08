@@ -12,12 +12,7 @@ These sketches manipulate individual pixels using mathematical functions. The vi
 - **sketch_feb25a.html** - Logarithmic color mixing across RGB channels
 - **exponents.html** - Generalized p-norm circles (mouse Y controls the exponent)
 - **squareShade.html** - XOR patterns in blue channel only
-- **sketch_feb24b.html** - Static multiplicative gradient
 
-### Recursive/Fractal
-- **Tree.html** - Classic recursive fractal tree (based on Daniel Shiffman example)
-  - Mouse X: branching angle
-  - Mouse Y: branch length scaling
 
 ### Geometric
 - **superCircle.html** - Rotating pentagonal symmetry with color shifts

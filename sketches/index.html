@@ -1,37 +1,37 @@
 ---
 layout: default
-title: Generative sketches
-description: Interactive pixel-math and recursive sketches from grad school (2013–15), ported from Processing to p5.js.
+title: Sketches
+description: Interactive generative sketches (Processing, 2013–15, ported to p5.js).
+extra_css: |
+  main{ max-width: none; }
+  .sketch{ display: block; width: 100%; border: 0; margin: 0 0 2.5rem; background: #000; }
+sketches:
+  - { file: dynamicTriangleFlower.html, title: Dynamic triangle flower, w: 510,  h: 510 }
+  - { file: sketch_feb23a.html,         title: Radial gradients,        w: 800,  h: 800 }
+  - { file: sketch_feb25a.html,         title: Log patterns,            w: 1020, h: 1020 }
+  - { file: exponents.html,             title: Exponents,               w: 1020, h: 1020 }
+  - { file: squareShade.html,           title: Square shade,            w: 2040, h: 126 }
+  - { file: superCircle.html,           title: Super circle,            w: 640,  h: 640 }
+  - { file: interference-lattice.html,  title: Interference lattice,    w: 800,  h: 800 }
+  - { file: recursive-decay.html,       title: Recursive decay,         w: 900,  h: 900 }
 ---
 <p class="back"><a href="{{ '/' | relative_url }}">← home</a></p>
-<article>
-<h1>Generative sketches</h1>
-<p class="byline">Processing (Java), 2013–15 · ported to p5.js in 2026</p>
+<h1>Sketches</h1>
 
-<p>Interactive sketches from grad school. Most of them push every pixel through some small piece of math (XOR, trig, logs, distance) and use the mouse position as a parameter. Each one opens as its own page. Move the mouse around.</p>
+{% for s in page.sketches -%}
+<iframe class="sketch" src="{{ s.file }}" title="{{ s.title }}" loading="lazy" scrolling="no"
+        style="max-width: {{ s.w }}px; aspect-ratio: {{ s.w }} / {{ s.h }};"></iframe>
+{% endfor %}
 
-<h2 class="section-label">Pixel math</h2>
-<ul class="entries">
-  <li><a href="dynamicTriangleFlower.html">Dynamic triangle flower</a><span class="desc">XOR bitwise operations combined with sine waves.</span></li>
-  <li><a href="sketch_feb23a.html">Radial gradients (Feb 23)</a><span class="desc">Distance-based gradients. The source has 30+ commented-out experiments, plus a <code>println("monkeys")</code> I can't explain.</span></li>
-  <li><a href="sketch_feb25a.html">Log patterns (Feb 25)</a><span class="desc">Logarithmic colour mixing across the RGB channels.</span></li>
-  <li><a href="exponents.html">Exponents</a><span class="desc">Generalized p-norm circles. Mouse Y sets the exponent.</span></li>
-  <li><a href="squareShade.html">Square shade</a><span class="desc">XOR patterns in the blue channel only.</span></li>
-  <li><a href="sketch_feb24b.html">Multiplicative gradient (Feb 24)</a><span class="desc">Static, no interaction.</span></li>
-</ul>
-
-<h2 class="section-label">Geometry and recursion</h2>
-<ul class="entries">
-  <li><a href="Tree.html">Recursive tree</a><span class="desc">Fractal branching, based on a Daniel Shiffman example. Mouse X sets the angle, Y the branch scaling.</span></li>
-  <li><a href="superCircle.html">Super circle</a><span class="desc">Rotating pentagonal symmetry. Left click rotates, right click clears, scroll shifts colours.</span></li>
-</ul>
-
-<h2 class="section-label">Newer experiments</h2>
-<ul class="entries">
-  <li><a href="interference-lattice.html">Interference lattice</a><span class="desc">Several oscillating sources interfering on a discrete phase grid.</span></li>
-  <li><a href="recursive-decay.html">Recursive decay</a><span class="desc">Recursion at the pixel level: each pixel updates from its neighbours' state.</span></li>
-</ul>
-
-<hr>
-<p class="note">Every sketch does per-pixel work in <code>loadPixels()</code>/<code>updatePixels()</code>, so some are slow on weaker devices. The original <code>.pde</code> sources are kept alongside, e.g. <a href="Tree.pde">Tree.pde</a>.</p>
-</article>
+<script>
+  // Every sketch redraws every pixel each frame; only run the ones on screen.
+  const io = new IntersectionObserver(entries => {
+    for (const e of entries) {
+      try {
+        const w = e.target.contentWindow;
+        if (typeof w.loop === 'function') e.isIntersecting ? w.loop() : w.noLoop();
+      } catch (_) {}
+    }
+  }, { rootMargin: '200px' });
+  document.querySelectorAll('iframe.sketch').forEach(f => f.addEventListener('load', () => io.observe(f)));
+</script>

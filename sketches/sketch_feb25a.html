@@ -5,15 +5,9 @@
   <title>Feb 25 Log Patterns</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/p5.min.js"></script>
   <style>
-    body {
-      margin: 0;
-      padding: 20px;
-      background: #000;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      min-height: 100vh;
-    }
+    /* Embedded on /sketches/: no margin, canvas scales down to fit (p5 corrects mouse coords for CSS scaling). */
+    body { margin: 0; background: #000; overflow: hidden; }
+    canvas { display: block; max-width: 100%; height: auto !important; }
   </style>
 </head>
 <body>
