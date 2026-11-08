@@ -7,6 +7,6 @@ layout: default
 {%- endif %}
 <article>
   <h1>{{ page.title }}</h1>
-  <p class="byline">{{ page.author | default: site.author }} · <time datetime="{{ page.date | date_to_xmlschema }}">{{ page.date | date: "%-d %B %Y" }}</time>{% if page.code %} · <a href="{{ page.code }}">code</a>{% endif %}</p>
+  <p class="byline">{{ page.author | default: site.author }}{% if page.started %} · started {{ page.started }}{% endif %} · {% if page.last_modified_at %}updated{% else %}published{% endif %} <time datetime="{{ page.last_modified_at | default: page.date | date_to_xmlschema }}">{{ page.last_modified_at | default: page.date | date: "%-d %B %Y" }}</time>{% if page.code %} · <a href="{{ page.code }}">code</a>{% endif %}</p>
 {{ content }}
 </article>

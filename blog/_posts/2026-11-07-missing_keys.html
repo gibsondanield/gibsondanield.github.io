@@ -2,6 +2,8 @@
 title: "Missing dict keys: what's fastest, and when"
 description: "get, setdefault, try/except, defaultdict, Counter, `__missing__` or functools.cache? Benchmarks on Python 3.14 for counting, grouping and memoizing, and when each one wins."
 date: 2026-11-07 19:16:00 +0900
+started: "November 2025"         # earliest known date of the work
+last_modified_at: 2026-11-07
 code: https://github.com/gibsondanield/missing-key-benchmark
 preface: >-
   I've had many discussions with colleagues, comments in code reviews, and failed many interview questions about this issue and how to best handle it. I wanted to give some thoughts here and have some quantitative info on runtime for empirical claims. As with other posts, nothing gets done without LLMs (I love writing, but I like running my own experiments more, so it's better to put up something AI written rather than nothing at all, right?). So Opus 5.5 is doing most of the writing here, and refactoring most of my code from an original project from a while back. Enjoy.

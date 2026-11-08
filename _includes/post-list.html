@@ -1,7 +1,7 @@
 <ul class="entries">
   {%- for post in include.posts %}
   <li>
-    <a href="{{ post.url | relative_url }}">{{ post.title }}</a><span class="meta">{{ post.date | date: "%Y-%m-%d" }}</span>
+    <a href="{{ post.url | relative_url }}">{{ post.title }}</a>
     {%- if include.descriptions and post.description %}<span class="desc">{{ post.description | markdownify | remove: "<p>" | remove: "</p>" | strip }}</span>{% endif %}
   </li>
   {%- endfor %}
