@@ -106,10 +106,15 @@
             padding: 0 20px;
             background-color: #ddd;
             font-size: 12px;
-            height: 40px;
+            height: 44px;
             font-family: monospace;
             display: flex;
-            align-items: center;
+            flex-direction: column;
+            justify-content: center;
+            gap: 3px;
+        }
+        .coordinates .line {
+            display: flex;
             white-space: nowrap;
             overflow: hidden;
         }
@@ -120,13 +125,15 @@
             padding-right: 2ch;
         }
         .coordinates .f b { font-weight: normal; color: #666; }
-        .coordinates .f-row { width: 11ch; }
-        .coordinates .f-col { width: 14ch; }
-        .coordinates .f-val { width: 18ch; }
-        .coordinates .f-fac { width: 30ch; }
-        .coordinates .f-center { width: 20ch; }
-        .coordinates .f-prim { width: 18ch; }
-        .coordinates .f-mod { flex: 1 1 auto; min-width: 0; }
+        /* Widths fit the largest values the grid can show (16-digit, up to 2^53),
+           and residues for all 13 primes up to 41. Factors go last, open-ended. */
+        .coordinates .f-row { width: 10ch; }
+        .coordinates .f-col { width: 18ch; }
+        .coordinates .f-val { width: 25ch; }
+        .coordinates .f-center { width: 29ch; }
+        .coordinates .f-prim { width: 27ch; }
+        .coordinates .f-mod { width: 81ch; }
+        .coordinates .f-fac { flex: 1 1 auto; min-width: 0; padding-right: 0; }
         .viewport {
             flex: 1;
             overflow: hidden;
@@ -270,13 +277,17 @@
     </div>
     <div class="main">
         <div class="coordinates" id="coordinates" title="Hover over cells; scroll to zoom">
-            <span class="f f-row"><b>Row</b> <span id="infoRow">–</span></span>
-            <span class="f f-col"><b>Column</b> <span id="infoCol">–</span></span>
-            <span class="f f-val"><b>Value</b> <span id="infoVal">–</span></span>
-            <span class="f f-fac"><b>Factors</b> <span id="infoFac">–</span></span>
-            <span class="f f-center"><b>Row center</b> <span id="infoCenter">–</span></span>
-            <span class="f f-prim"><b>Primorial</b> <span id="infoPrim">–</span></span>
-            <span class="f f-mod"><b>Residues</b> <span id="infoMod">–</span></span>
+            <div class="line">
+                <span class="f f-row"><b>Row</b> <span id="infoRow">–</span></span>
+                <span class="f f-col"><b>Column</b> <span id="infoCol">–</span></span>
+                <span class="f f-val"><b>Value</b> <span id="infoVal">–</span></span>
+                <span class="f f-center"><b>Row center</b> <span id="infoCenter">–</span></span>
+                <span class="f f-prim"><b>Primorial</b> <span id="infoPrim">–</span></span>
+            </div>
+            <div class="line">
+                <span class="f f-mod"><b>Residues</b> <span id="infoMod">–</span></span>
+                <span class="f f-fac"><b>Factors</b> <span id="infoFac">–</span></span>
+            </div>
         </div>
         <div class="viewport" id="viewport">
             <canvas id="grid"></canvas>
@@ -1102,6 +1113,22 @@
             return { primorial, primes };
         }
 
+        // [2, 2, 2, 3, 5, 5] -> "2³ × 3 × 5²"
+        const SUPERSCRIPT_DIGITS = '⁰¹²³⁴⁵⁶⁷⁸⁹';
+        function formatFactors(factors) {
+            if (factors.length === 0) return '1';
+            const parts = [];
+            for (let i = 0; i < factors.length; ) {
+                let j = i;
+                while (j < factors.length && factors[j] === factors[i]) j++;
+                const k = j - i;
+                const exp = k > 1 ? [...String(k)].map(d => SUPERSCRIPT_DIGITS[d]).join('') : '';
+                parts.push(`${factors[i]}${exp}`);
+                i = j;
+            }
+            return parts.join(' × ');
+        }
+
         // Hover: map the mouse position back to a cell
         let hoveredKey = '';
         viewport.addEventListener('mousemove', (e) => {
@@ -1112,10 +1139,9 @@
             hoveredKey = `${row},${col}`;
             const pseudoprimorial = getPseudoprimorial(row);
             const value = pseudoprimorial + col;
-            const factors = primeFactorization(Math.abs(value));
-            const factorStr = factors.length > 0 ? factors.join(' × ') : '1';
+            const factorStr = value === 0 ? '–' : formatFactors(primeFactorization(Math.abs(value)));
             const { primorial, primes } = largestPrimorialDividing(pseudoprimorial);
-            const residues = primes.map(p => `${p}:${((value % p) + p) % p}`).join('  ');
+            const residues = primes.map(p => `${p}:${((value % p) + p) % p}`).join(' ');
             info.row.textContent = row;
             info.col.textContent = col;
             info.val.textContent = value;

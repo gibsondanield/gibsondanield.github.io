@@ -51,7 +51,7 @@ If a number matches several selected types, its cell is split into equal vertica
 - **Drag**: Pan around the grid
 - **Recenter**: Snap column 0 back to center horizontally
 - **Reset**: Return to default state (column 0 centered, zoom 1, 30 rows, square cells, no special types selected)
-- **Info bar**: Shows the hovered cell's row, column, value, factors, and row center. It also shows the largest primorial dividing the row center and the value's residue mod each prime in that primorial. Fields sit at fixed positions.
+- **Info bar**: Two fixed lines. The first shows the hovered cell's row, column, value, row center, and the largest primorial dividing the row center. The second shows the value's residue mod each prime in that primorial, then its factorization with exponents (e.g. 2³ × 3² × 5).
 - **Special Primes**: Check boxes to highlight special prime types with colors
 
 ## Explore
