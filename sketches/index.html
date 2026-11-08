@@ -1,7 +1,7 @@
 ---
 layout: default
-title: Sketches
-description: Interactive generative sketches (Processing, 2013–15, ported to p5.js).
+title: Generative Art circa 2010
+description: Interactive generative art, written in Processing and ported to p5.js.
 extra_css: |
   main{ max-width: none; }
   .sketch{ display: block; width: 100%; border: 0; margin: 0 0 2.5rem; background: #000; }
@@ -16,7 +16,7 @@ sketches:
   - { file: recursive-decay.html,       title: Recursive decay,         w: 900,  h: 900 }
 ---
 <p class="back"><a href="{{ '/' | relative_url }}">← home</a></p>
-<h1>Sketches</h1>
+<h1>Generative Art circa 2010</h1>
 
 {% for s in page.sketches -%}
 <iframe class="sketch" src="{{ s.file }}" title="{{ s.title }}" loading="lazy" scrolling="no"
