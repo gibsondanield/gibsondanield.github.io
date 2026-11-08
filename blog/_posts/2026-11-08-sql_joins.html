@@ -1,0 +1,78 @@
+---
+title: "SQL joins without Venn diagrams"
+description: "Joins drawn as what they produce: rows grouped by whether they matched, columns from both tables, and NULLs where nothing matched. Plus duplicate keys, IS NULL, and NOT IN."
+date: 2026-11-08 10:00:00 +0900
+preface: >-
+  An artifact from my attempts to explain SQL joins in a systematic way. This is how I think about SQL joins.
+---
+
+  <h2>What's wrong with the Venn diagram</h2>
+  <p>The usual join cheat sheet draws two overlapping circles, A and B, and shades parts of them: the overlap for <code>INNER JOIN</code>, all of A for <code>LEFT JOIN</code>, and so on. It's memorable, but it treats a join as a set operation on rows, and it isn't one. Set operations are <code>UNION</code>, <code>INTERSECT</code> and <code>EXCEPT</code>; they take rows of the same shape and return rows of that shape. A join returns <em>new, wider</em> rows, each built from a row of A and a row of B. The circles can't show three things that matter:</p>
+  <ul>
+    <li><strong>The columns.</strong> Every output row has A's columns and B's columns.</li>
+    <li><strong>The NULLs.</strong> When an outer join keeps a row that matched nothing, the other table's columns are filled with NULL.</li>
+    <li><strong>The row count.</strong> A key that appears twice in B makes its partner in A appear twice in the output. The "overlap" can be bigger than either circle.</li>
+  </ul>
+  <p>So here's the alternative: draw the result table itself.</p>
+
+  <h2>Two small tables</h2>
+  <figure>
+    <img src="inputs.svg" alt="Table A has columns key and a, with rows 1 a1, 2 a2, 3 a3. Table B has columns key and b, with rows 2 b1, 3 b2, 3 b3, 4 b4." style="max-width:292px"/>
+    <figcaption>Key 1 is only in A, key 4 is only in B, and key 3 appears twice in B.</figcaption>
+  </figure>
+<pre><code>CREATE TABLE A (key INT, a TEXT);
+INSERT INTO A VALUES (1,'a1'), (2,'a2'), (3,'a3');
+CREATE TABLE B (key INT, b TEXT);
+INSERT INTO B VALUES (2,'b1'), (3,'b2'), (3,'b3'), (4,'b4');</code></pre>
+
+  <h2>One picture for every join</h2>
+  <p>Below is the result of <code>A FULL JOIN B ON A.key = B.key</code>, the join that keeps everything. Its rows fall into three bands: rows of A that matched nothing, matched pairs, and rows of B that matched nothing. Every other join is just a choice of which bands to keep. The bars on the right show the choices, with the number of rows each one returns.</p>
+  <figure>
+    <picture>
+      <source media="(max-width: 640px)" srcset="joins_tall.svg"/>
+      <img src="joins.svg" alt="The five-row result of A full join B, in three bands. Top band, A only: 1 a1 NULL NULL. Middle band, matched: 2 a2 2 b1; 3 a3 3 b2; 3 a3 3 b3. Bottom band, B only: NULL NULL 4 b4. Bars to the right show which bands each join keeps: INNER keeps the middle band (3 rows), LEFT the top and middle (4), RIGHT the middle and bottom (4), FULL all three (5), A only the top band (1), B only the bottom band (1), and unmatched the top and bottom bands (2)."/>
+    </picture>
+    <figcaption>Red cells come from A, blue from B, dashed cells are NULL. Columns split into <code>A.*</code> and <code>B.*</code>, which is what <code>SELECT</code> picks from; the bands are what the join and <code>WHERE</code> pick.</figcaption>
+  </figure>
+
+  <div class="table-wrap">
+  <table class="tradeoffs">
+    <thead><tr><th>Keeps</th><th>Query</th><th>Rows</th></tr></thead>
+    <tbody>
+      <tr><td>matched</td><td><code>A INNER JOIN B ON A.key = B.key</code></td><td>3</td></tr>
+      <tr><td>A only + matched</td><td><code>A LEFT JOIN B ON A.key = B.key</code></td><td>4</td></tr>
+      <tr><td>matched + B only</td><td><code>A RIGHT JOIN B ON A.key = B.key</code></td><td>4</td></tr>
+      <tr><td>everything</td><td><code>A FULL JOIN B ON A.key = B.key</code></td><td>5</td></tr>
+      <tr><td>A only</td><td><code>A LEFT JOIN B ON A.key = B.key WHERE B.key IS NULL</code></td><td>1</td></tr>
+      <tr><td>B only</td><td><code>A RIGHT JOIN B ON A.key = B.key WHERE A.key IS NULL</code></td><td>1</td></tr>
+      <tr><td>unmatched</td><td><code>A FULL JOIN B ON A.key = B.key WHERE A.key IS NULL OR B.key IS NULL</code></td><td>2</td></tr>
+    </tbody>
+  </table>
+  </div>
+  <p>Plain <code>JOIN</code> means <code>INNER JOIN</code>, and <code>LEFT JOIN</code> is short for <code>LEFT OUTER JOIN</code>. <code>RIGHT JOIN</code> is the same as a <code>LEFT JOIN</code> with the tables swapped, so many people never use it.</p>
+
+  <h2>What the picture makes obvious</h2>
+
+  <h3>Joins can multiply rows</h3>
+  <p>A has three rows, but <code>A LEFT JOIN B</code> returns four, because <code>a3</code> matches two rows of B and comes out once per match. This is the classic way a join quietly inflates a total: <code>SUM</code> over a column of A after joining to B counts <code>a3</code> twice. If you only want to know <em>whether</em> a match exists, use a semi-join, which returns each row of A at most once:</p>
+<pre><code>SELECT * FROM A
+WHERE EXISTS (SELECT 1 FROM B WHERE B.key = A.key);   -- a2, a3: 2 rows, not 3</code></pre>
+
+  <h3>Test for NULL with IS NULL, never = NULL</h3>
+  <p>The "A only" band is the rows where B's columns are NULL. But <code>B.key = NULL</code> is never true. Comparing anything with NULL, even NULL itself, gives <em>unknown</em>, and <code>WHERE</code> drops unknown rows, so <code>WHERE B.key = NULL</code> returns nothing at all. The 2017 version of this sheet made exactly that mistake. It has to be <code>IS NULL</code>.</p>
+  <p>Test the join key (or another column declared <code>NOT NULL</code>), not any column of B. A matched row can have a NULL in an ordinary column of B, which would make it look unmatched. The join key can't be NULL in a matched row, because NULL never equals anything.</p>
+
+  <h3>A WHERE on the right table undoes a LEFT JOIN</h3>
+  <p>In the "A only" band, every B column is NULL. So any <code>WHERE</code> condition on a B column, like <code>WHERE B.b &lt;&gt; 'b3'</code>, is unknown there, and the band disappears: the <code>LEFT JOIN</code> silently becomes an <code>INNER JOIN</code>. To filter B but keep unmatched A rows, put the condition in the <code>ON</code> clause:</p>
+<pre><code>SELECT * FROM A LEFT JOIN B ON A.key = B.key WHERE B.b &lt;&gt; 'b3';  -- 2 rows, a1 is gone
+SELECT * FROM A LEFT JOIN B ON A.key = B.key AND B.b &lt;&gt; 'b3';  -- 3 rows, a1 kept</code></pre>
+
+  <h3>NULL keys never match</h3>
+  <p>A row of A with <code>key</code> NULL always lands in the "A only" band, even if B also has a NULL key. Joining on nullable columns is fine, as long as you expect those rows to fall out of an inner join.</p>
+
+  <h2>Things the picture doesn't cover</h2>
+  <ul>
+    <li><strong>Anti-joins with NOT IN.</strong> <code>WHERE A.key NOT IN (SELECT key FROM B)</code> looks like the "A only" query, but if B has even one NULL key it returns nothing, for the same reason <code>= NULL</code> does. <code>NOT EXISTS</code> doesn't have this problem, and neither does the <code>LEFT JOIN … IS NULL</code> form above.</li>
+    <li><strong>CROSS JOIN</strong> pairs every row of A with every row of B: 3 × 4 = 12 rows, no bands at all. An inner join is a cross join filtered by the <code>ON</code> condition.</li>
+    <li><strong>USING and NATURAL JOIN</strong> merge the two key columns into one. In a full join, the merged key is <code>COALESCE(A.key, B.key)</code>, so it's never NULL even in the unmatched bands.</li>
+  </ul>
