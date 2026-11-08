@@ -3,7 +3,7 @@ title: "SQL joins without Venn diagrams"
 description: "Joins drawn as what they produce: rows grouped by whether they matched, columns from both tables, and NULLs where nothing matched. Plus duplicate keys, IS NULL, and NOT IN."
 date: 2026-11-08 10:00:00 +0900
 preface: >-
-  An artifact from my attempts to explain SQL joins in a systematic way. This is how I think about SQL joins.
+  Back in 2015 I made a cheat sheet for SQL joins because the Venn-diagram ones bugged me: they don't show the NULLs an outer join fills in. I updated it in 2017. The idea held up, but the sheet still had bugs (an = NULL that matches nothing, a LEFT JOIN labelled as plain JOIN). Here it is redrawn and corrected by Claude Opus 5.5, with every query checked against SQLite.
 ---
 
   <h2>What's wrong with the Venn diagram</h2>
