@@ -379,7 +379,7 @@
             const minCol = Math.floor(vpLeft / cellWidth);
             const maxCol = Math.ceil(vpRight / cellWidth) + 1;
             const minRow = Math.max(1, Math.floor(vpTop / cellHeight) + 1);
-            const maxRow = Math.ceil(vpBottom / cellHeight) + 2;
+            const maxRow = Math.min(MAX_ROW + 1, Math.ceil(vpBottom / cellHeight) + 2);
 
             return { minCol, maxCol, minRow, maxRow };
         }
@@ -388,6 +388,9 @@
         function constrainView() {
             // offsetY = 0 means row 1 is at the top. We can't go higher (positive offsetY).
             if (offsetY > 0) offsetY = 0;
+            // ...or lower than the last row whose values are still exact integers.
+            const minOffsetY = Math.min(0, viewport.clientHeight - MAX_ROW * cellHeight * zoomLevel);
+            if (offsetY < minOffsetY) offsetY = minOffsetY;
         }
 
         // Update transforms
@@ -804,9 +807,9 @@
         // A378018: primes primorial(i)*m ± prime(i+1) for 0 < m < prime(i+1),
         // i.e. a term of A060735 plus or minus the smallest prime not dividing it.
         const a378018Set = new Set();
-        for (let i = 0; i < 9; i++) {
+        for (let i = 0; i < PRIMORIAL_PRIMES.length; i++) {
             const q = PRIMORIAL_PRIMES[i];
-            for (let m = 1; m < q; m++) {
+            for (let m = 1; m < q && PRIMORIALS[i] * m <= Number.MAX_SAFE_INTEGER; m++) {
                 a378018Set.add(PRIMORIALS[i] * m - q);
                 a378018Set.add(PRIMORIALS[i] * m + q);
             }
@@ -912,34 +915,33 @@
             return primality(n);
         }
 
-        // Row centers: OEIS A060735, a(n+1) = a(n) + rad(a(n)), i.e. the multiples
-        // m * primorial(i) for 1 <= m < prime(i+1): 1, 2, 4, 6, 12, ..., 210, 420, ...,
-        // 2310, 4620, 6930, ..., 27720, 30030, 60060, ...
-        function generatePseudoprimorialNumbers(count) {
-            const result = [1];
-            while (result.length < count) {
-                const a = result[result.length - 1];
-                const rad = [...new Set(primeFactorization(a))].reduce((x, y) => x * y, 1);
-                result.push(a + rad);
+        // Row centers: OEIS A060735, the multiples m * primorial(i) for
+        // 1 <= m < prime(i+1): 1, 2, 4, 6, 12, ..., 210, 420, ..., 2310, 4620, 6930,
+        // ..., 27720, 30030, 60060, ... Generated once, stopping where values
+        // exceed Number.MAX_SAFE_INTEGER (past that, + and % are no longer exact).
+        const ROW_CENTERS = (() => {
+            const result = [];
+            const primes = [2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47];
+            let primorial = 1;
+            for (const q of primes) {
+                for (let m = 1; m < q; m++) {
+                    const v = primorial * m;
+                    if (v > Number.MAX_SAFE_INTEGER) return result;
+                    result.push(v);
+                }
+                primorial *= q;
             }
             return result;
-        }
+        })();
+        const MAX_ROW = ROW_CENTERS.length - 1;  // row r uses ROW_CENTERS[r]; row 0 is unused
 
         function generateColorFromFactors(num) {
             const colorFunction = compositeColorFunctions[currentCompositeColorScheme];
             return colorFunction(num);
         }
 
-        // Cache for pseudoprimorials to avoid recalculating
-        let pseudoprimorialCache = [];
-
         function getPseudoprimorial(row) {
-            while (pseudoprimorialCache.length <= row) {
-                const nextIdx = pseudoprimorialCache.length;
-                const psuedos = generatePseudoprimorialNumbers(nextIdx + 100);
-                pseudoprimorialCache = psuedos;
-            }
-            return pseudoprimorialCache[row];
+            return ROW_CENTERS[row];
         }
 
         // Check if a cell should be greyed out based on pseudoprimorial midpoints
@@ -948,7 +950,7 @@
             const value = pseudoprimorial + col;
 
             // Check midpoint with next row
-            if (row + 1 < pseudoprimorialCache.length) {
+            if (row + 1 <= MAX_ROW) {
                 const nextPseudoprimorial = getPseudoprimorial(row + 1);
                 const midpointNext = (pseudoprimorial + nextPseudoprimorial) / 2;
                 if (value > midpointNext) return true;
