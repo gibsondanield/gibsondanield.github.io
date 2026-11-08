@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Recursive Decay</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/p5.min.js"></script>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      background: #000;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+    }
+  </style>
+</head>
+<body>
+  <script>
+/**
+ * RECURSIVE DECAY
+ * 
+ * Concept: What if recursion happened at the pixel level?
+ * Each pixel looks at its neighbors and applies a transformation
+ * based on their state, creating self-propagating patterns.
+ * 
+ * This combines:
+ * - Your recursive tree concept (but for pixels)
+ * - Your bitwise XOR operations
+ * - Cellular automata rules
+ * - Mouse-driven parameter space exploration
+ * 
+ * Click to seed new patterns.
+ * Mouse position controls the decay rules.
+ */
+
+let grid;
+let nextGrid;
+let cols, rows;
+let resolution = 3;
+
+function setup() {
+  createCanvas(900, 900);
+  cols = width / resolution;
+  rows = height / resolution;
+  
+  // Initialize grids
+  grid = create2DArray(cols, rows);
+  nextGrid = create2DArray(cols, rows);
+  
+  // Seed initial pattern
+  seedPattern();
+}
+
+function create2DArray(cols, rows) {
+  let arr = new Array(cols);
+  for (let i = 0; i < cols; i++) {
+    arr[i] = new Array(rows);
+    for (let j = 0; j < rows; j++) {
+      arr[i][j] = 0;
+    }
+  }
+  return arr;
+}
+
+function seedPattern() {
+  // Create initial seeds
+  for (let i = 0; i < 10; i++) {
+    let x = floor(random(cols));
+    let y = floor(random(rows));
+    grid[x][y] = random(100, 255);
+  }
+}
+
+function draw() {
+  background(0);
+  
+  // Mouse-controlled parameters
+  let decayRate = map(mouseX, 0, width, 0.85, 0.99);
+  let threshold = map(mouseY, 0, height, 30, 200);
+  
+  // Compute next generation
+  for (let i = 1; i < cols - 1; i++) {
+    for (let j = 1; j < rows - 1; j++) {
+      
+      // Look at neighbors in a + pattern (von Neumann neighborhood)
+      let left = grid[i-1][j];
+      let right = grid[i+1][j];
+      let up = grid[i][j-1];
+      let down = grid[i][j+1];
+      let center = grid[i][j];
+      
+      // Also check diagonal neighbors (Moore neighborhood)
+      let nw = grid[i-1][j-1];
+      let ne = grid[i+1][j-1];
+      let sw = grid[i-1][j+1];
+      let se = grid[i+1][j+1];
+      
+      // Apply bitwise operations inspired by your XOR patterns
+      // This creates non-linear interactions between neighbors
+      let xorSum = (left ^ right) + (up ^ down);
+      let andPattern = (nw & se) | (ne & sw);
+      
+      // Recursive-like rule: cell value depends on neighbor relationships
+      // Higher values "infect" neighbors, but with decay
+      let maxNeighbor = max(left, right, up, down, nw, ne, sw, se);
+      let avgNeighbor = (left + right + up + down) / 4;
+      
+      // The "recursion": if neighbors are active and pattern matches, propagate
+      if (maxNeighbor > threshold) {
+        // Propagate with XOR modulation
+        nextGrid[i][j] = (avgNeighbor * decayRate + xorSum * 0.3 + andPattern * 0.1) % 255;
+      } else {
+        // Natural decay
+        nextGrid[i][j] = center * 0.95;
+      }
+      
+      // Add small random perturbations
+      if (random() < 0.001) {
+        nextGrid[i][j] += random(-10, 10);
+      }
+      
+      // Clamp
+      nextGrid[i][j] = constrain(nextGrid[i][j], 0, 255);
+    }
+  }
+  
+  // Swap grids
+  let temp = grid;
+  grid = nextGrid;
+  nextGrid = temp;
+  
+  // Render
+  loadPixels();
+  for (let i = 0; i < cols; i++) {
+    for (let j = 0; j < rows; j++) {
+      let value = grid[i][j];
+      
+      // Color based on value with XOR position modulation
+      // (inspired by your dynamicTriangleFlower)
+      let positionMod = (i ^ j) % 60;
+      let hue = (value + positionMod + frameCount * 0.5) % 255;
+      
+      let r = value;
+      let g = (value + positionMod) % 255;
+      let b = (value * 0.7) % 255;
+      
+      // Alternative: use sin modulation like your experiments
+      // let r = value * abs(sin(i * 0.1));
+      // let g = value * abs(sin(j * 0.1));
+      // let b = value * abs(sin((i+j) * 0.1));
+      
+      // Fill resolution x resolution block
+      for (let x = 0; x < resolution; x++) {
+        for (let y = 0; y < resolution; y++) {
+          let px = i * resolution + x;
+          let py = j * resolution + y;
+          let index = (py * width + px) * 4;
+          pixels[index] = r;
+          pixels[index + 1] = g;
+          pixels[index + 2] = b;
+          pixels[index + 3] = 255;
+        }
+      }
+    }
+  }
+  updatePixels();
+}
+
+function mousePressed() {
+  // Add energy at mouse position
+  let i = floor(mouseX / resolution);
+  let j = floor(mouseY / resolution);
+  if (i > 0 && i < cols && j > 0 && j < rows) {
+    // Create a small cluster
+    for (let di = -2; di <= 2; di++) {
+      for (let dj = -2; dj <= 2; dj++) {
+        if (i+di > 0 && i+di < cols && j+dj > 0 && j+dj < rows) {
+          grid[i+di][j+dj] = random(150, 255);
+        }
+      }
+    }
+  }
+}
+
+function keyPressed() {
+  if (key === ' ') {
+    // Reset
+    grid = create2DArray(cols, rows);
+    seedPattern();
+  } else if (key === 'c') {
+    // Clear
+    grid = create2DArray(cols, rows);
+  }
+}
+  </script>
+</body>
+</html>

@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Dynamic Triangle Flower</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/p5.min.js"></script>
+  <style>
+    body {
+      margin: 0;
+      padding: 20px;
+      background: #000;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+    }
+  </style>
+</head>
+<body>
+  <script>
+function setup() {
+  createCanvas(510, 510);
+  loadPixels();
+}
+
+function draw() {
+  background(0);
+  let cols = width;
+  let rows = height;
+  let r, b, g = 0;
+  
+  for (let i = 0; i < cols; i++) {
+    for (let j = 0; j < rows; j++) {
+      // Original bitwise XOR operation with sine wave modulation
+      r = 255 * pow(sin((mouseX / 5100) * (i ^ j)), 2 * (mouseY / 10));
+      let index = (j * width + i) * 4;
+      pixels[index] = r;     // Red
+      pixels[index + 1] = r; // Green
+      pixels[index + 2] = 0; // Blue
+      pixels[index + 3] = 255; // Alpha
+    }
+  }
+  
+  updatePixels();
+}
+  </script>
+</body>
+</html>

@@ -1,61 +1,11 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Reverse-engineering the wine cellar</title>
-  <meta name="description" content="Following up the sixteen-bottles wine riddle: why an LP can't find the probabilities, what the principle of indifference has to do with permanents, and a better approximation than max-entropy."/>
-  <style>
-    :root{
-      --bg: #000;
-      --fg: #fff;
-      --fg2: #c3c2b7;
-      --muted: #9a9a95;
-      --rule: #2c2c2a;
-      --panel: #121211;
-      --link: #4da6ff;
-      --link-hover: #82c7ff;
-      --accent: #3987e5;
-    }
-    body{ background: var(--bg); color: var(--fg); font-family: sans-serif; margin: 0; padding: 2rem 1rem; }
-    main{ max-width: 46rem; margin: 0 auto; line-height: 1.65; font-size: 1.05rem; }
-    h1{ font-size: 2rem; line-height: 1.2; margin: 1.5rem 0 0.25rem; }
-    h2{ font-size: 1.35rem; margin: 2.75rem 0 0.5rem; }
-    p, li{ color: var(--fg2); }
-    strong{ color: var(--fg); }
-    a{ color: var(--link); text-decoration: none; }
-    a:hover{ text-decoration: underline; color: var(--link-hover); }
-    .back{ font-size: 1rem; }
-    .byline{ color: var(--muted); font-size: 0.95rem; margin: 0 0 2rem; }
-    .preface{ border-left: 3px solid var(--accent); background: var(--panel); padding: 0.9rem 1.1rem; margin: 0 0 2rem; }
-    .preface p{ margin: 0; color: var(--fg); }
-    code, .math{ font-family: ui-monospace, "DejaVu Sans Mono", monospace; font-size: 0.92em; color: var(--fg); }
-    .display{ display: block; background: var(--panel); padding: 0.75rem 1rem; margin: 1rem 0; overflow-x: auto; white-space: pre; }
-    figure{ margin: 2rem 0; }
-    figure img{ width: 100%; height: auto; display: block; }
-    figcaption{ color: var(--muted); font-size: 0.9rem; margin-top: 0.5rem; }
-    .table-wrap{ overflow-x: auto; margin: 1.25rem 0; }
-    table{ border-collapse: collapse; width: 100%; font-size: 0.95rem; }
-    th, td{ padding: 0.45rem 0.7rem; border-bottom: 1px solid var(--rule); text-align: right; white-space: nowrap; }
-    th:first-child, td:first-child{ text-align: left; }
-    th{ color: var(--fg); font-weight: 600; }
-    td{ color: var(--fg2); font-variant-numeric: tabular-nums; }
-    td.best{ color: var(--fg); font-weight: 600; }
-    tr.floor td{ color: var(--muted); font-style: italic; }
-    .note{ color: var(--muted); font-size: 0.9rem; }
-    hr{ border: 0; border-top: 1px solid var(--rule); margin: 3rem 0 1.5rem; }
-  </style>
-</head>
-<body>
-<main>
-  <p><a class="back" href="/blog/">← blog</a></p>
-
-  <div class="preface">
-    <p>Without LLMs, nothing would get done. Here is a project that sat around for a year before pushing it. The following is written by claude Opus 5.5, and is meant to convey info rather than be about human experience (though my thought process is mentioned along the way).</p>
-  </div>
-
-  <h1>Reverse-engineering the wine cellar</h1>
-  <p class="byline">Daniel Gibson · November 2026 · <a href="https://github.com/gibsondanield/doubly_stochastic_matrix_solving">code</a></p>
+---
+title: "Reverse-engineering the wine cellar"
+description: "Following up the sixteen-bottles wine riddle: why an LP can't find the probabilities, what the principle of indifference has to do with permanents, and a better approximation than max-entropy."
+date: 2026-11-07 18:24:00 +0900
+code: https://github.com/gibsondanield/doubly_stochastic_matrix_solving
+preface: >-
+  Without LLMs, nothing would get done. Here is a project that sat around for a year before pushing it. The following is written by claude Opus 5.5, and is meant to convey info rather than be about human experience (though my thought process is mentioned along the way).
+---
 
   <h2>The riddle</h2>
   <p>This builds on Chris KW's <a href="https://chriskw.xyz/2025/08/11/Wine/">Sixteen bottles of wine riddle</a>; read that first, it's short and good. The gist: there are 2<sup>n</sup> bottles, each from a different year, and n measuring devices. Each device reports one bit of a bottle's year. You can't mix wines, so every measurement is one bit of one bottle. Identify every bottle in as few measurements as possible. Chris's post covers the pen-and-paper divide-and-conquer strategy (49 measurements for 16 bottles), the information content, and a greedy expected-information-gain strategy that averages <strong>15.48 measurements on 8 bottles</strong>.</p>
@@ -181,6 +131,3 @@
 
   <hr/>
   <p class="note">References: Chris KW, <a href="https://chriskw.xyz/2025/08/11/Wine/">Sixteen bottles of wine riddle</a> (2025) and its <a href="https://news.ycombinator.com/item?id=44933019">HN discussion</a>; P. O. Vontobel, "The Bethe permanent of a nonnegative matrix", IEEE Trans. Inf. Theory (2013); H. J. Ryser, <em>Combinatorial Mathematics</em> (1963).</p>
-</main>
-</body>
-</html>

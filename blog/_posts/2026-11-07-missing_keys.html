@@ -1,66 +1,11 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Missing dict keys</title>
-  <meta name="description" content="get, setdefault, try/except, defaultdict, Counter, __missing__ or functools.cache? Benchmarks on Python 3.14 for counting, grouping and memoizing, and when each one wins."/>
-  <style>
-    :root{
-      --bg: #000;
-      --fg: #fff;
-      --fg2: #c3c2b7;
-      --muted: #9a9a95;
-      --rule: #2c2c2a;
-      --panel: #121211;
-      --link: #4da6ff;
-      --link-hover: #82c7ff;
-      --accent: #3987e5;
-    }
-    body{ background: var(--bg); color: var(--fg); font-family: sans-serif; margin: 0; padding: 2rem 1rem; }
-    main{ max-width: 46rem; margin: 0 auto; line-height: 1.65; font-size: 1.05rem; }
-    h1{ font-size: 2rem; line-height: 1.2; margin: 1.5rem 0 0.25rem; }
-    h2{ font-size: 1.35rem; margin: 2.75rem 0 0.5rem; }
-    p, li{ color: var(--fg2); }
-    strong{ color: var(--fg); }
-    a{ color: var(--link); text-decoration: none; }
-    a:hover{ text-decoration: underline; color: var(--link-hover); }
-    .back{ font-size: 1rem; }
-    .byline{ color: var(--muted); font-size: 0.95rem; margin: 0 0 2rem; }
-    .preface{ border-left: 3px solid var(--accent); background: var(--panel); padding: 0.9rem 1.1rem; margin: 0 0 2rem; }
-    .preface p{ margin: 0; color: var(--fg); }
-    code{ font-family: ui-monospace, "DejaVu Sans Mono", monospace; font-size: 0.92em; color: var(--fg); }
-    pre{ background: var(--panel); padding: 0.75rem 1rem; margin: 1rem 0; overflow-x: auto; line-height: 1.45; }
-    pre code{ font-size: 0.9rem; }
-    figure{ margin: 2rem 0; }
-    figure img{ width: 100%; height: auto; display: block; }
-    figcaption{ color: var(--muted); font-size: 0.9rem; margin-top: 0.5rem; }
-    .table-wrap{ overflow-x: auto; margin: 1.25rem 0; }
-    table{ border-collapse: collapse; width: 100%; font-size: 0.95rem; }
-    th, td{ padding: 0.45rem 0.7rem; border-bottom: 1px solid var(--rule); text-align: right; white-space: nowrap; }
-    th:first-child, td:first-child{ text-align: left; }
-    th{ color: var(--fg); font-weight: 600; }
-    td{ color: var(--fg2); font-variant-numeric: tabular-nums; }
-    td.best{ color: var(--fg); font-weight: 600; }
-    table.tradeoffs td{ white-space: normal; text-align: left; vertical-align: top; font-variant-numeric: normal; }
-    table.tradeoffs th{ text-align: left; }
-    table.tradeoffs td:first-child{ white-space: nowrap; }
-    .note{ color: var(--muted); font-size: 0.9rem; }
-    hr{ border: 0; border-top: 1px solid var(--rule); margin: 3rem 0 1.5rem; }
-    .closing{ border-left: 3px solid var(--accent); background: var(--panel); padding: 0.9rem 1.1rem; margin: 2.5rem 0 1rem; }
-    .closing p{ margin: 0; color: var(--fg); }
-  </style>
-</head>
-<body>
-<main>
-  <p><a class="back" href="/blog/">← blog</a></p>
-
-  <div class="preface">
-    <p>I've had many discussions with colleagues, comments in code reviews, and failed many interview questions about this issue and how to best handle it. I wanted to give some thoughts here and have some quantitative info on runtime for empirical claims. As with other posts, nothing gets done without LLMs (I love writing, but I like running my own experiments more, so it's better to put up something AI written rather than nothing at all, right?). So Opus 5.5 is doing most of the writing here, and refactoring most of my code from an original project from a while back. Enjoy.</p>
-  </div>
-
-  <h1>Missing dict keys: what's fastest, and when</h1>
-  <p class="byline">Daniel Gibson · November 2026 · <a href="https://github.com/gibsondanield/missing-key-benchmark">code</a></p>
+---
+title: "Missing dict keys: what's fastest, and when"
+description: "get, setdefault, try/except, defaultdict, Counter, `__missing__` or functools.cache? Benchmarks on Python 3.14 for counting, grouping and memoizing, and when each one wins."
+date: 2026-11-07 19:16:00 +0900
+code: https://github.com/gibsondanield/missing-key-benchmark
+preface: >-
+  I've had many discussions with colleagues, comments in code reviews, and failed many interview questions about this issue and how to best handle it. I wanted to give some thoughts here and have some quantitative info on runtime for empirical claims. As with other posts, nothing gets done without LLMs (I love writing, but I like running my own experiments more, so it's better to put up something AI written rather than nothing at all, right?). So Opus 5.5 is doing most of the writing here, and refactoring most of my code from an original project from a while back. Enjoy.
+---
 
   <h2>The question</h2>
   <p>Every Python codebase has some version of this: update <code>d[k]</code>, but <code>k</code> might not be there yet. There are several common ways to write it, and every one of them has defenders:</p>
@@ -222,6 +167,3 @@ d[k] += 1</code></pre>
 
   <hr/>
   <p class="note">CPython 3.14.0 on Linux x86-64. Times are ns per operation after subtracting an empty loop; each point is the median of at least 7 runs. Benchmark code, raw results and figure scripts: <a href="https://github.com/gibsondanield/missing-key-benchmark">github.com/gibsondanield/missing-key-benchmark</a>.</p>
-</main>
-</body>
-</html>

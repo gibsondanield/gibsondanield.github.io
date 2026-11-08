@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Math Experiments (Feb 23, 2013)</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/p5.min.js"></script>
+  <style>
+    body {
+      margin: 0;
+      padding: 20px;
+      background: #000;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+    }
+  </style>
+</head>
+<body>
+  <script>
+function setup() {
+  createCanvas(800, 800);
+  loadPixels();
+  console.log("monkeys"); // Original debug message preserved
+}
+
+function draw() {
+  background(0);
+  let cols = width;
+  let rows = height;
+
+  for (let i = 0; i < cols; i++) {
+    for (let j = 0; j < rows; j++) {
+      // Distance from origin modulated by mouse
+      let c = mouseX * sqrt(pow(i, 2) + pow(j, 2)) % 255;
+      let index = (j * width + i) * 4;
+      pixels[index] = c;
+      pixels[index + 1] = c;
+      pixels[index + 2] = c;
+      pixels[index + 3] = 255;
+    }
+  }
+  
+  updatePixels();
+}
+
+// COMMENTED OUT EXPERIMENTS FROM ORIGINAL (preserved for archaeology):
+// Too many cool variations to lose - here's what I was trying:
+// - Sine/cosine interference patterns
+// - XOR bitwise operations for symmetry
+// - Exponential decay gradients
+// - RGB channel experiments with different math functions
+// - Logarithmic spirals
+// Active formula: mouseX*sqrt(i^2+j^2)%255
+  </script>
+</body>
+</html>

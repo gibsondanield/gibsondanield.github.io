@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Feb 25 Log Patterns</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/p5.min.js"></script>
+  <style>
+    body {
+      margin: 0;
+      padding: 20px;
+      background: #000;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+    }
+  </style>
+</head>
+<body>
+  <script>
+function setup() {
+  createCanvas(1020, 1020);
+  loadPixels();
+}
+
+function draw() {
+  background(0);
+  let cols = width;
+  let rows = height;
+
+  for (let i = 0; i < cols; i++) {
+    for (let j = 0; j < rows; j++) {
+      let r = mouseX * log(sqrt(pow(i, 2) + pow(j, 3))) % 255;
+      let g = mouseX * log(pow(i, 2) + pow(j, 2)) % 255;
+      let b = mouseY * sqrt(pow(i, 3) + pow(j, 3)) % 255;
+      
+      let index = (j * width + i) * 4;
+      pixels[index] = r;
+      pixels[index + 1] = g;
+      pixels[index + 2] = b;
+      pixels[index + 3] = 255;
+    }
+  }
+  
+  updatePixels();
+}
+  </script>
+</body>
+</html>

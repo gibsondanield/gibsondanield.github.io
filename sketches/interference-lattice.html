@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Interference Lattice</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/p5.min.js"></script>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      background: #000;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      overflow: hidden;
+    }
+    canvas {
+      border: 1px solid #222;
+    }
+  </style>
+</head>
+<body>
+  <script>
+/**
+ * INTERFERENCE LATTICE
+ * 
+ * Concept: Multiple wave sources propagate through a 2D lattice,
+ * creating interference patterns. Instead of calculating continuous waves,
+ * we discretize space into a grid where each cell has a "phase" value
+ * influenced by multiple oscillating sources.
+ * 
+ * Mouse controls:
+ * - X position: modulates wavelength
+ * - Y position: controls decay rate
+ * - Click: adds a new wave source
+ * - Right click: clears sources
+ * 
+ * The twist: Uses bitwise operations on the interference sum
+ * to create hard-edged patterns within the smooth wave field.
+ */
+
+let sources = [];
+let time = 0;
+let gridSize = 4; // Size of each "pixel" in the lattice
+
+function setup() {
+  createCanvas(800, 800);
+  colorMode(HSB, 360, 100, 100);
+  
+  // Start with a few sources
+  sources.push({x: width * 0.3, y: height * 0.3, phase: 0, freq: 0.8});
+  sources.push({x: width * 0.7, y: height * 0.7, phase: PI, freq: 1.2});
+  sources.push({x: width * 0.5, y: height * 0.5, phase: PI/2, freq: 1.0});
+}
+
+function draw() {
+  background(0);
+  loadPixels();
+  
+  time += 0.02;
+  
+  // Mouse-controlled parameters
+  let wavelength = map(mouseX, 0, width, 20, 200);
+  let decay = map(mouseY, 0, height, 0.001, 0.01);
+  
+  // Update each grid cell
+  for (let x = 0; x < width; x += gridSize) {
+    for (let y = 0; y < height; y += gridSize) {
+      
+      // Sum interference from all sources
+      let totalAmplitude = 0;
+      let totalPhase = 0;
+      
+      for (let source of sources) {
+        let dx = x - source.x;
+        let dy = y - source.y;
+        let distance = sqrt(dx * dx + dy * dy);
+        
+        // Wave equation with decay
+        let amplitude = exp(-decay * distance);
+        let phase = (distance / wavelength) * TWO_PI - time * source.freq;
+        
+        totalAmplitude += amplitude * cos(phase + source.phase);
+        totalPhase += phase;
+      }
+      
+      // Here's the twist: apply bitwise operation to create discrete levels
+      // Map continuous value to integer, then use bitwise AND to create patterns
+      let quantized = int(abs(totalAmplitude) * 255);
+      let pattern = quantized & int(totalPhase * 10 % 256); // Bitwise magic
+      
+      // Color mapping with pattern modulation
+      let hue = (pattern * 2 + time * 50) % 360;
+      let sat = map(abs(totalAmplitude), 0, sources.length, 0, 100);
+      let bright = map(pattern, 0, 255, 0, 100);
+      
+      // Alternative: use the XOR approach from your triangle flower
+      // let xorPattern = (x >> 2) ^ (y >> 2);
+      // bright = map((pattern ^ xorPattern) & 255, 0, 255, 0, 100);
+      
+      let c = color(hue, sat, bright);
+      
+      // Fill grid cell
+      for (let dx = 0; dx < gridSize; dx++) {
+        for (let dy = 0; dy < gridSize; dy++) {
+          let px = x + dx;
+          let py = y + dy;
+          if (px < width && py < height) {
+            let index = (py * width + px) * 4;
+            pixels[index] = red(c);
+            pixels[index + 1] = green(c);
+            pixels[index + 2] = blue(c);
+            pixels[index + 3] = 255;
+          }
+        }
+      }
+    }
+  }
+  
+  updatePixels();
+  
+  // Draw source indicators
+  noStroke();
+  fill(255, 100);
+  for (let source of sources) {
+    ellipse(source.x, source.y, 8, 8);
+  }
+}
+
+function mousePressed() {
+  if (mouseButton === LEFT) {
+    // Add new source at mouse position
+    sources.push({
+      x: mouseX,
+      y: mouseY,
+      phase: random(TWO_PI),
+      freq: random(0.5, 1.5)
+    });
+    
+    // Limit number of sources
+    if (sources.length > 12) {
+      sources.shift();
+    }
+  } else if (mouseButton === RIGHT) {
+    // Clear all sources
+    sources = [];
+  }
+  return false; // Prevent context menu
+}
+
+function keyPressed() {
+  if (key === ' ') {
+    // Reset with random sources
+    sources = [];
+    for (let i = 0; i < 5; i++) {
+      sources.push({
+        x: random(width),
+        y: random(height),
+        phase: random(TWO_PI),
+        freq: random(0.5, 1.5)
+      });
+    }
+  } else if (key === 'c') {
+    // Clear
+    sources = [];
+  }
+}
+  </script>
+</body>
+</html>

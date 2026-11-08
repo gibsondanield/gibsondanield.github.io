@@ -1,87 +1,23 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Welcome</title>
-<style>
-  /* 1️⃣  Site‑wide colour palette */
-  :root{
-    --bg: #000;   /* pure black background   */
-    --fg: #fff;   /* main (formerly black) text */
-    --link: #4da6ff;   /* bright blue link on black */
-    --link-hover: #82c7ff;
-  }
+---
+layout: default
+title: Daniel Gibson
+---
+<h1>Daniel Gibson</h1>
+<p class="tagline">{{ site.tagline }}</p>
 
-  /* 2️⃣  Apply the palette */
-  body{
-    background: var(--bg);
-    color: var(--fg);
-    font-family: sans-serif;
-    margin: 0;
-    padding: 2rem;
-  }
+<h2 class="section-label">Writing</h2>
+{% include post-list.html posts=site.posts %}
+<p class="note"><a href="{{ '/blog/' | relative_url }}">all posts</a> · <a href="{{ '/blog/feed.xml' | relative_url }}">rss</a></p>
 
-  h1{ margin-bottom: 1rem; }
+<h2 class="section-label">Things I made</h2>
+<ul class="entries">
+  <li><a href="{{ '/prime_grid/prime_grid.html' | relative_url }}">Prime number visualization</a></li>
+  <li><a href="{{ '/sketches/' | relative_url }}">Generative sketches</a><span class="meta">2013–15</span></li>
+  <li><a href="{{ '/photos/' | relative_url }}">Photos</a></li>
+</ul>
 
-  ul{ list-style:none; padding:0; }
-
-  li{ margin:1rem 0; }
-
-  a{
-    color: var(--link);
-    text-decoration:none;
-    font-size:1.25rem;
-  }
-  a:hover{ text-decoration:underline; color:var(--link-hover); }
-
-  .eapps-instagram-feed-title-container,
-  .eapps-instagram-feed-title {
-    display: none !important;
-}
-  .eapps-instagram-feed-posts-item-image-wrapper {
-  padding-bottom: 0 !important;
-  height: auto !important;
-}
-
-.eapps-instagram-feed-posts-item-image {
-  position: relative !important;
-  height: auto !important;
-  object-fit: contain !important;
-}
-.eapps-instagram-feed-posts-item-media,
-.eapps-instagram-feed-posts-item-image-wrapper {
-  background: #000 !important;
-}
-
-  footer {
-    margin-top: 4rem;
-    padding-top: 2rem;
-    border-top: 1px solid #333;
-    color: #666;
-    font-size: 0.9rem;
-  }
-</style>
-
-</head>
-<body>
-  <h1>Daniel Gibson</h1>
-  <h2>LLM prompter, vibe epistimologist, exister </h2>
-  <ul>
-    <li><a href="/blog/">Blog</a></li>
-    <li><a href="/photoPlotting/exposure_plot.html">Photography exposure visualization</a></li>
-    <li><a href="/prime_grid/prime_grid.html">Prime Number Visualization</a></li>
-    <li><a href="https://linkedin.com/in/ddgibson">LinkedIn</a></li>
-  </ul>
-
-  <!-- Elfsight Instagram Feed -->
-  <script src="https://elfsightcdn.com/platform.js" async></script>
-  <div class="elfsight-app-03a813b4-e1ff-44c9-b72a-5f7914471dfe" data-elfsight-app-lazy></div>
-
-  <p style="margin-top: 40px; color: #222;"><a href="/for_bots/interesting_data.html" style="color: #222;">interesting data</a></p>
-
-  <footer>
-    © 2026 Daniel D Gibson
-  </footer>
-</body>
-</html>
+<h2 class="section-label">Elsewhere</h2>
+<ul class="entries">
+  <li><a href="https://github.com/gibsondanield">GitHub</a></li>
+  <li><a href="https://linkedin.com/in/ddgibson">LinkedIn</a></li>
+</ul>

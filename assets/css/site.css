@@ -1,0 +1,145 @@
+/* Site-wide styles. Dark only: the post figures are drawn for a black background. */
+
+:root{
+  --bg: #000;
+  --fg: #f4f3ee;          /* headings, emphasis */
+  --fg2: #c3c2b7;         /* body text */
+  --muted: #9a9a95;       /* bylines, captions, dates */
+  --rule: #2c2c2a;
+  --panel: #121211;
+  --link: #4da6ff;
+  --link-hover: #82c7ff;
+  --accent: #3987e5;
+
+  --sans: system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans", "Helvetica Neue", Arial, sans-serif;
+  --mono: ui-monospace, "SF Mono", "JetBrains Mono", "Cascadia Code", Menlo, Consolas, "DejaVu Sans Mono", monospace;
+  --measure: 42rem;
+}
+
+*, *::before, *::after{ box-sizing: border-box; }
+
+html{ -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
+
+body{
+  background: var(--bg);
+  color: var(--fg2);
+  font-family: var(--sans);
+  font-size: 1.0625rem;
+  line-height: 1.7;
+  margin: 0;
+  padding: 2.5rem 1rem 3rem;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+}
+
+main, .site-footer{ max-width: var(--measure); margin: 0 auto; }
+
+/* ---------- type ---------- */
+
+h1, h2, h3{ color: var(--fg); line-height: 1.25; font-weight: 650; letter-spacing: -0.015em; }
+h1{ font-size: clamp(1.75rem, 1.3rem + 2vw, 2.25rem); margin: 1.25rem 0 0.4rem; text-wrap: balance; }
+h2{ font-size: 1.35rem; margin: 2.75rem 0 0.6rem; text-wrap: balance; }
+h3{ font-size: 1.1rem; margin: 2rem 0 0.4rem; }
+
+p, li{ text-wrap: pretty; }
+strong{ color: var(--fg); font-weight: 600; }
+sup, sub{ line-height: 0; }
+
+a{ color: var(--link); text-decoration: none; }
+a:hover{ color: var(--link-hover); text-decoration: underline; }
+a:focus-visible{ outline: 2px solid var(--link); outline-offset: 2px; border-radius: 2px; }
+
+/* Underline links inside running text so they don't rely on colour alone. */
+article p a, article li a, .note a{
+  text-decoration: underline;
+  text-decoration-color: rgba(77,166,255,0.4);
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.18em;
+}
+article p a:hover, article li a:hover, .note a:hover{ text-decoration-color: currentColor; }
+
+code, .math{ font-family: var(--mono); font-size: 0.88em; color: var(--fg); }
+:not(pre) > code{ background: var(--panel); padding: 0.1em 0.3em; border-radius: 3px; }
+pre, .display{
+  background: var(--panel);
+  border: 1px solid var(--rule);
+  border-radius: 6px;
+  padding: 0.8rem 1rem;
+  margin: 1.25rem 0;
+  overflow-x: auto;
+  line-height: 1.5;
+}
+pre code{ font-size: 0.875rem; }
+.display{ display: block; white-space: pre; }
+
+hr{ border: 0; border-top: 1px solid var(--rule); margin: 3rem 0 1.5rem; }
+
+/* ---------- post furniture ---------- */
+
+.back{ font-size: 0.95rem; margin: 0 0 1.5rem; }
+.byline{ color: var(--muted); font-size: 0.95rem; margin: 0 0 2.25rem; }
+.note{ color: var(--muted); font-size: 0.9rem; }
+
+.preface, .closing{
+  border-left: 3px solid var(--accent);
+  background: var(--panel);
+  border-radius: 0 6px 6px 0;
+  padding: 0.9rem 1.15rem;
+  font-size: 0.975rem;
+}
+.preface{ margin: 0 0 1.5rem; }
+.closing{ margin: 2.5rem 0 1rem; }
+.preface p, .closing p{ margin: 0; color: var(--fg); }
+
+figure{ margin: 2.25rem 0; }
+figure img{ width: 100%; height: auto; display: block; }
+figcaption{ color: var(--muted); font-size: 0.9rem; line-height: 1.55; margin-top: 0.6rem; }
+
+.table-wrap{ overflow-x: auto; margin: 1.25rem 0; }
+table{ border-collapse: collapse; width: 100%; font-size: 0.925rem; line-height: 1.5; }
+th, td{ padding: 0.45rem 0.7rem; border-bottom: 1px solid var(--rule); text-align: right; white-space: nowrap; }
+th:first-child, td:first-child{ text-align: left; }
+th{ color: var(--fg); font-weight: 600; }
+td{ font-variant-numeric: tabular-nums; }
+td.best{ color: var(--fg); font-weight: 600; }
+tr.floor td{ color: var(--muted); font-style: italic; }
+table.tradeoffs th, table.tradeoffs td{ text-align: left; }
+table.tradeoffs td{ white-space: normal; vertical-align: top; font-variant-numeric: normal; }
+table.tradeoffs td:first-child{ white-space: nowrap; }
+
+/* ---------- lists of things (home, blog index, sketches) ---------- */
+
+.tagline{ color: var(--muted); font-size: 1.1rem; margin: 0 0 2.5rem; }
+.section-label{
+  color: var(--muted);
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  margin: 2.5rem 0 0.75rem;
+}
+
+.entries{ list-style: none; padding: 0; margin: 0; }
+.entries li{ padding: 0.7rem 0; border-bottom: 1px solid var(--rule); }
+.entries li:first-child{ border-top: 1px solid var(--rule); }
+.entries a, .byline a{ text-decoration: none; }
+.entries a{ font-size: 1.1rem; font-weight: 500; }
+.entries a:hover, .byline a:hover{ text-decoration: underline; }
+.entries .meta{ color: var(--muted); font-size: 0.875rem; font-variant-numeric: tabular-nums; margin-left: 0.5rem; white-space: nowrap; }
+.entries .desc{ display: block; color: var(--muted); font-size: 0.925rem; line-height: 1.55; margin-top: 0.2rem; }
+
+/* ---------- footer ---------- */
+
+.site-footer{
+  margin-top: 4rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid var(--rule);
+  color: #666;
+  font-size: 0.875rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1.25rem;
+}
+.site-footer a{ color: #777; }
+.site-footer a:hover{ color: var(--muted); }
+.site-footer .lurk, .site-footer .lurk:hover{ color: #222; }

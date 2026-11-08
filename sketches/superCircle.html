@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Super Circle</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/p5.min.js"></script>
+  <style>
+    body {
+      margin: 0;
+      padding: 20px;
+      background: #000;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+    }
+  </style>
+</head>
+<body>
+  <script>
+let x = 640;
+let y = 640;
+let colorValue = 152;
+let theta = 0;
+let alpha = 100;
+
+function setup() {
+  createCanvas(x, y);
+  noStroke();
+  background(0);
+}
+
+function draw() {
+  // Right click to clear
+  if (mouseIsPressed && mouseButton === RIGHT) {
+    background(0);
+  }
+  
+  let d = mouseY / 4;
+  let dcos = d * (sqrt(3) / 2 + 1);
+  let colorParam = mouseX / 2;
+  
+  let white = color(255);
+  let black = color(0);
+  let green = color(colorValue, 251, colorValue);
+  let green1 = color(colorValue - colorParam, 251, colorValue);
+  let green2 = color(colorValue - colorParam, 251, colorValue + colorParam);
+  let green3 = color(colorValue, 251, colorValue - colorParam);
+  let green4 = color(colorValue + colorParam, 251, colorValue);
+  
+  push();
+  translate(x / 2, y / 2);
+  
+  // Left click to set rotation
+  if (mouseIsPressed && mouseButton === LEFT) {
+    theta = pmouseY / 35;
+  }
+  
+  rotate(theta);
+  
+  // Draw 5 circles in pentagonal arrangement
+  fill(green1);
+  green1.setAlpha(alpha);
+  ellipse(-d / 2, dcos, d, d);
+  
+  fill(green);
+  green.setAlpha(alpha);
+  ellipse(0, d, d, d);
+  
+  fill(green2);
+  green2.setAlpha(alpha);
+  ellipse(0, 0, d, d);
+  
+  fill(green3);
+  green3.setAlpha(alpha);
+  ellipse(0, -d, d, d);
+  
+  fill(green4);
+  green4.setAlpha(alpha);
+  ellipse(d / 2, -dcos, d, d);
+  
+  pop();
+}
+
+function mouseWheel(event) {
+  colorValue = colorValue + event.delta * 0.5;
+  colorValue = constrain(colorValue, -10, 280);
+  console.log(colorValue);
+  return false; // Prevent page scrolling
+}
+  </script>
+</body>
+</html>

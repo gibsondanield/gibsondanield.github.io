@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Exponents</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/p5.min.js"></script>
+  <style>
+    body {
+      margin: 0;
+      padding: 20px;
+      background: #000;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+    }
+  </style>
+</head>
+<body>
+  <script>
+function setup() {
+  createCanvas(1020, 1020);
+  loadPixels();
+}
+
+function draw() {
+  background(0);
+  let cols = width;
+  let rows = height;
+  let r, g, b = 0;
+
+  for (let i = 0; i < cols; i++) {
+    for (let j = 0; j < rows; j++) {
+      // Generalized p-norm circle with mouse-controlled exponent
+      r = mouseX * sqrt(pow(i / mouseY, mouseY) + pow(j / mouseY, mouseY)) % 255;
+      g = 0;
+      b = 0;
+      
+      let index = (j * width + i) * 4;
+      pixels[index] = r;
+      pixels[index + 1] = g;
+      pixels[index + 2] = b;
+      pixels[index + 3] = 255;
+    }
+  }
+  
+  updatePixels();
+}
+  </script>
+</body>
+</html>

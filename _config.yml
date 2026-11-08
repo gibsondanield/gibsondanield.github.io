@@ -1,0 +1,40 @@
+# Built by GitHub Pages (legacy branch build -> github-pages gem, Jekyll 3.10).
+# Files without front matter (the interactive tools, sketches) are copied verbatim.
+title: Daniel Gibson
+tagline: LLM prompter, vibe epistemologist, exister
+description: Writing and small interactive tools by Daniel Gibson.
+author: Daniel Gibson
+url: https://gibsondanield.github.io
+baseurl: ""
+lang: en
+timezone: Asia/Tokyo
+github_username: gibsondanield
+repository: gibsondanield/gibsondanield.github.io
+
+plugins:
+  - jekyll-feed
+  - jekyll-seo-tag
+  - jekyll-sitemap
+
+feed:
+  path: blog/feed.xml
+
+defaults:
+  - scope:
+      path: ""
+      type: posts
+    values:
+      layout: post
+      permalink: /blog/:title/
+
+# Notes and source docs that shouldn't become public pages
+# (GH Pages renders bare .md files via jekyll-optional-front-matter).
+exclude:
+  - README.md
+  - LICENSE
+  - Gemfile
+  - Gemfile.lock
+  - vendor
+  - processing-archive
+  - photoPlotting   # unpublished 2026-11-08; source kept in repo
+  - sketches/README.md

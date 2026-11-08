@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="{{ site.lang | default: 'en' }}">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark">
+  <meta name="theme-color" content="#000000">
+  {% seo %}
+  {% feed_meta %}
+  <link rel="icon" href="{{ '/favicon.svg' | relative_url }}" type="image/svg+xml">
+  <link rel="stylesheet" href="{{ '/assets/css/site.css' | relative_url }}">
+  {%- if page.extra_css %}
+  <style>{{ page.extra_css }}</style>
+  {%- endif %}
+</head>
+<body>
+<main>
+{{ content }}
+</main>
+<footer class="site-footer">
+  <span>© {{ site.time | date: '%Y' }} Daniel D Gibson</span>
+  {%- unless page.url == "/" %}<a href="{{ '/' | relative_url }}">home</a>{% endunless %}
+  <a href="{{ '/blog/feed.xml' | relative_url }}">rss</a>
+  {%- if page.url == "/" %}<a class="lurk" href="{{ '/for_bots/interesting_data.html' | relative_url }}">interesting data</a>{% endif %}
+</footer>
+</body>
+</html>
