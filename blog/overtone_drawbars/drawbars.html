@@ -1,0 +1,721 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="dark">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<style>*, *::before, *::after { box-sizing: border-box; } [hidden] { display: none !important; }</style>
+<title>Overtone Drawbars</title>
+<script>if (/[?&]embed\b/.test(location.search)) document.documentElement.classList.add('embedded');</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Barlow:wght@400;500&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Layout: one narrow console column; summary readout, then the controls (interval, tuning, drawbars), then two charts. */
+:root {
+  --bg: #fcfcfb; --panel: #f0efec; --rail: #dcdad4; --line: #d0cec7;
+  --ink: #0b0b0b; --ink2: #52514e; --muted: #898781;
+  --root: #52514e; --upper: #eb6834; --accent: #2a78d6; --accent-ink: #ffffff;
+  --bar-white: #ece9df; --bar-white-ink: #2a2723; --bar-black: #24221f; --bar-black-ink: #ddd8cc; --bar-edge: #8f8b82;
+  --display: "Barlow Condensed", "Arial Narrow", sans-serif;
+  --body: "Barlow", "Helvetica Neue", Arial, sans-serif;
+  --mono: "JetBrains Mono", ui-monospace, Menlo, monospace;
+  --thumb: 22px;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #000000; --panel: #151413; --rail: #262523; --line: #2f2e2b;
+  --ink: #f0efec; --ink2: #c3c2b7; --muted: #898781;
+  --root: #c3c2b7; --upper: #d95926; --accent: #3987e5; --accent-ink: #ffffff;
+  --bar-edge: #5c5952; color-scheme: dark } }
+:root[data-theme="dark"] {
+  --bg: #000000; --panel: #151413; --rail: #262523; --line: #2f2e2b;
+  --ink: #f0efec; --ink2: #c3c2b7; --muted: #898781;
+  --root: #c3c2b7; --upper: #d95926; --accent: #3987e5; --accent-ink: #ffffff;
+  --bar-edge: #5c5952; color-scheme: dark }
+
+body { background: var(--bg); color: var(--ink); font-family: var(--body); font-size: 15px; line-height: 1.5;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 24px 48px; }
+main { max-width: 720px; margin: 0; display: grid; gap: 22px; }
+/* embedded in the blog post (drawbars.html?embed): the post supplies the title and the page margins */
+.embedded body { padding: 0 0 8px; }
+.embedded header h1 { display: none; }
+.embedded .lede { margin-top: 0; }
+h1 { font-family: var(--display); font-weight: 700; font-size: 2.1rem; letter-spacing: .01em; margin: 0; line-height: 1.1; text-wrap: balance; }
+.lede { color: var(--ink2); margin: 6px 0 0; max-width: 62ch; }
+.label { font-family: var(--display); font-weight: 600; text-transform: uppercase; letter-spacing: .08em; font-size: .78rem; color: var(--muted); }
+.num { font-family: var(--mono); font-variant-numeric: tabular-nums; }
+
+/* readout */
+.readout { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 12px 20px; align-items: end; }
+.iv-name { font-family: var(--display); font-weight: 700; font-size: 1.7rem; line-height: 1; }
+.iv-detail { color: var(--ink2); margin-top: 6px; }
+.compare { display: grid; grid-template-columns: repeat(3, auto); gap: 2px 14px; text-align: right; }
+.compare .label { text-align: right; }
+.compare .num { font-size: 1.05rem; color: var(--ink2); }
+.compare .on { color: var(--ink); font-weight: 600; }
+.compare .on.label { color: var(--accent); }
+
+/* controls row */
+.row { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+button { font: inherit; cursor: pointer; }
+button:focus-visible, input:focus-visible, .drawbar:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.play { font-family: var(--display); font-weight: 700; font-size: 1.05rem; letter-spacing: .06em; text-transform: uppercase;
+  background: var(--accent); color: var(--accent-ink); border: 0; border-radius: 6px; padding: 8px 18px; min-width: 96px; }
+.play[aria-pressed="true"] { background: var(--ink); color: var(--bg); }
+.seg { display: inline-flex; border: 1px solid var(--line); border-radius: 6px; overflow: hidden; margin: 0; padding: 0; min-width: 0; flex-wrap: wrap; }
+.seg legend { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+.seg input { position: absolute; opacity: 0; pointer-events: none; }
+.seg label { padding: 7px 12px; cursor: pointer; color: var(--ink2); font-weight: 500; border-right: 1px solid var(--line); }
+.seg label:last-of-type { border-right: 0; }
+.seg input:checked + label { background: var(--panel); color: var(--ink); box-shadow: inset 0 -2px 0 var(--accent); }
+.seg input:focus-visible + label { outline: 2px solid var(--accent); outline-offset: -2px; }
+
+/* interval slider */
+.slider-wrap { position: relative; padding-bottom: 26px; }
+input[type="range"] { width: 100%; margin: 0; height: 28px; background: transparent; -webkit-appearance: none; appearance: none; }
+input[type="range"]::-webkit-slider-runnable-track { height: 4px; background: var(--rail); border-radius: 2px; }
+input[type="range"]::-moz-range-track { height: 4px; background: var(--rail); border-radius: 2px; }
+input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; width: var(--thumb); height: var(--thumb); margin-top: -9px; border-radius: 50%; background: var(--upper); border: 3px solid var(--bg); box-shadow: 0 0 0 1px var(--upper); }
+input[type="range"]::-moz-range-thumb { width: 16px; height: 16px; border-radius: 50%; background: var(--upper); border: 3px solid var(--bg); box-shadow: 0 0 0 1px var(--upper); }
+.ticks { position: absolute; left: 0; right: 0; bottom: 0; height: 22px; }
+.ticks button { position: absolute; transform: translateX(-50%); background: none; border: 0; padding: 2px 3px; color: var(--muted);
+  font-family: var(--display); font-weight: 600; font-size: .8rem; letter-spacing: .03em; }
+.ticks button.on { color: var(--ink); }
+.root-range::-webkit-slider-thumb { background: var(--root) !important; box-shadow: 0 0 0 1px var(--root) !important; }
+.root-range::-moz-range-thumb { background: var(--root) !important; box-shadow: 0 0 0 1px var(--root) !important; }
+
+/* drawbars */
+.console { background: var(--panel); border-radius: 10px; padding: 16px 14px 14px; display: grid; gap: 12px; }
+.console-head { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px 16px; align-items: baseline; }
+.presets { display: flex; flex-wrap: wrap; gap: 6px; }
+.presets button { background: none; border: 1px solid var(--line); color: var(--ink2); border-radius: 4px; padding: 3px 9px; font-size: .85rem; }
+.presets button:hover { color: var(--ink); border-color: var(--muted); }
+.bars { display: grid; grid-template-columns: repeat(10, minmax(0, 1fr)); gap: 6px; max-width: 560px; }
+.stop { display: grid; justify-items: center; gap: 4px; min-width: 0; }
+.stop .h { font-family: var(--mono); font-size: .72rem; color: var(--muted); }
+.drawbar { position: relative; width: 100%; max-width: 40px; height: 196px; touch-action: none; cursor: ns-resize; border-radius: 3px;
+  background: linear-gradient(var(--rail), var(--rail)) center top / 4px 100% no-repeat; }
+.drawbar::before { content: ""; position: absolute; left: 0; right: 0; top: 0; height: 6px; background: var(--line); border-radius: 2px; }
+.shaft { position: absolute; left: 18%; right: 18%; top: 0; overflow: hidden; display: flex; flex-direction: column; justify-content: flex-end;
+  border: 1px solid var(--bar-edge); border-top: 0; transition: height .08s ease-out; }
+.shaft span { height: var(--notch); flex: none; display: grid; place-items: center; font-family: var(--mono); font-size: .62rem; border-top: 1px solid color-mix(in srgb, currentColor 25%, transparent); }
+.cap { position: absolute; left: 0; right: 0; height: 30px; border-radius: 4px; border: 1px solid var(--bar-edge); display: grid; place-items: center;
+  font-family: var(--display); font-weight: 700; font-size: .86rem; letter-spacing: .02em; transition: top .08s ease-out; box-shadow: 0 2px 0 rgba(0,0,0,.25); }
+.white .shaft, .white .cap { background: var(--bar-white); color: var(--bar-white-ink); }
+.black .shaft, .black .cap { background: var(--bar-black); color: var(--bar-black-ink); }
+.stop .lvl { font-family: var(--mono); font-weight: 600; font-size: .9rem; }
+.stop .shift { font-family: var(--mono); font-size: .68rem; color: var(--ink2); min-height: 1.1em; white-space: nowrap; }
+.stop .shift.off { visibility: hidden; }
+.console-foot { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 6px 16px; color: var(--ink2); font-size: .85rem; }
+
+/* charts */
+figure { margin: 0; display: grid; gap: 6px; min-width: 0; }
+figcaption { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 4px 14px; align-items: baseline; }
+figcaption b { font-family: var(--display); font-weight: 700; font-size: 1.15rem; letter-spacing: .01em; }
+.legend { display: flex; flex-wrap: wrap; gap: 4px 14px; color: var(--ink2); font-size: .85rem; }
+.sw { display: inline-block; width: 16px; height: 3px; vertical-align: middle; margin-right: 6px; border-radius: 2px; }
+.sw.dash { background: repeating-linear-gradient(90deg, var(--muted) 0 4px, transparent 4px 7px); }
+svg { width: 100%; height: auto; display: block; overflow: visible; }
+svg text { font-family: var(--body); font-size: 13px; fill: var(--muted); }
+svg .ink2 { fill: var(--ink2); }
+.grid { stroke: var(--line); stroke-width: 1; }
+.grid.minor { stroke-opacity: .45; }
+.axis { stroke: var(--muted); stroke-width: 1; }
+.p-root { fill: var(--root); }
+.p-upper { fill: var(--upper); }
+.coin { stroke: var(--accent); stroke-width: 1.5; stroke-dasharray: 2 3; }
+.miss { fill: var(--ink); }
+.curve-on { fill: none; stroke: var(--accent); stroke-width: 2; }
+.curve-off { fill: none; stroke: var(--muted); stroke-width: 1.5; stroke-dasharray: 4 3; }
+.marker { fill: var(--upper); stroke: var(--bg); stroke-width: 2; }
+.guide { stroke: var(--ink2); stroke-width: 1; }
+.beats { margin: 0; padding: 0; list-style: none; color: var(--ink2); font-size: .88rem; display: grid; gap: 2px; }
+.beats .num { color: var(--ink); }
+.note { color: var(--muted); font-size: .85rem; margin: 0; max-width: 64ch; }
+/* keyboard */
+.row.tight { gap: 8px; }
+.tonic { display: inline-flex; align-items: center; gap: 6px; }
+.tonic.off { opacity: .45; }
+select { font: inherit; color: var(--ink); background: var(--bg); border: 1px solid var(--line); border-radius: 4px; padding: 2px 6px; }
+.ghost { background: none; border: 1px solid var(--line); color: var(--ink); border-radius: 4px; padding: 3px 10px; font-size: .9rem; }
+.ghost[aria-pressed="true"] { border-color: var(--accent); color: var(--accent); }
+.keys { position: relative; display: flex; height: 132px; touch-action: none; user-select: none; -webkit-user-select: none; }
+.wk, .bk { position: relative; cursor: pointer; display: flex; flex-direction: column; justify-content: flex-end; align-items: center;
+  padding-bottom: 6px; font-family: var(--mono); font-size: .62rem; line-height: 1.2; transition: background .05s; }
+.wk { flex: 1 1 0; min-width: 0; background: var(--bar-white); color: var(--bar-white-ink); border: 1px solid var(--bar-edge); border-radius: 0 0 5px 5px; margin-right: -1px; }
+.bk { position: absolute; top: 0; height: 60%; z-index: 2; background: var(--bar-black); color: var(--bar-black-ink); border: 1px solid var(--bar-edge); border-radius: 0 0 4px 4px; padding-bottom: 4px; }
+.wk.on, .bk.on { background: var(--upper); color: #fff; }
+.wk .cn { font-family: var(--display); font-weight: 700; font-size: .72rem; }
+.hint { opacity: .7; }
+.chord { margin: 0; color: var(--ink2); font-size: .9rem; min-height: 1.5em; }
+.chord b { color: var(--ink); font-family: var(--display); font-size: 1.05rem; letter-spacing: .02em; }
+.chord .on { color: var(--ink); font-weight: 600; }
+@media (max-width: 480px) {
+  .keys { height: 112px; }
+  .hint { display: none; }
+  h1 { font-size: 1.75rem; }
+  .readout { grid-template-columns: 1fr; }
+  .compare { justify-content: start; text-align: left; } .compare .label { text-align: left; }
+  .ticks button { font-size: .66rem; padding: 2px 0; }
+  .drawbar { height: 168px; }
+  .cap { font-size: .7rem; }
+}
+@media (prefers-reduced-motion: reduce) { .shaft, .cap { transition: none; } }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <h1>Overtone Drawbars</h1>
+    <p class="lede">Two notes, ten overtones each. Choose an interval, then switch between just intonation, 12-tone equal temperament,
+      and equal temperament with every overtone moved onto the 12-TET grid. Pull the drawbars down to bring in overtones. Overtones of the two notes that land
+      close together, but not exactly together, beat.</p>
+  </header>
+
+  <section class="readout" aria-live="polite">
+    <div>
+      <div class="iv-name" id="ivName">major third</div>
+      <div class="iv-detail num" id="ivDetail"></div>
+    </div>
+    <div class="compare" id="compare" title="Plomp–Levelt roughness (Sethares' model) of both notes at this interval, with the current drawbars"></div>
+  </section>
+
+  <section class="row">
+    <button class="play" id="play" aria-pressed="false">Play</button>
+    <fieldset class="seg" id="mode">
+      <legend>Tuning</legend>
+      <input type="radio" name="mode" id="m-just" value="just"><label for="m-just">Just intonation</label>
+      <input type="radio" name="mode" id="m-et" value="et" checked><label for="m-et">12-TET</label>
+      <input type="radio" name="mode" id="m-snap" value="snap"><label for="m-snap">12-TET, snapped overtones</label>
+    </fieldset>
+  </section>
+
+  <section>
+    <div class="label" id="ivLabel">Interval above the root</div>
+    <div class="slider-wrap">
+      <input type="range" id="step" min="0" max="12" step="1" value="4" aria-labelledby="ivLabel">
+      <div class="ticks" id="ticks"></div>
+    </div>
+  </section>
+
+  <section>
+    <div class="label"><span id="f0Label">Root frequency</span> · <span class="num" id="f0Out" style="color:var(--ink);letter-spacing:0;text-transform:none"></span></div>
+    <div class="slider-wrap">
+      <input type="range" class="root-range" id="f0" min="0" max="1000" step="1" value="500" aria-labelledby="f0Label">
+      <div class="ticks" id="f0Ticks"></div>
+    </div>
+  </section>
+
+  <section class="console" aria-label="Drawbars">
+    <div class="console-head">
+      <span class="label">Drawbars · footage · harmonic</span>
+      <div class="presets" id="presets"></div>
+    </div>
+    <div class="bars" id="bars"></div>
+    <div class="console-foot">
+      <span>Registration <span class="num" id="reg"></span></span>
+      <span id="shiftNote">Each step is 3 dB. Octave stops are white.</span>
+    </div>
+  </section>
+
+  <section class="console" aria-label="Keyboard">
+    <div class="console-head">
+      <span class="label">Keyboard · MIDI, computer keys or tap</span>
+      <div class="row tight">
+        <label class="tonic" id="tonicWrap"><span class="label">Just key</span> <select id="tonic"></select></label>
+        <button type="button" class="ghost" id="midi">Connect MIDI</button>
+      </div>
+    </div>
+    <div class="keys" id="keys"></div>
+    <div class="console-foot">
+      <span id="midiStatus">Keys A to ' play the lower octave and a half; Z and X shift the octave. The drawbars and tuning above apply.</span>
+    </div>
+    <p class="chord" id="chord"></p>
+  </section>
+
+  <figure>
+    <figcaption><b>Where the overtones land</b>
+      <span class="legend"><span><span class="sw" style="background:var(--root)"></span>lower note</span>
+        <span><span class="sw" style="background:var(--upper)"></span>upper note</span>
+        <span><span class="sw dash" style="background:none;border-top:2px dashed var(--accent);height:0"></span>coincide</span>
+        <span>▼ beat</span></span></figcaption>
+    <svg id="partials" viewBox="0 0 640 200" role="img" aria-label="Overtones of both notes on a pitch axis"></svg>
+    <ul class="beats" id="beats"></ul>
+  </figure>
+
+  <figure>
+    <figcaption><b>Roughness across the octave</b>
+      <span class="legend"><span><span class="sw" style="background:var(--accent)"></span><span id="onName">harmonic overtones</span></span>
+        <span><span class="sw dash"></span><span id="offName">snapped overtones</span></span></span></figcaption>
+    <svg id="curve" viewBox="0 0 640 230" role="img" aria-label="Roughness of the two notes as the interval sweeps one octave"></svg>
+    <p class="note" id="hover">Dips are intervals where overtones coincide. Hover the chart to read a value.</p>
+  </figure>
+
+  <p class="note">Roughness uses the Plomp–Levelt curve as parameterised by Sethares (<i>Tuning, Timbre, Spectrum, Scale</i>, 2005):
+    every pair of sounding overtones adds min(a₁, a₂)·(e<sup>−3.51 s Δf</sup> − e<sup>−5.75 s Δf</sup>), s = 0.24 / (0.0207 f<sub>min</sub> + 18.96).
+    Just intervals are 5-limit.</p>
+</main>
+
+<script>
+// In the blog post's iframe: tell the parent page how tall the tool is, so the iframe fits it.
+if (document.documentElement.classList.contains('embedded')) {
+  const report = () => parent.postMessage({ drawbarsHeight: Math.ceil(document.querySelector('main').getBoundingClientRect().bottom) + 8 }, location.origin);
+  new ResizeObserver(report).observe(document.querySelector('main'));
+}
+let F0 = 220;
+const N = 10, LEVELS = 8;
+// root slider: log-scaled position, value rounded to the nearest Hz; A1 (55 Hz) to A5 (880 Hz)
+const F_LO = 55, OCTS = 4;
+const posToHz = p => Math.round(F_LO * 2 ** (OCTS * p / 1000));
+const hzToPos = f => Math.round(1000 * Math.log2(f / F_LO) / OCTS);
+const NOTE_NAMES = ['C', 'C♯', 'D', 'E♭', 'E', 'F', 'F♯', 'G', 'A♭', 'A', 'B♭', 'B'];
+function noteName(f) {
+  const m = 69 + 12 * Math.log2(f / 440), r = Math.round(m), off = Math.round(100 * (m - r));
+  return `${NOTE_NAMES[r % 12]}${Math.floor(r / 12) - 1}` + (off ? ` ${off > 0 ? '+' : '−'}${Math.abs(off)}¢` : '');
+}
+const STEPS = [
+  ['unison', 'P1', 1, 1], ['minor second', 'm2', 16, 15], ['major second', 'M2', 9, 8], ['minor third', 'm3', 6, 5],
+  ['major third', 'M3', 5, 4], ['perfect fourth', 'P4', 4, 3], ['tritone', 'TT', 45, 32], ['perfect fifth', 'P5', 3, 2],
+  ['minor sixth', 'm6', 8, 5], ['major sixth', 'M6', 5, 3], ['minor seventh', 'm7', 9, 5], ['major seventh', 'M7', 15, 8], ['octave', 'P8', 2, 1],
+];
+const FOOT = ['8′', '4′', '2⅔′', '2′', '1⅗′', '1⅓′', '1⅐′', '1′', '8/9′', '4/5′'];   // organ footage = 8′ / harmonic
+const OCTAVE_STOP = h => (h & (h - 1)) === 0;                                         // 1, 2, 4, 8: white bars
+const MODES = { just: 'Just intonation', et: '12-TET', snap: '12-TET, snapped' };
+
+const dbLevel = h => Math.max(0, LEVELS - Math.round(20 * Math.log10(h) / 3));
+const PRESETS = {
+  'Bright (1/h)': h => dbLevel(h),
+  'Odd only': h => h % 2 ? dbLevel(h) : 0,
+  'Flute': h => [8, 5, 0, 2][h - 1] ?? 0,
+  'All out': () => 8,
+  'Sine': h => h === 1 ? 8 : 0,
+};
+
+const state = { step: 4, mode: 'et', tonic: 0, levels: Array.from({ length: N }, (_, i) => dbLevel(i + 1)) };
+
+const snap = r => 2 ** (Math.round(12 * Math.log2(r)) / 12);
+const cents = r => 1200 * Math.log2(r);
+const amp = l => l ? 10 ** (-(LEVELS - l) * 3 / 20) : 0;
+const ratioFor = (mode, step) => mode === 'just' ? STEPS[step][2] / STEPS[step][3] : 2 ** (step / 12);
+const partialRatio = (h, snapped) => snapped ? snap(h) : h;
+
+function spectrumAt(freq, snapped) {
+  const f = [], a = [];
+  for (let h = 1; h <= N; h++) { f.push(freq * partialRatio(h, snapped)); a.push(amp(state.levels[h - 1])); }
+  return { f, a };
+}
+const spectrum = (ratio, snapped) => spectrumAt(F0 * ratio, snapped);
+function roughness(...specs) {
+  const f = specs.flatMap(s => s.f), a = specs.flatMap(s => s.a);
+  let d = 0;
+  for (let i = 0; i < f.length; i++) {
+    if (!a[i]) continue;
+    for (let j = i + 1; j < f.length; j++) {
+      if (!a[j]) continue;
+      const fmin = Math.min(f[i], f[j]), df = Math.abs(f[i] - f[j]), s = 0.24 / (0.0207 * fmin + 18.96);
+      d += Math.min(a[i], a[j]) * (Math.exp(-3.51 * s * df) - Math.exp(-5.75 * s * df));
+    }
+  }
+  return d;
+}
+const modeRough = (mode, step) => {
+  const snapped = mode === 'snap';
+  return roughness(spectrum(1, snapped), spectrum(ratioFor(mode, step), snapped));
+};
+
+/* ---------- controls ---------- */
+const $ = id => document.getElementById(id);
+const ticks = $('ticks');
+STEPS.forEach(([name, short], i) => {
+  const b = document.createElement('button');
+  b.type = 'button'; b.textContent = short; b.title = name; b.setAttribute('aria-label', name);
+  b.style.left = `calc(var(--thumb) / 2 + (100% - var(--thumb)) * ${i / 12})`;
+  b.onclick = () => { state.step = i; $('step').value = i; update(); };
+  ticks.appendChild(b);
+});
+$('step').addEventListener('input', e => { state.step = +e.target.value; update(); });
+const setF0 = f => { F0 = f; $('f0').value = hzToPos(f); update(true); };
+$('f0').addEventListener('input', e => setF0(posToHz(+e.target.value)));
+[['A1', 55], ['A2', 110], ['A3', 220], ['A4', 440], ['A5', 880]].forEach(([n, f]) => {
+  const b = document.createElement('button');
+  b.type = 'button'; b.textContent = n; b.title = `${f} Hz`;
+  b.style.left = `calc(var(--thumb) / 2 + (100% - var(--thumb)) * ${hzToPos(f) / 1000})`;
+  b.onclick = () => setF0(f);
+  $('f0Ticks').appendChild(b);
+});
+document.querySelectorAll('#mode input').forEach(r => r.addEventListener('change', e => { state.mode = e.target.value; update(); }));
+
+const presets = $('presets');
+for (const [name, fn] of Object.entries(PRESETS)) {
+  const b = document.createElement('button');
+  b.type = 'button'; b.textContent = name;
+  b.onclick = () => { state.levels = state.levels.map((_, i) => fn(i + 1)); update(true); };
+  presets.appendChild(b);
+}
+
+const bars = $('bars');
+const barEls = [];
+for (let h = 1; h <= N; h++) {
+  const stop = document.createElement('div');
+  stop.className = 'stop ' + (OCTAVE_STOP(h) ? 'white' : 'black');
+  stop.innerHTML = `<div class="drawbar" tabindex="0" role="slider" aria-orientation="vertical" aria-valuemin="0" aria-valuemax="8"
+      aria-label="${FOOT[h - 1]} stop, harmonic ${h}"><div class="shaft">${[8, 7, 6, 5, 4, 3, 2, 1].map(n => `<span>${n}</span>`).join('')}</div>
+      <div class="cap">${FOOT[h - 1]}</div></div>
+    <span class="lvl"></span><span class="h">×${h}</span><span class="shift off"></span>`;
+  bars.appendChild(stop);
+  const bar = stop.querySelector('.drawbar');
+  barEls.push({ bar, shaft: stop.querySelector('.shaft'), cap: stop.querySelector('.cap'), lvl: stop.querySelector('.lvl'), shift: stop.querySelector('.shift') });
+  const setFromY = y => {
+    const r = bar.getBoundingClientRect(), capH = 30, travel = r.height - capH;
+    const l = Math.round((y - r.top - capH / 2) / travel * LEVELS);
+    const v = Math.max(0, Math.min(LEVELS, l));
+    if (v !== state.levels[h - 1]) { state.levels[h - 1] = v; update(true); }
+  };
+  bar.addEventListener('pointerdown', e => { bar.setPointerCapture(e.pointerId); setFromY(e.clientY); bar.focus(); e.preventDefault(); });
+  bar.addEventListener('pointermove', e => { if (bar.hasPointerCapture(e.pointerId)) setFromY(e.clientY); });
+  bar.addEventListener('keydown', e => {
+    const d = { ArrowDown: 1, ArrowRight: 1, ArrowUp: -1, ArrowLeft: -1, PageDown: 8, PageUp: -8, End: 8, Home: -8 }[e.key];
+    if (d === undefined) return;
+    e.preventDefault();
+    state.levels[h - 1] = Math.max(0, Math.min(LEVELS, state.levels[h - 1] + d));
+    update(true);
+  });
+}
+
+/* ---------- audio ---------- */
+let ctx = null, master = null, drone = null, voices = [];
+function ensureAudio() {
+  if (ctx) { if (ctx.state !== 'running') ctx.resume(); return; }
+  ctx = new (window.AudioContext || window.webkitAudioContext)();
+  const comp = ctx.createDynamicsCompressor(); comp.connect(ctx.destination);
+  master = ctx.createGain(); master.gain.value = 0.6; master.connect(comp);
+  drone = ctx.createGain(); drone.gain.value = 0; drone.connect(master);   // the two-note interval, toggled by Play
+  for (let n = 0; n < 2; n++) for (let h = 1; h <= N; h++) {
+    const osc = ctx.createOscillator(), g = ctx.createGain();
+    osc.type = 'sine'; g.gain.value = 0; osc.connect(g).connect(drone); osc.start();
+    voices.push({ n, h, osc, g });
+  }
+}
+async function toggleAudio() {
+  const btn = $('play');
+  ensureAudio();
+  const on = btn.getAttribute('aria-pressed') !== 'true';
+  if (on) { await ctx.resume(); updateAudio(); drone.gain.setTargetAtTime(0.8, ctx.currentTime, 0.04); }
+  else drone.gain.setTargetAtTime(0, ctx.currentTime, 0.04);
+  btn.setAttribute('aria-pressed', on); btn.textContent = on ? 'Stop' : 'Play';
+}
+$('play').addEventListener('click', toggleAudio);
+function updateAudio() {
+  if (!ctx) return;
+  kb.forEach(v => setVoice(v));
+  const t = ctx.currentTime, snapped = state.mode === 'snap', ratio = ratioFor(state.mode, state.step);
+  const total = 2 * state.levels.reduce((s, l) => s + amp(l), 0) || 1;
+  for (const v of voices) {
+    v.osc.frequency.setTargetAtTime(F0 * (v.n ? ratio : 1) * partialRatio(v.h, snapped), t, 0.03);
+    v.g.gain.setTargetAtTime(amp(state.levels[v.h - 1]) / total, t, 0.02);
+  }
+}
+
+/* ---------- keyboard: Web MIDI, computer keys, on-screen keys ---------- */
+const kb = new Map();          // MIDI note -> sounding voice
+const sustained = new Set();
+let pedal = false, kbBase = 60; // on-screen and computer keys start at C4
+const MAX_VOICES = 16;
+const KEY_CODES = ['KeyA', 'KeyW', 'KeyS', 'KeyE', 'KeyD', 'KeyF', 'KeyT', 'KeyG', 'KeyY', 'KeyH', 'KeyU', 'KeyJ', 'KeyK', 'KeyO', 'KeyL', 'KeyP', 'Semicolon', 'Quote'];
+const KEY_HINTS = ['A', 'W', 'S', 'E', 'D', 'F', 'T', 'G', 'Y', 'H', 'U', 'J', 'K', 'O', 'L', 'P', ';', "'"];
+const midiName = m => NOTE_NAMES[m % 12] + (Math.floor(m / 12) - 1);
+
+// 12-TET and snapped: equal temperament from A4 = 440. Just: 5-limit ratios above the chosen key, whose tonic is tuned to 12-TET.
+function keyFreq(m, mode = state.mode) {
+  if (mode !== 'just') return 440 * 2 ** ((m - 69) / 12);
+  const t = 60 + state.tonic, d = m - t, pc = ((d % 12) + 12) % 12;
+  return 440 * 2 ** ((t - 69) / 12) * STEPS[pc][2] / STEPS[pc][3] * 2 ** Math.floor(d / 12);
+}
+function setVoice(v, now = false) {
+  const t = ctx.currentTime, f = keyFreq(v.m), snapped = state.mode === 'snap';
+  const total = state.levels.reduce((s, l) => s + amp(l), 0) || 1;
+  v.parts.forEach(({ osc, g }, k) => {
+    const fk = f * partialRatio(k + 1, snapped), a = fk < 18000 ? 0.4 * amp(state.levels[k]) / total : 0;
+    if (now) { osc.frequency.value = fk; g.gain.value = a; }
+    else { osc.frequency.setTargetAtTime(fk, t, 0.03); g.gain.setTargetAtTime(a, t, 0.02); }
+  });
+}
+function noteOn(m, vel = 0.8) {
+  if (m < 0 || m > 127) return;
+  ensureAudio();
+  if (kb.has(m)) release(m);
+  if (kb.size >= MAX_VOICES) release(kb.keys().next().value);   // steal the oldest
+  const env = ctx.createGain(); env.gain.value = 0; env.connect(master);
+  const parts = Array.from({ length: N }, () => {
+    const osc = ctx.createOscillator(), g = ctx.createGain();
+    osc.connect(g).connect(env); osc.start(); return { osc, g };
+  });
+  const v = { m, env, parts };
+  setVoice(v, true);
+  env.gain.setTargetAtTime(0.3 + 0.7 * vel, ctx.currentTime, 0.004);   // organ: fast attack, no decay
+  kb.set(m, v);
+  keysChanged();
+}
+function noteOff(m) {
+  if (!kb.has(m)) return;
+  if (pedal) sustained.add(m); else release(m);
+}
+function release(m) {
+  const v = kb.get(m); if (!v) return;
+  kb.delete(m); sustained.delete(m);
+  const t = ctx.currentTime;
+  v.env.gain.cancelScheduledValues(t); v.env.gain.setValueAtTime(v.env.gain.value, t); v.env.gain.setTargetAtTime(0, t, 0.04);
+  v.parts.forEach(p => p.osc.stop(t + 0.4));
+  setTimeout(() => v.env.disconnect(), 600);
+  keysChanged();
+}
+const releaseAll = () => [...kb.keys()].forEach(release);
+
+// Web MIDI
+function onMidi({ data }) {
+  const [st, d1, d2 = 0] = data, type = st & 0xf0;
+  if (type === 0x90 && d2) noteOn(d1, d2 / 127);
+  else if (type === 0x80 || type === 0x90) noteOff(d1);
+  else if (type === 0xb0 && d1 === 64) { pedal = d2 >= 64; if (!pedal) [...sustained].forEach(release); }
+  else if (type === 0xb0 && (d1 === 120 || d1 === 123)) { pedal = false; releaseAll(); }
+}
+const midiStatus = msg => { $('midiStatus').textContent = msg; };
+$('midi').addEventListener('click', async () => {
+  ensureAudio();   // the click unlocks audio, so notes from the MIDI keyboard can sound
+  if (!navigator.requestMIDIAccess) {
+    midiStatus('This browser has no Web MIDI (Chrome, Edge and Firefox do; Safari does not). The computer keys still work.');
+    return;
+  }
+  try {
+    const access = await navigator.requestMIDIAccess();
+    const hook = () => {
+      const names = [];
+      access.inputs.forEach(i => { i.onmidimessage = onMidi; names.push(i.name); });
+      midiStatus(names.length ? `Listening to ${names.join(', ')}. Sustain pedal works.`
+                              : 'MIDI is on, but no keyboard is connected. Plug one in and it is picked up.');
+    };
+    hook();
+    access.onstatechange = hook;
+    $('midi').setAttribute('aria-pressed', 'true'); $('midi').textContent = 'MIDI on';
+  } catch {
+    midiStatus('MIDI access was blocked. Allow it when the browser asks; some embedded previews block it entirely.');
+  }
+});
+
+// computer keys, by physical position so any layout works
+const held = new Map();
+addEventListener('keydown', e => {
+  if (e.metaKey || e.ctrlKey || e.altKey || e.repeat) return;
+  if (e.target.closest?.('select')) return;
+  if (e.code === 'KeyZ' || e.code === 'KeyX') {
+    kbBase = Math.max(24, Math.min(96, kbBase + (e.code === 'KeyZ' ? -12 : 12)));
+    drawKeys(); return;
+  }
+  const i = KEY_CODES.indexOf(e.code);
+  if (i < 0) return;
+  e.preventDefault();
+  held.set(e.code, kbBase + i);
+  noteOn(kbBase + i);
+});
+addEventListener('keyup', e => { if (held.has(e.code)) { noteOff(held.get(e.code)); held.delete(e.code); } });
+addEventListener('blur', () => { held.forEach(m => noteOff(m)); held.clear(); });
+
+// on-screen keys: two octaves from kbBase
+const BLACK = new Set([1, 3, 6, 8, 10]);
+function drawKeys() {
+  const wrap = $('keys'); wrap.replaceChildren();
+  const span = 25, whites = [...Array(span).keys()].filter(i => !BLACK.has((kbBase + i) % 12)).length, w = 100 / whites;
+  let wi = 0;
+  for (let i = 0; i < span; i++) {
+    const m = kbBase + i, black = BLACK.has(m % 12), k = document.createElement('div');
+    k.className = black ? 'bk' : 'wk';
+    k.dataset.m = m;
+    k.setAttribute('aria-label', midiName(m));
+    const hint = KEY_HINTS[i] ? `<span class="hint">${KEY_HINTS[i]}</span>` : '';
+    k.innerHTML = hint + (m % 12 === 0 ? `<span class="cn">${midiName(m)}</span>` : '');
+    if (black) { k.style.left = `calc(${wi * w}% - ${w * 0.3}%)`; k.style.width = `${w * 0.6}%`; }
+    else wi++;
+    wrap.append(k);
+  }
+  keysChanged();
+}
+const touching = new Map();   // pointerId -> MIDI note
+const keysEl = $('keys');
+const keyAt = e => document.elementFromPoint(e.clientX, e.clientY)?.closest?.('#keys [data-m]');
+keysEl.addEventListener('pointerdown', e => {
+  const k = keyAt(e); if (!k) return;
+  keysEl.setPointerCapture(e.pointerId);
+  touching.set(e.pointerId, +k.dataset.m); noteOn(+k.dataset.m);
+});
+keysEl.addEventListener('pointermove', e => {   // glissando
+  if (!touching.has(e.pointerId)) return;
+  const k = keyAt(e), m = k ? +k.dataset.m : null, prev = touching.get(e.pointerId);
+  if (m === prev) return;
+  noteOff(prev); touching.set(e.pointerId, m);
+  if (m !== null) noteOn(m);
+});
+const lift = e => { if (touching.has(e.pointerId)) { const m = touching.get(e.pointerId); if (m !== null) noteOff(m); touching.delete(e.pointerId); } };
+keysEl.addEventListener('pointerup', lift);
+keysEl.addEventListener('pointercancel', lift);
+
+const tonicSel = $('tonic');
+NOTE_NAMES.forEach((n, i) => tonicSel.append(new Option(n, i)));
+tonicSel.addEventListener('change', e => { state.tonic = +e.target.value; update(); });
+
+function keysChanged() {
+  document.querySelectorAll('#keys [data-m]').forEach(k => k.classList.toggle('on', kb.has(+k.dataset.m)));
+  const notes = [...kb.keys()].sort((a, b) => a - b), out = $('chord');
+  if (!notes.length) { out.textContent = 'Hold two or more notes to compare the chord across the three tunings.'; return; }
+  const names = notes.map(midiName).join(' ');
+  if (notes.length < 2) { out.innerHTML = `<b>${names}</b>`; return; }
+  const vals = Object.keys(MODES).map(md => [md, roughness(...notes.map(m => spectrumAt(keyFreq(m, md), md === 'snap')))]);
+  out.innerHTML = `<b>${names}</b> · roughness ` +
+    vals.map(([md, v]) => `<span class="${md === state.mode ? 'on' : ''}">${MODES[md]} <span class="num">${fmt(v, 3)}</span></span>`).join(' · ');
+}
+
+/* ---------- charts ---------- */
+const NS = 'http://www.w3.org/2000/svg';
+const el = (tag, attrs, text) => { const e = document.createElementNS(NS, tag); for (const k in attrs) e.setAttribute(k, attrs[k]); if (text != null) e.textContent = text; return e; };
+const fmt = (x, d = 1) => x.toFixed(d);
+
+function drawPartials() {
+  const svg = $('partials'); svg.replaceChildren();
+  const W = 640, L = 64, R = 10, maxC = 5300, x = c => L + (W - L - R) * c / maxC;
+  const rows = [{ y: 172, cls: 'p-root', name: 'lower' }, { y: 100, cls: 'p-upper', name: 'upper' }], barH = 56;
+  for (let c = 0; c <= maxC; c += 100) svg.append(el('line', { x1: x(c), x2: x(c), y1: 30, y2: 172, class: c % 1200 ? 'grid minor' : 'grid' }));
+  ['root', '+1 oct', '+2 oct', '+3 oct', '+4 oct'].forEach((t, i) => svg.append(el('text', { x: x(i * 1200), y: 192, 'text-anchor': i ? 'middle' : 'start' }, t)));
+  rows.forEach(r => { svg.append(el('line', { x1: L, x2: W - R, y1: r.y, y2: r.y, class: 'axis' })); svg.append(el('text', { x: 0, y: r.y - 6, class: 'ink2' }, r.name)); });
+
+  const snapped = state.mode === 'snap', ratio = ratioFor(state.mode, state.step);
+  const specs = [spectrum(1, snapped), spectrum(ratio, snapped)];
+  const pairs = [];
+  for (let i = 0; i < N; i++) for (let j = 0; j < N; j++) {
+    const a = specs[0].a[i], b = specs[1].a[j]; if (!a || !b) continue;
+    const f1 = specs[0].f[i], f2 = specs[1].f[j], dc = Math.abs(cents(f2 / f1));
+    if (dc < 0.5) pairs.push({ coin: true, c: cents(f1 / F0) });
+    else if (dc < 80) pairs.push({ coin: false, c: (cents(f1 / F0) + cents(f2 / F0)) / 2, i, j, f1, f2, w: Math.min(a, b), dc });
+  }
+  for (const p of pairs.filter(p => p.coin)) svg.append(el('line', { x1: x(p.c), x2: x(p.c), y1: rows[1].y - barH - 4, y2: rows[0].y, class: 'coin' }));
+  specs.forEach((s, n) => s.f.forEach((f, k) => {
+    if (!s.a[k]) return;
+    const c = cents(f / F0), h = barH * s.a[k];
+    const r = el('rect', { x: x(c) - 2, y: rows[n].y - h, width: 4, height: h, rx: 1, class: rows[n].cls });
+    r.append(el('title', {}, `${rows[n].name} note, overtone ${k + 1}: ${fmt(f)} Hz`));
+    svg.append(r);
+  }));
+  const misses = pairs.filter(p => !p.coin);
+  for (const p of misses) {
+    const t = el('path', { d: `M${x(p.c) - 5},14 h10 l-5,8 z`, class: 'miss' });
+    t.append(el('title', {}, `${fmt(Math.abs(p.f2 - p.f1))} beats per second`)); svg.append(t);
+  }
+  const list = $('beats'); list.replaceChildren();
+  const coins = pairs.length - misses.length;
+  const head = document.createElement('li');
+  head.textContent = `${coins} coinciding pair${coins === 1 ? '' : 's'}, ${misses.length} beating pair${misses.length === 1 ? '' : 's'}` +
+    (misses.length ? '. Loudest:' : '.');
+  list.append(head);
+  misses.sort((a, b) => b.w - a.w).slice(0, 3).forEach(p => {
+    const li = document.createElement('li');
+    li.innerHTML = `lower ×${p.i + 1} (${fmt(p.f1)} Hz) vs upper ×${p.j + 1} (${fmt(p.f2)} Hz): <span class="num">${fmt(Math.abs(p.f2 - p.f1))}</span> beats/s, ${fmt(p.dc, 0)}¢ apart`;
+    list.append(li);
+  });
+}
+
+let curveCache = null;
+function computeCurves() {
+  const pts = [];
+  const rootH = spectrum(1, false), rootS = spectrum(1, true);
+  for (let c = 0; c <= 1200; c += 2) {
+    const r = 2 ** (c / 1200);
+    pts.push([c, roughness(rootH, spectrum(r, false)), roughness(rootS, spectrum(r, true))]);
+  }
+  curveCache = pts;
+}
+function drawCurve() {
+  const svg = $('curve'); svg.replaceChildren();
+  const W = 640, L = 40, R = 10, T = 10, B = 190, pts = curveCache;
+  const ymax = Math.max(1e-9, ...pts.flatMap(p => [p[1], p[2]])) * 1.08;
+  const x = c => L + (W - L - R) * c / 1200, y = v => B - (B - T) * v / ymax;
+  STEPS.forEach(([, short], i) => {
+    svg.append(el('line', { x1: x(i * 100), x2: x(i * 100), y1: T, y2: B, class: 'grid' }));
+    svg.append(el('text', { x: x(i * 100), y: B + 18, 'text-anchor': 'middle', class: i === state.step ? 'ink2' : '' }, short));
+  });
+  svg.append(el('line', { x1: L, x2: W - R, y1: B, y2: B, class: 'axis' }));
+  svg.append(el('text', { x: L - 6, y: B, 'text-anchor': 'end' }, '0'));
+  svg.append(el('text', { x: L - 6, y: T + 10, 'text-anchor': 'end' }, fmt(ymax / 1.08, 2)));
+  svg.append(el('text', { x: W - R, y: B + 36, 'text-anchor': 'end' }, 'cents above the lower note'));
+  const snapped = state.mode === 'snap', on = snapped ? 2 : 1, off = snapped ? 1 : 2;
+  const path = k => 'M' + pts.map(p => `${x(p[0]).toFixed(1)},${y(p[k]).toFixed(1)}`).join('L');
+  svg.append(el('path', { d: path(off), class: 'curve-off' }));
+  svg.append(el('path', { d: path(on), class: 'curve-on' }));
+  const cNow = cents(ratioFor(state.mode, state.step)), rNow = modeRough(state.mode, state.step);
+  svg.append(el('circle', { cx: x(cNow), cy: y(rNow), r: 6, class: 'marker' }));
+  const guide = el('line', { x1: 0, x2: 0, y1: T, y2: B, class: 'guide', visibility: 'hidden' });
+  svg.append(guide);
+  const hit = el('rect', { x: L, y: T, width: W - L - R, height: B - T, fill: 'transparent' });
+  svg.append(hit);
+  const hover = $('hover');
+  hit.addEventListener('pointermove', e => {
+    const box = svg.getBoundingClientRect(), sx = (e.clientX - box.left) * W / box.width;
+    const c = Math.max(0, Math.min(1200, Math.round((sx - L) / (W - L - R) * 600) * 2)), p = pts[c / 2];
+    guide.setAttribute('x1', x(c)); guide.setAttribute('x2', x(c)); guide.setAttribute('visibility', 'visible');
+    hover.textContent = `${c}¢: roughness ${fmt(p[1], 3)} with harmonic overtones, ${fmt(p[2], 3)} with snapped overtones.`;
+  });
+  hit.addEventListener('pointerleave', () => { guide.setAttribute('visibility', 'hidden'); });
+  $('onName').textContent = snapped ? 'snapped overtones (active)' : 'harmonic overtones (active)';
+  $('offName').textContent = snapped ? 'harmonic overtones' : 'snapped overtones';
+}
+
+/* ---------- render ---------- */
+let raf = 0, levelsChanged = true;
+function update(levels = false) {
+  levelsChanged ||= levels;
+  if (!raf) raf = requestAnimationFrame(render);
+  updateAudio();
+}
+function render() {
+  raf = 0;
+  const { step, mode } = state, [name, , p, q] = STEPS[step];
+  const ratio = ratioFor(mode, step);
+  $('ivName').textContent = name;
+  $('ivDetail').textContent = mode === 'just'
+    ? `${p}/${q} = ${fmt(ratio, 4)} · ${fmt(cents(ratio))}¢ · ${fmt(F0)} + ${fmt(F0 * ratio)} Hz`
+    : `2^(${step}/12) = ${fmt(ratio, 4)} · ${fmt(cents(ratio))}¢ (just ${p}/${q} is ${fmt(cents(p / q))}¢) · ${fmt(F0)} + ${fmt(F0 * ratio)} Hz`;
+  const cmp = $('compare'); cmp.replaceChildren();
+  const vals = Object.keys(MODES).map(m => [m, modeRough(m, step)]);
+  vals.forEach(([m]) => { const d = document.createElement('div'); d.className = 'label' + (m === mode ? ' on' : ''); d.textContent = MODES[m]; cmp.append(d); });
+  vals.forEach(([m, v]) => { const d = document.createElement('div'); d.className = 'num' + (m === mode ? ' on' : ''); d.textContent = fmt(v, 3); cmp.append(d); });
+  ticks.querySelectorAll('button').forEach((b, i) => b.classList.toggle('on', i === step));
+  $('f0Out').textContent = `${F0} Hz · ${noteName(F0)}`;
+  $('f0').setAttribute('aria-valuetext', `${F0} hertz`);
+  $('f0Ticks').querySelectorAll('button').forEach(b => b.classList.toggle('on', b.title === `${F0} Hz`));
+  document.querySelector(`#mode input[value="${mode}"]`).checked = true;
+
+  barEls.forEach((b, i) => {
+    const l = state.levels[i], travel = b.bar.clientHeight - 30, notch = travel / LEVELS;
+    b.shaft.style.setProperty('--notch', `${notch}px`);
+    b.shaft.style.height = `${l * notch + 2}px`;
+    b.cap.style.top = `${l * notch}px`;
+    b.lvl.textContent = l;
+    b.bar.setAttribute('aria-valuenow', l);
+    const sh = cents(snap(i + 1)) - cents(i + 1);
+    b.shift.textContent = Math.abs(sh) < 0.05 ? '±0¢' : `${sh > 0 ? '+' : '−'}${fmt(Math.abs(sh), 0)}¢`;
+    b.shift.classList.toggle('off', mode !== 'snap');
+  });
+  $('reg').textContent = state.levels.join('');
+  $('shiftNote').textContent = mode === 'snap'
+    ? 'Numbers under the stops: how far snapping moves each overtone.'
+    : 'Each step is 3 dB. Octave stops are white.';
+  $('tonicWrap').classList.toggle('off', mode !== 'just');
+  tonicSel.value = state.tonic;
+  keysChanged();
+  if (levelsChanged) { computeCurves(); levelsChanged = false; }
+  drawPartials();
+  drawCurve();
+}
+window.addEventListener('resize', () => update());
+drawKeys();
+render();
+</script>
+</body>
+</html>
