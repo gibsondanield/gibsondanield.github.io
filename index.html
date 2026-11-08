@@ -5,12 +5,18 @@ title: Daniel Gibson
 <h1>Daniel Gibson</h1>
 <p class="tagline">{{ site.tagline }}</p>
 
-<h2 class="section-label">Writing</h2>
-{% include post-list.html posts=site.posts %}
+{%- assign blog_posts = site.posts | where_exp: "p", "p.interactive != true" %}
+{%- assign interactive_posts = site.posts | where: "interactive", true %}
+
+<h2 class="section-label">Blog</h2>
+{% include post-list.html posts=blog_posts %}
 <p class="note"><a href="{{ '/blog/' | relative_url }}">all posts</a> · <a href="{{ '/blog/feed.xml' | relative_url }}">rss</a></p>
 
-<h2 class="section-label">Things I made</h2>
+<h2 class="section-label">Interactive</h2>
 <ul class="entries">
+  {%- for p in interactive_posts %}
+  <li><a href="{{ p.url | relative_url }}">{{ p.title }}</a></li>
+  {%- endfor %}
   <li><a href="{{ '/prime_grid/prime_grid.html' | relative_url }}">Prime number visualization</a></li>
   <li><a href="{{ '/sketches/' | relative_url }}">Sketches</a></li>
   <li><a href="{{ '/photos/' | relative_url }}">Photos</a></li>
