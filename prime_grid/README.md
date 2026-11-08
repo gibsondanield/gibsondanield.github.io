@@ -26,7 +26,7 @@ Composite (non-prime) numbers are displayed in lighter colors based on their pri
 ### Prime Numbers (Dark Colors)
 All prime numbers are shown in **black by default**. You can highlight special types of primes by checking the "Special Primes" options. These appear as dark, saturated colors:
 
-- **Ramanujan Primes** (Red): Defined by a specific mathematical property related to prime counting
+- **Ramanujan Primes** (Red): [A104272](https://oeis.org/A104272), the least R_n with π(x) − π(x/2) ≥ n for all x ≥ R_n. Computed by sieve on first use, so only those up to 13,657,993 are marked.
 - **Fermat Primes** (Blue): Primes of the form 2^(2^n) + 1 (only 5 known: 3, 5, 17, 257, 65537)
 - **Mersenne Primes** (Orange): Primes of the form 2^p - 1 where p is prime
 - **Twin Primes** (Green): Primes that differ by 2 (e.g., 3 and 5, 11 and 13)
