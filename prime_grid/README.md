@@ -34,16 +34,24 @@ All prime numbers are shown in **black by default**. You can highlight special t
 - **Sexy Primes** (Purple): Primes that differ by 6
 - **Sophie Germain Primes** (Cyan): Primes p where 2p + 1 is also prime
 
+### My OEIS Sequences
+Three of my OEIS entries can be highlighted alongside the special primes:
+
+- **[A378018](https://oeis.org/A378018)** (Gold): Primes equal to a row center (A060735) plus or minus the smallest prime not dividing it
+- **[A367182](https://oeis.org/A367182)** (Violet red): Primes of the form primorial(k) - prime(k+1)
+- **[A377884](https://oeis.org/A377884)** (Bright blue): Composites sharing no prime factor with the greatest primorial below them. These color composite cells.
+
 ### Multiple Prime Types
-If a prime number matches multiple selected types, its cell will flash between the colors of all matching types to highlight the special property.
+If a number matches several selected types, its cell is split into equal vertical stripes, one per matching type, in checkbox order.
 
 ## Controls
 
-- **Rows on screen**: Adjust how many rows are visible at zoom level 1
+- **Rows / Columns on screen**: How many rows and columns are visible. Columns start at whatever makes the cells square.
 - **Mouse wheel**: Zoom in/out (also updates the rows displayed)
 - **Drag**: Pan around the grid
 - **Recenter**: Snap column 0 back to center horizontally
-- **Reset**: Return to default state (column 0 centered, zoom 1, 30 rows)
+- **Reset**: Return to default state (column 0 centered, zoom 1, 30 rows, square cells, no special types selected)
+- **Info bar**: Shows the hovered cell's row, column, value, factors, and row center. It also shows the largest primorial dividing the row center and the value's residue mod each prime in that primorial. Fields sit at fixed positions.
 - **Special Primes**: Check boxes to highlight special prime types with colors
 
 ## Explore

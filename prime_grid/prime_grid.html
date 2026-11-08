@@ -55,6 +55,8 @@
             min-width: 40px;
         }
         .radio-group {
+            flex-wrap: wrap;
+            row-gap: 4px;
             display: flex;
             align-items: center;
             gap: 12px;
@@ -102,14 +104,33 @@
             flex-direction: column;
             overflow: hidden;
         }
+        /* Fixed-width fields on one line, so nothing shifts and the grid
+           below never resizes as the hovered cell changes. */
         .coordinates {
-            padding: 10px 20px;
+            padding: 0 20px;
             background-color: #ddd;
             font-size: 12px;
-            height: auto;
-            min-height: 40px;
+            height: 40px;
             font-family: monospace;
+            display: flex;
+            align-items: center;
+            white-space: nowrap;
+            overflow: hidden;
         }
+        .coordinates .f {
+            flex: none;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            padding-right: 2ch;
+        }
+        .coordinates .f b { font-weight: normal; color: #666; }
+        .coordinates .f-row { width: 11ch; }
+        .coordinates .f-col { width: 14ch; }
+        .coordinates .f-val { width: 18ch; }
+        .coordinates .f-fac { width: 30ch; }
+        .coordinates .f-center { width: 20ch; }
+        .coordinates .f-prim { width: 18ch; }
+        .coordinates .f-mod { flex: 1 1 auto; min-width: 0; }
         .viewport {
             flex: 1;
             overflow: hidden;
@@ -153,6 +174,11 @@
             <label for="rows">Rows on screen:</label>
             <input type="range" id="rows" min="1" max="200" value="30" step="1">
             <span id="rowsValue">30</span>
+        </div>
+        <div class="control-section">
+            <label for="cols">Columns on screen:</label>
+            <input type="range" id="cols" min="1" max="400" value="60" step="1">
+            <span id="colsValue">60</span>
         </div>
         <fieldset class="control-section radio-group">
             <legend style="font-size: 12px; padding: 0; margin: 0; font-weight: 500;">Composite number color scheme:</legend>
@@ -239,11 +265,31 @@
                 <input type="checkbox" id="prime-circular" value="circular">
                 <label for="prime-circular" title="Circular primes: Primes where every rotation of digits gives another prime (e.g., 13, 197, 199)"><span class="color-swatch" style="background-color: rgba(102,51,153,1);"></span>Circular</label>
             </div>
+            <div class="radio-item">
+                <input type="checkbox" id="prime-a378018" value="a378018">
+                <label for="prime-a378018" title="OEIS A378018 (D. D. Gibson): primes p = A060735(k) ± the smallest prime not dividing A060735(k), i.e. a row center ± the next prime after its primorial (e.g. 23 = 30 - 7, 67 = 60 + 7)"><span class="color-swatch" style="background-color: rgba(184,134,11,1);"></span><a href="https://oeis.org/A378018" target="_blank" rel="noopener">A378018</a></label>
+            </div>
+            <div class="radio-item">
+                <input type="checkbox" id="prime-a367182" value="a367182">
+                <label for="prime-a367182" title="OEIS A367182 (D. D. Gibson): primes of the form primorial(k) - prime(k+1) (e.g. 23 = 30 - 7, 199 = 210 - 11)"><span class="color-swatch" style="background-color: rgba(199,21,133,1);"></span><a href="https://oeis.org/A367182" target="_blank" rel="noopener">A367182</a></label>
+            </div>
+            <div class="radio-item">
+                <input type="checkbox" id="prime-a377884" value="a377884">
+                <label for="prime-a377884" title="OEIS A377884 (D. D. Gibson): composite numbers k sharing no prime factor with the greatest primorial less than k (e.g. 25, 49, 77, 91). These are composites, so they colour non-prime cells."><span class="color-swatch" style="background-color: rgba(30,144,255,1);"></span><a href="https://oeis.org/A377884" target="_blank" rel="noopener">A377884</a> (composite)</label>
+            </div>
         </fieldset>
 
     </div>
     <div class="main">
-        <div class="coordinates" id="coordinates">Hover over cells or scroll to zoom</div>
+        <div class="coordinates" id="coordinates" title="Hover over cells; scroll to zoom">
+            <span class="f f-row"><b>Row</b> <span id="infoRow">–</span></span>
+            <span class="f f-col"><b>Column</b> <span id="infoCol">–</span></span>
+            <span class="f f-val"><b>Value</b> <span id="infoVal">–</span></span>
+            <span class="f f-fac"><b>Factors</b> <span id="infoFac">–</span></span>
+            <span class="f f-center"><b>Row center</b> <span id="infoCenter">–</span></span>
+            <span class="f f-prim"><b>Primorial</b> <span id="infoPrim">–</span></span>
+            <span class="f f-mod"><b>Residues</b> <span id="infoMod">–</span></span>
+        </div>
         <div class="viewport" id="viewport">
             <div class="grid-wrapper" id="gridWrapper">
                 <div class="grid" id="grid"></div>
@@ -255,21 +301,31 @@
         const grid = document.getElementById('grid');
         const gridWrapper = document.getElementById('gridWrapper');
         const viewport = document.getElementById('viewport');
-        const coordinatesDisplay = document.getElementById('coordinates');
+        const info = {
+            row: document.getElementById('infoRow'),
+            col: document.getElementById('infoCol'),
+            val: document.getElementById('infoVal'),
+            fac: document.getElementById('infoFac'),
+            center: document.getElementById('infoCenter'),
+            prim: document.getElementById('infoPrim'),
+            mod: document.getElementById('infoMod'),
+        };
         const rowsInput = document.getElementById('rows');
         const rowsValueDisplay = document.getElementById('rowsValue');
+        const colsInput = document.getElementById('cols');
+        const colsValueDisplay = document.getElementById('colsValue');
         const recenterBtn = document.getElementById('recenterBtn');
         const resetBtn = document.getElementById('resetBtn');
 
-        let baseRowsOnScreen = parseInt(rowsInput.value) || 30;
-        let rowsOnScreen = baseRowsOnScreen;
+        // Rows/columns visible at zoom 1. Cell size is derived from these; zoom is
+        // applied on top as a CSS scale, and the sliders show the zoomed counts.
+        const DEFAULT_ROWS = 30;
+        let baseRowsOnScreen = DEFAULT_ROWS;
+        let baseColsOnScreen = DEFAULT_ROWS;  // replaced at startup by squareCols()
         let currentCompositeColorScheme = '235';
         let activePrimeTypes = new Set();
         let cellWidth = 0;
         let cellHeight = 0;
-        let columnsOnScreen = 0;
-        let animationFrameId = null;
-        let flashFrameCount = 0;
         let renderPending = false;
 
         // Pan and zoom state
@@ -284,17 +340,25 @@
 
         // Calculate cell dimensions based on viewport size
         function calculateCellDimensions() {
-            const viewportWidth = viewport.clientWidth;
-            const viewportHeight = viewport.clientHeight;
-
-            // Square cells: height determines size
-            cellHeight = viewportHeight / rowsOnScreen;
-            cellWidth = cellHeight;
-
-            // Calculate how many columns fit
-            columnsOnScreen = Math.floor(viewportWidth / cellWidth);
-
+            cellHeight = viewport.clientHeight / baseRowsOnScreen;
+            cellWidth = viewport.clientWidth / baseColsOnScreen;
             return { cellWidth, cellHeight };
+        }
+
+        // Column count that makes cells square for the current row count
+        function squareCols() {
+            const cellSize = viewport.clientHeight / baseRowsOnScreen;
+            return Math.max(1, Math.min(400, Math.round(viewport.clientWidth / cellSize)));
+        }
+
+        // Show the zoomed row/column counts on the sliders
+        function syncSliders() {
+            const rows = Math.max(1, Math.round(baseRowsOnScreen / zoomLevel));
+            const cols = Math.max(1, Math.round(baseColsOnScreen / zoomLevel));
+            rowsInput.value = rows;
+            rowsValueDisplay.textContent = rows;
+            colsInput.value = cols;
+            colsValueDisplay.textContent = cols;
         }
 
         // Calculate visible grid bounds
@@ -344,10 +408,11 @@
             zoomLevel = 1;
             offsetX = viewport.clientWidth / 2;
             offsetY = 0;
-            baseRowsOnScreen = 30;
-            rowsInput.value = 30;
-            rowsValueDisplay.textContent = '30';
-            rowsOnScreen = baseRowsOnScreen;
+            baseRowsOnScreen = DEFAULT_ROWS;
+            baseColsOnScreen = squareCols();
+            syncSliders();
+            activePrimeTypes.clear();
+            document.querySelectorAll('input[type="checkbox"][id^="prime-"]').forEach(cb => { cb.checked = false; });
             calculateCellDimensions();
             updateTransform();
         });
@@ -360,9 +425,7 @@
             zoomLevel = Math.max(0.5, Math.min(5, zoomLevel * delta));
 
             // Update rows on screen based on zoom
-            rowsOnScreen = Math.max(1, Math.round(baseRowsOnScreen / zoomLevel));
-            rowsInput.value = rowsOnScreen;
-            rowsValueDisplay.textContent = rowsOnScreen;
+            syncSliders();
 
             const rect = viewport.getBoundingClientRect();
             const mouseX = e.clientX - rect.left;
@@ -454,9 +517,7 @@
                 zoomLevel = Math.max(0.5, Math.min(5, zoomLevel * zoomRatio));
 
                 // Update rows on screen based on zoom
-                rowsOnScreen = Math.max(1, Math.round(baseRowsOnScreen / zoomLevel));
-                rowsInput.value = rowsOnScreen;
-                rowsValueDisplay.textContent = rowsOnScreen;
+                syncSliders();
 
                 // Center zoom on touch point
                 const rect = viewport.getBoundingClientRect();
@@ -484,9 +545,16 @@
 
         // Row control - changes the base rows at zoom 1
         rowsInput.addEventListener('input', () => {
-            baseRowsOnScreen = parseInt(rowsInput.value);
-            rowsOnScreen = Math.max(1, Math.round(baseRowsOnScreen / zoomLevel));
-            rowsValueDisplay.textContent = rowsOnScreen;
+            baseRowsOnScreen = parseInt(rowsInput.value) * zoomLevel;
+            rowsValueDisplay.textContent = rowsInput.value;
+            calculateCellDimensions();
+            renderVisibleCells();
+        });
+
+        // Column control - same, horizontally
+        colsInput.addEventListener('input', () => {
+            baseColsOnScreen = parseInt(colsInput.value) * zoomLevel;
+            colsValueDisplay.textContent = colsInput.value;
             calculateCellDimensions();
             renderVisibleCells();
         });
@@ -582,7 +650,10 @@
             'quadruplet': 'rgba(85, 107, 47, 1)',      // dark olive
             'chen': 'rgba(139, 35, 69, 1)',            // dark maroon
             'pythagorean': 'rgba(0, 100, 100, 1)',     // dark teal
-            'circular': 'rgba(102, 51, 153, 1)'        // dark purple
+            'circular': 'rgba(102, 51, 153, 1)',       // dark purple
+            'a378018': 'rgba(184, 134, 11, 1)',        // dark goldenrod
+            'a367182': 'rgba(199, 21, 133, 1)',        // violet red
+            'a377884': 'rgba(30, 144, 255, 1)'         // bright blue (composites)
         };
 
         function isRamanujanPrime(n) {
@@ -717,6 +788,41 @@
         }
 
         // Circular primes: all cyclic rotations of digits are prime
+        // ---- Daniel D Gibson's OEIS sequences ----
+        // Primorials 1, 2, 6, 30, ... (index k = product of the first k primes),
+        // kept within Number.MAX_SAFE_INTEGER.
+        const PRIMORIAL_PRIMES = [2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41];
+        const PRIMORIALS = PRIMORIAL_PRIMES.reduce((acc, q) => (acc.push(acc[acc.length - 1] * q), acc), [1]);
+
+        // A367182: primes primorial(k) - prime(k+1)
+        const a367182Set = new Set();
+        for (let k = 1; k < PRIMORIALS.length - 1; k++) {
+            a367182Set.add(PRIMORIALS[k] - PRIMORIAL_PRIMES[k]);
+        }
+        function isA367182(n) { return a367182Set.has(n); }
+
+        // A378018: primes primorial(i)*m ± prime(i+1) for 0 < m < prime(i+1),
+        // i.e. a term of A060735 plus or minus the smallest prime not dividing it.
+        const a378018Set = new Set();
+        for (let i = 0; i < 9; i++) {
+            const q = PRIMORIAL_PRIMES[i];
+            for (let m = 1; m < q; m++) {
+                a378018Set.add(PRIMORIALS[i] * m - q);
+                a378018Set.add(PRIMORIALS[i] * m + q);
+            }
+        }
+        function isA378018(n) { return a378018Set.has(n); }
+
+        // A377884: composite k coprime to the greatest primorial less than k
+        function isA377884(n) {
+            if (n < 4 || isPrime(n)) return false;
+            let primorialBelow = 1;
+            for (const P of PRIMORIALS) { if (P < n) primorialBelow = P; else break; }
+            let a = n, b = primorialBelow;
+            while (b) [a, b] = [b, a % b];
+            return a === 1;
+        }
+
         function isCircularPrime(n) {
             if (!isPrime(n)) return false;
             const str = n.toString();
@@ -748,6 +854,8 @@
             if (activePrimeTypes.has('chen') && isChPrime(n)) types.push('chen');
             if (activePrimeTypes.has('pythagorean') && isPythagoreanPrime(n)) types.push('pythagorean');
             if (activePrimeTypes.has('circular') && isCircularPrime(n)) types.push('circular');
+            if (activePrimeTypes.has('a378018') && isA378018(n)) types.push('a378018');
+            if (activePrimeTypes.has('a367182') && isA367182(n)) types.push('a367182');
             return types;
         }
 
@@ -759,14 +867,18 @@
                 return 'rgba(0, 0, 0, 1)';
             }
 
-            // One type matches - show its color
-            if (matchingTypes.length === 1) {
-                return primeTypeColors[matchingTypes[0]];
-            }
+            // One colour per matching type; several are drawn as side-by-side stripes
+            return matchingTypes.map(type => primeTypeColors[type]);
+        }
 
-            // Multiple types match - use flash animation
-            const colorIndex = Math.floor(flashFrameCount / 10) % matchingTypes.length;
-            return primeTypeColors[matchingTypes[colorIndex]];
+        // Turn a colour or list of colours into a CSS background. A list becomes
+        // equal-width vertical stripes, left to right in checkbox order.
+        function cellBackground(colors) {
+            if (!Array.isArray(colors)) return colors;
+            if (colors.length === 1) return colors[0];
+            const w = 100 / colors.length;
+            const stops = colors.map((c, i) => `${c} ${(i * w).toFixed(3)}% ${((i + 1) * w).toFixed(3)}%`);
+            return `linear-gradient(to right, ${stops.join(', ')})`;
         }
 
         function primeFactorization(n) {
@@ -898,16 +1010,18 @@
                     } else if (isPrime(value)) {
                         bgColor = getPrimeColor(value);
                     } else {
-                        bgColor = generateColorFromFactors(value);
+                        bgColor = (activePrimeTypes.has('a377884') && isA377884(value))
+                            ? primeTypeColors['a377884']
+                            : generateColorFromFactors(value);
                     }
 
                     // Apply grey-out if in invalid zone
                     if (shouldGreyOut(row, col)) {
-                        bgColor = greyOutColor(bgColor);
+                        bgColor = Array.isArray(bgColor) ? bgColor.map(greyOutColor) : greyOutColor(bgColor);
                         cell.style.border = '1px solid black';
                     }
 
-                    cell.style.backgroundColor = bgColor;
+                    cell.style.background = cellBackground(bgColor);
 
                     // Store data for event delegation hover
                     cell.dataset.row = row;
@@ -920,6 +1034,21 @@
             }
         }
 
+        // Largest primorial (2·3·5·…) that divides n, and the primes in it.
+        // Each row center is a multiple of its primorial, so a cell's residue
+        // mod each of these primes is just its column mod that prime.
+        const SMALL_PRIMES = [2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47];
+        function largestPrimorialDividing(n) {
+            let primorial = 1;
+            const primes = [];
+            for (const p of SMALL_PRIMES) {
+                if (n % (primorial * p) !== 0) break;
+                primorial *= p;
+                primes.push(p);
+            }
+            return { primorial, primes };
+        }
+
         // Event delegation for cell hover
         grid.addEventListener('mouseover', (e) => {
             const cell = e.target.closest('.cell');
@@ -930,7 +1059,15 @@
                 const pseudoprimorial = parseInt(cell.dataset.pseudoprimorial);
                 const factors = primeFactorization(Math.abs(value));
                 const factorStr = factors.length > 0 ? factors.join(' × ') : '1';
-                coordinatesDisplay.innerHTML = `Row: ${row} | Column: ${col} | Value: ${value}, Factors: ${factorStr} | Row Center: ${pseudoprimorial}`;
+                const { primorial, primes } = largestPrimorialDividing(pseudoprimorial);
+                const residues = primes.map(p => `${p}:${((value % p) + p) % p}`).join('  ');
+                info.row.textContent = row;
+                info.col.textContent = col;
+                info.val.textContent = value;
+                info.fac.textContent = factorStr;
+                info.center.textContent = pseudoprimorial;
+                info.prim.textContent = primorial;
+                info.mod.textContent = residues || '–';
             }
         });
 
@@ -945,19 +1082,7 @@
             });
         });
 
-        // Animation loop for flashing primes - only runs when special primes are active
-        function animationLoop() {
-            if (activePrimeTypes.size > 0) {
-                flashFrameCount++;
-                // Only re-render every 10 frames for color cycling (reduces from 60fps to 6fps)
-                if (flashFrameCount % 10 === 0) {
-                    renderVisibleCells();
-                }
-                animationFrameId = requestAnimationFrame(animationLoop);
-            }
-        }
-
-        // Start animation loop when special primes are checked
+        // Special-prime checkboxes
         const primeCheckboxes = document.querySelectorAll('input[type="checkbox"][id^="prime-"]');
         primeCheckboxes.forEach(checkbox => {
             checkbox.addEventListener('change', () => {
@@ -967,14 +1092,12 @@
                     activePrimeTypes.delete(checkbox.value);
                 }
                 renderVisibleCells();
-                // Start animation loop if this was the first type checked
-                if (activePrimeTypes.size === 1) {
-                    animationLoop();
-                }
             });
         });
 
         // Initial setup
+        baseColsOnScreen = squareCols();
+        syncSliders();
         calculateCellDimensions();
         offsetX = viewport.clientWidth / 2;  // Center column 0
         offsetY = 0;
@@ -986,8 +1109,9 @@
             radioForDefault.checked = true;
         }
 
-        renderVisibleCells();
-        // Animation loop starts only when special primes are checked
+        // updateTransform (not just renderVisibleCells) so the grid is actually
+        // shifted by offsetX; otherwise column 0 sits at the left edge on load.
+        updateTransform();
     </script>
     <footer>
         © 2026 Daniel D Gibson
