@@ -912,16 +912,17 @@
             return primality(n);
         }
 
+        // Row centers: OEIS A060735, a(n+1) = a(n) + rad(a(n)), i.e. the multiples
+        // m * primorial(i) for 1 <= m < prime(i+1): 1, 2, 4, 6, 12, ..., 210, 420, ...,
+        // 2310, 4620, 6930, ..., 27720, 30030, 60060, ...
         function generatePseudoprimorialNumbers(count) {
-            const expected = [1, 2, 4, 6, 12, 18, 24, 30, 60, 90, 120, 150, 180, 210, 420, 630, 840, 1050, 1260, 1470, 1680, 1890, 2100, 2310, 4620];
-            if (count <= expected.length) return expected.slice(0, count);
-            const result = [...expected];
-            let last = expected[expected.length - 1];
+            const result = [1];
             while (result.length < count) {
-                last += 4620;
-                result.push(last);
+                const a = result[result.length - 1];
+                const rad = [...new Set(primeFactorization(a))].reduce((x, y) => x * y, 1);
+                result.push(a + rad);
             }
-            return result.slice(0, count);
+            return result;
         }
 
         function generateColorFromFactors(num) {

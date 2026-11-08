@@ -9,7 +9,7 @@ The grid represents an infinite positive number line where each row is offset by
 - **Column 0** (center): The boundary, shown in white
 - **Rows**: Extend infinitely downward from row 1
 - **Columns**: Extend infinitely left and right from column 0
-- **Values**: Each cell's value = pseudoprimorial[row] + column
+- **Values**: Each cell's value = A060735[row] + column, where A060735 (1, 2, 4, 6, 12, …, 210, 420, …, 2310, 4620, 6930, …, 30030, …) runs through the multiples of each primorial below the next prime
 
 ## Color Scheme
 
