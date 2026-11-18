@@ -1,0 +1,527 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="dark">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<style>*, *::before, *::after { box-sizing: border-box; } [hidden] { display: none !important; }</style>
+<title>Prime Drawbars</title>
+<script>if (/[?&]embed\b/.test(location.search)) document.documentElement.classList.add('embedded');</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Ubuntu+Mono:ital,wght@0,400;0,700;1,400&display=swap">
+<style>
+/* Same console look as the overtone drawbars. Readout, controls, drawbars, then two canvases: waveform and prime clock. */
+:root {
+  --bg: #fcfcfb; --panel: #f0efec; --rail: #dcdad4; --line: #d0cec7;
+  --ink: #0b0b0b; --ink2: #52514e; --muted: #898781;
+  --hot: #eb6834; --accent: #2a78d6; --accent-ink: #ffffff;
+  --bar-white: #ece9df; --bar-white-ink: #2a2723; --bar-black: #24221f; --bar-black-ink: #ddd8cc; --bar-edge: #8f8b82;
+  --display: "Ubuntu Mono", ui-monospace, Menlo, monospace;
+  --body: "Ubuntu Mono", ui-monospace, Menlo, monospace;
+  --mono: "Ubuntu Mono", ui-monospace, Menlo, monospace;
+  --thumb: 22px;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #000000; --panel: #151413; --rail: #262523; --line: #2f2e2b;
+  --ink: #f0efec; --ink2: #c3c2b7; --muted: #898781;
+  --hot: #d95926; --accent: #3987e5; --bar-edge: #5c5952; color-scheme: dark } }
+:root[data-theme="dark"] {
+  --bg: #000000; --panel: #151413; --rail: #262523; --line: #2f2e2b;
+  --ink: #f0efec; --ink2: #c3c2b7; --muted: #898781;
+  --hot: #d95926; --accent: #3987e5; --bar-edge: #5c5952; color-scheme: dark }
+
+html { font-size: 19px; }
+body { background: var(--bg); color: var(--ink); font-family: var(--body); font-size: 18px; line-height: 1.5;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 24px 48px; margin: 0; }
+main { max-width: 1840px; margin: 0; display: grid; gap: 22px; }
+.lede { max-width: 90ch !important; }
+.figs { display: grid; gap: 22px; }
+@media (min-width: 1100px) {
+  .figs { grid-template-columns: minmax(0, 1fr) 420px; align-items: start; }
+  #scope { height: 300px !important; }
+  .strip { height: 240px !important; }
+}
+.embedded body { padding: 0 0 8px; }
+.embedded header h1 { display: none; }
+.embedded .lede { margin-top: 0; }
+h1 { font-family: var(--display); font-weight: 700; font-size: 2.1rem; letter-spacing: .01em; margin: 0; line-height: 1.1; }
+.lede { color: var(--ink2); margin: 6px 0 0; max-width: 62ch; }
+.label { font-family: var(--display); font-weight: 600; text-transform: uppercase; letter-spacing: .08em; font-size: 21px; color: var(--muted); }
+.num { font-family: var(--mono); font-variant-numeric: tabular-nums; }
+
+.readout { display: grid; gap: 4px; }
+.big { font-family: var(--display); font-weight: 700; font-size: 1.7rem; line-height: 1; }
+.detail { color: var(--ink2); }
+
+.row { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+button { font: inherit; cursor: pointer; }
+button:focus-visible, input:focus-visible, .drawbar:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.play { font-family: var(--display); font-weight: 700; font-size: 1.05rem; letter-spacing: .06em; text-transform: uppercase;
+  background: var(--accent); color: var(--accent-ink); border: 0; padding: 8px 18px; min-width: 96px; }
+.play[aria-pressed="true"] { background: var(--ink); color: var(--bg); }
+.seg { display: inline-flex; border: 1px solid var(--line); overflow: hidden; margin: 0; padding: 0; min-width: 0; flex-wrap: wrap; }
+.seg legend { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+.seg input { position: absolute; opacity: 0; pointer-events: none; }
+.seg label { padding: 7px 12px; cursor: pointer; color: var(--ink2); font-weight: 500; border-right: 1px solid var(--line); }
+.seg label:last-of-type { border-right: 0; }
+.seg input:checked + label { background: var(--panel); color: var(--ink); box-shadow: inset 0 -2px 0 var(--accent); }
+.seg input:focus-visible + label { outline: 2px solid var(--accent); outline-offset: -2px; }
+
+.slider-wrap { position: relative; padding-bottom: 26px; }
+input[type="range"] { width: 100%; margin: 0; height: 28px; background: transparent; -webkit-appearance: none; appearance: none; }
+input[type="range"]::-webkit-slider-runnable-track { height: 4px; background: var(--rail); border-radius: 2px; }
+input[type="range"]::-moz-range-track { height: 4px; background: var(--rail); border-radius: 2px; }
+input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; width: var(--thumb); height: var(--thumb); margin-top: -9px; border-radius: 50%; background: var(--hot); border: 3px solid var(--bg); box-shadow: 0 0 0 1px var(--hot); }
+input[type="range"]::-moz-range-thumb { width: 16px; height: 16px; border-radius: 50%; background: var(--hot); border: 3px solid var(--bg); box-shadow: 0 0 0 1px var(--hot); }
+.ticks { position: absolute; left: 0; right: 0; bottom: 0; height: 22px; }
+.ticks button { position: absolute; transform: translateX(-50%); background: none; border: 0; padding: 2px 3px; color: var(--muted);
+  font-family: var(--display); font-weight: 600; font-size: .8rem; letter-spacing: .03em; }
+.ticks button.on { color: var(--ink); }
+
+.console { background: var(--panel); border-radius: 10px; padding: 16px 14px 14px; display: grid; gap: 12px; }
+.console-head { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px 16px; align-items: baseline; }
+.presets { display: flex; flex-wrap: wrap; gap: 6px; }
+.toggle { background: none; border: 1px solid var(--line); color: var(--ink2); padding: 7px 12px; }
+.toggle[aria-pressed="true"] { border-color: var(--accent); color: var(--ink); box-shadow: inset 0 -2px 0 var(--accent); }
+.toggle:disabled { opacity: .4; cursor: default; }
+.presets button { background: none; border: 1px solid var(--line); color: var(--ink2); padding: 3px 9px; font-size: .85rem; }
+.presets button:hover { color: var(--ink); border-color: var(--muted); }
+.bars { display: grid; grid-template-columns: repeat(15, minmax(0, 1fr)); gap: 4px; }
+.stop { display: grid; justify-items: center; gap: 3px; min-width: 0; }
+.drawbar { position: relative; width: 100%; max-width: 38px; height: 196px; touch-action: none; cursor: ns-resize; border-radius: 3px;
+  background: linear-gradient(var(--rail), var(--rail)) center top / 4px 100% no-repeat; }
+.drawbar::before { content: ""; position: absolute; left: 0; right: 0; top: 0; height: 6px; background: var(--line); border-radius: 2px; }
+.shaft { position: absolute; left: 18%; right: 18%; top: 0; overflow: hidden; display: flex; flex-direction: column; justify-content: flex-end;
+  border: 1px solid var(--bar-edge); border-top: 0; transition: height .08s ease-out; }
+.shaft span { height: var(--notch); flex: none; display: grid; place-items: center; font-family: var(--mono); font-size: 21px; border-top: 1px solid color-mix(in srgb, currentColor 25%, transparent); }
+.cap { position: absolute; left: 0; right: 0; height: 30px; border-radius: 4px; border: 1px solid var(--bar-edge); display: grid; place-items: center;
+  font-family: var(--display); font-weight: 700; font-size: .95rem; transition: top .08s ease-out, box-shadow .05s; box-shadow: 0 2px 0 rgba(0,0,0,.25); }
+.white .shaft, .white .cap { background: var(--bar-white); color: var(--bar-white-ink); }
+.black .shaft, .black .cap { background: var(--bar-black); color: var(--bar-black-ink); }
+.cap.flash { box-shadow: 0 0 0 2px var(--hot), 0 0 12px var(--hot); }
+.stop .lvl { font-family: var(--mono); font-weight: 600; font-size: .85rem; }
+.stop .hz { font-family: var(--mono); font-size: 21px; color: var(--muted); white-space: nowrap; }
+.console-foot { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 6px 16px; color: var(--ink2); font-size: .85rem; }
+
+figure { margin: 0; display: grid; gap: 6px; min-width: 0; }
+figcaption { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 4px 14px; align-items: baseline; }
+figcaption b { font-family: var(--display); font-weight: 700; font-size: 1.15rem; letter-spacing: .01em; }
+canvas { width: 100%; display: block; }
+#scope { height: 180px; }
+.strip { height: 200px; touch-action: none; cursor: crosshair; }
+#clock { height: auto; aspect-ratio: 1; max-width: 420px; }
+.note { color: var(--muted); font-size: .85rem; margin: 0; max-width: 64ch; }
+.pairs { color: var(--ink2); font-size: .88rem; margin: 0; }
+@media (max-width: 520px) {
+  h1 { font-size: 1.75rem; }
+  .bars { gap: 2px; }
+  .drawbar { height: 160px; }
+  .cap { font-size: 21px; }
+  .stop .hz { font-size: 21px; }
+}
+@media (prefers-reduced-motion: reduce) { .shaft, .cap { transition: none; } }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <h1>Prime Drawbars</h1>
+    <p class="lede">An organ whose stops are the primes. Stop <i>p</i> sounds at <i>p</i> × 10 Hz: 2 is 20 Hz, 3 is 30 Hz, 5 is 50 Hz.
+      No stop is an overtone of another, so the only thing they share is the 10 Hz they are all multiples of, a fundamental nobody plays.
+      Switch to <b>Pulse</b> to slow the same chord down until it becomes a polyrhythm.</p>
+  </header>
+
+  <section class="readout" aria-live="polite">
+    <div class="big" id="bigLine"></div>
+    <div class="detail num" id="detail"></div>
+  </section>
+
+  <section class="row">
+    <button class="play" id="play" aria-pressed="false">Play</button>
+    <fieldset class="seg" id="mode">
+      <legend>Mode</legend>
+      <input type="radio" name="mode" id="m-tone" value="tone" checked><label for="m-tone">Tone</label>
+      <input type="radio" name="mode" id="m-pulse" value="pulse"><label for="m-pulse">Pulse</label>
+    </fieldset>
+    <button type="button" class="toggle" id="fund" aria-pressed="false" title="Add a sine at the unit frequency itself, the common fundamental the primes imply. Tone mode only.">Fundamental: off</button>
+    <fieldset class="seg" id="phase" title="Starting phase of each prime's sine. Aligned peaks once per cycle; scattered spreads the energy out. Same spectrum, different waveform.">
+      <legend>Phase</legend>
+      <input type="radio" name="phase" id="p-al" value="aligned" checked><label for="p-al">Aligned</label>
+      <input type="radio" name="phase" id="p-sc" value="scatter"><label for="p-sc">Scattered</label>
+    </fieldset>
+  </section>
+
+  <section>
+    <div class="label"><span id="baseLabel">Unit</span> · <span class="num" id="baseOut" style="color:var(--ink);letter-spacing:0;text-transform:none"></span></div>
+    <div class="slider-wrap">
+      <input type="range" id="base" min="0" max="1000" step="1" aria-labelledby="baseLabel">
+      <div class="ticks" id="baseTicks"></div>
+    </div>
+  </section>
+
+  <section class="console" aria-label="Drawbars">
+    <div class="console-head">
+      <span class="label">Drawbars · all 303 primes below 2000 · drag to paint</span>
+      <div class="presets" id="presets"></div>
+    </div>
+    <div class="label" id="rowHead0"></div><canvas class="strip" id="strip0" aria-label="Drawbars for primes below 100"></canvas>
+    <div class="label" id="rowHead1"></div><canvas class="strip" id="strip1" aria-label="Drawbars for primes 100 to 999"></canvas>
+    <div class="label" id="rowHead2"></div><canvas class="strip" id="strip2" aria-label="Drawbars for primes 1000 to 1999"></canvas>
+    <div class="console-foot">
+      <span class="num" id="stripHover">&nbsp;</span>
+      <span><span class="num" id="reg"></span> · 127 steps over 48 dB · light bars: p ≡ 1 (mod 4)</span>
+    </div>
+  </section>
+
+  <div class="figs">
+  <figure>
+    <figcaption><b>One cycle of the sum</b><span class="label" id="scopeCap"></span></figcaption>
+    <canvas id="scope"></canvas>
+    <p class="pairs" id="pairs"></p>
+  </figure>
+
+  <figure>
+    <figcaption><b>Prime clock</b><span class="label">one ring per sounding stop up to 47</span></figcaption>
+    <canvas id="clock"></canvas>
+    <p class="note">One turn of the hand is one cycle of the unit. Ring <i>p</i> has <i>p</i> ticks, one per cycle of that stop.
+      Two different primes never tick together except at the top: <i>j</i>/<i>p</i> = <i>k</i>/<i>q</i> has no solution with
+      0 &lt; <i>j</i> &lt; <i>p</i>. That is the whole chord in one picture: everything lines up once per cycle and never in between.
+      In Tone mode the hand is slowed down so you can see it.</p>
+  </figure>
+  </div>
+</main>
+
+<script>
+if (document.documentElement.classList.contains('embedded')) {
+  const report = () => parent.postMessage({ drawbarsHeight: Math.ceil(document.querySelector('main').getBoundingClientRect().bottom) + 8 }, location.origin);
+  new ResizeObserver(report).observe(document.querySelector('main'));
+}
+const $ = id => document.getElementById(id);
+const PRIMES = [];
+for (let n = 2; n < 2000; n++) if (PRIMES.every(p => p * p > n || n % p)) PRIMES.push(n);
+const N = PRIMES.length, LEVELS = 127, DB_RANGE = 48;   // 127 steps spread over 48 dB: level 0 is off, 127 is full
+const PULSE_N = 15;   // pulse mode and the clock use the primes up to 47; 303 polyrhythmic voices can't be scheduled or drawn
+const SETS = {
+  mersenne: [2, 3, 5, 7, 13, 17, 19, 31, 61, 89, 107, 127, 521, 607, 1279],   // 2^p − 1 is prime
+  fib: [2, 3, 5, 13, 89, 233, 1597],
+};
+const isPrime = n => PRIMES.includes(n);
+const amp = l => l ? 10 ** (-(LEVELS - l) / LEVELS * DB_RANGE / 20) : 0;
+const atDb = db => Math.max(0, Math.round(LEVELS * (1 + db / DB_RANGE)));   // level for a gain in dB (0 = full)
+const L = x => Math.round(LEVELS * x / 8);   // old 0–8 drawbar scale, for the presets
+const dbLevel = p => atDb(-20 * Math.log10(p / 2));   // amplitude 2/p
+const isTwin = p => PRIMES.includes(p + 2) || PRIMES.includes(p - 2);
+
+const PRESETS = {
+  'First three': p => p <= 5 ? L(8) : 0,
+  'Up to 47': p => p <= 47 ? dbLevel(p) || 1 : 0,
+  '1/p, all': p => Math.max(1, dbLevel(p)),
+  'Twin primes': p => isTwin(p) && p > 3 ? L(6) : 0,
+  'p ≡ 1 mod 4': p => p % 4 === 1 ? L(5) : 0,
+  'p ≡ 3 mod 4': p => p % 4 === 3 ? L(5) : 0,
+  'Sophie Germain': p => p < 1000 && isPrime(2 * p + 1) ? L(6) : 0,
+  'Mersenne exp.': p => SETS.mersenne.includes(p) ? L(8) : 0,
+  'Fibonacci': p => SETS.fib.includes(p) ? L(8) : 0,
+  'Above 10 kHz': p => p > 1000 ? L(4) : 0,
+  'All out': () => LEVELS,
+  'Random': () => Math.random() < .15 ? 1 + Math.floor(Math.random() * LEVELS) : 0,
+};
+
+// Unit slider (log). Tone: 2–100 Hz. Pulse: 0.05–1 Hz (cycles per second of the whole pattern).
+const RANGES = { tone: [2, 100, 10], pulse: [0.05, 1, 0.2] };
+const state = { fund: false, mode: 'tone', phase: 'aligned', unit: { tone: 10, pulse: 0.2 }, levels: PRIMES.map(p => p <= 5 ? L(8) : 0) };
+const posToUnit = pos => { const [lo, hi] = RANGES[state.mode]; return lo * (hi / lo) ** (pos / 1000); };
+const unitToPos = u => { const [lo, hi] = RANGES[state.mode]; return Math.round(1000 * Math.log(u / lo) / Math.log(hi / lo)); };
+const roundUnit = u => u >= 10 ? Math.round(u) : u >= 1 ? Math.round(u * 10) / 10 : Math.round(u * 100) / 100;
+const unit = () => state.unit[state.mode];
+// Pulse carriers keep the prime ratios: stop p beeps at p × 40 Hz.
+const CARRIER = 40;
+// fixed pseudo-random phases so "scattered" is the same every time
+const PHASES = PRIMES.map((p, i) => (Math.sin(i * 12.9898 + p * 78.233) * 43758.5453 % 1 + 1) % 1 * 2 * Math.PI);
+const phaseOf = i => state.phase === 'aligned' ? 0 : PHASES[i];
+
+/* ---------- controls ---------- */
+document.querySelectorAll('#mode input').forEach(r => r.addEventListener('change', e => { state.mode = e.target.value; syncSlider(); retune(); update(); }));
+document.querySelectorAll('#phase input').forEach(r => r.addEventListener('change', e => { state.phase = e.target.value; retune(); update(); }));
+$('fund').addEventListener('click', () => { state.fund = !state.fund; retune(); update(); });
+$('base').addEventListener('input', e => { state.unit[state.mode] = roundUnit(posToUnit(+e.target.value)); retune(); update(); });
+function syncSlider() {
+  $('base').value = unitToPos(unit());
+  const t = $('baseTicks'); t.replaceChildren();
+  const marks = state.mode === 'tone' ? [2, 5, 10, 20, 50, 100] : [0.05, 0.1, 0.2, 0.5, 1];
+  marks.forEach(u => {
+    const b = document.createElement('button');
+    b.type = 'button'; b.textContent = u; b.dataset.u = u;
+    b.style.left = `calc(var(--thumb) / 2 + (100% - var(--thumb)) * ${unitToPos(u) / 1000})`;
+    b.onclick = () => { state.unit[state.mode] = u; $('base').value = unitToPos(u); retune(); update(); };
+    t.append(b);
+  });
+}
+for (const [name, fn] of Object.entries(PRESETS)) {
+  const b = document.createElement('button');
+  b.type = 'button'; b.textContent = name;
+  b.onclick = () => { state.levels = PRIMES.map(fn); retune(); update(); };
+  $('presets').append(b);
+}
+
+/* ---------- painted drawbar strips: one thin bar per prime, hanging from the top; drag across to paint.
+   Three rows by prime value: below 100, 100–999, 1000 and up. ---------- */
+const STRIP_TOP = 14, STRIP_BOT = 34;
+const ROWS = [[0, 100], [100, 1000], [1000, 2000]].map(([lo, hi], k) => {
+  const i0 = PRIMES.findIndex(p => p > lo), i1 = PRIMES.findIndex(p => p >= hi);
+  return { k, lo, hi, i0, n: (i1 < 0 ? N : i1) - i0, cv: $('strip' + k) };
+});
+let paintLast = null, hover = null;   // hover: global prime index
+function rowAt(row, e) {
+  const r = row.cv.getBoundingClientRect(), w = r.width / row.n, h = r.height - STRIP_TOP - STRIP_BOT;
+  return [row.i0 + Math.max(0, Math.min(row.n - 1, Math.floor((e.clientX - r.left) / w))),
+          Math.max(0, Math.min(LEVELS, Math.round((e.clientY - r.top - STRIP_TOP) / h * LEVELS)))];
+}
+function paint(row, e) {
+  const [i, l] = rowAt(row, e);
+  const [i0, l0] = paintLast ?? [i, l];
+  const n = Math.abs(i - i0);   // fill every bar between the last point and this one, so fast drags leave no gaps
+  for (let k = 0; k <= n; k++) state.levels[i0 + Math.sign(i - i0) * k] = n ? Math.round(l0 + (l - l0) * k / n) : l;
+  paintLast = [i, l];
+  retune(); update();
+}
+ROWS.forEach(row => {
+  const cv = row.cv;
+  cv.addEventListener('pointerdown', e => { cv.setPointerCapture(e.pointerId); paintLast = null; paint(row, e); e.preventDefault(); });
+  cv.addEventListener('pointermove', e => { hover = rowAt(row, e)[0]; if (cv.hasPointerCapture(e.pointerId)) paint(row, e); else update(); });
+  cv.addEventListener('pointerup', () => { paintLast = null; });
+  cv.addEventListener('pointerleave', () => { hover = null; update(); });
+});
+function drawStrips() {
+  const tone = state.mode === 'tone', u = unit();
+  const light = css('--bar-white'), dark = css('--muted'), hot = css('--hot'), rail = css('--rail'), mono = css('--mono');
+  ROWS.forEach(row => {
+    const [g, W, H] = fit(row.cv), w = W / row.n, h = H - STRIP_TOP - STRIP_BOT;
+    g.clearRect(0, 0, W, H);
+    g.fillStyle = rail; g.fillRect(0, STRIP_TOP - 3, W, 3);
+    const gap = w > 4 ? Math.min(2, w * .15) : 0;
+    for (let j = 0; j < row.n; j++) {
+      const i = row.i0 + j, l = state.levels[i], p = PRIMES[i];
+      g.fillStyle = rail; g.globalAlpha = .5; g.fillRect(j * w + gap / 2, STRIP_TOP, Math.max(1, w - gap), h); g.globalAlpha = 1;
+      if (l) { g.fillStyle = p % 4 === 1 ? light : dark; g.fillRect(j * w + gap / 2, STRIP_TOP, Math.max(1, w - gap), h * l / LEVELS); }
+      if (i === hover) { g.fillStyle = hot; g.globalAlpha = .4; g.fillRect(j * w, STRIP_TOP, Math.max(1, w), h); g.globalAlpha = 1; }
+    }
+    // label every k-th prime, k chosen so the labels don't collide
+    g.font = `21px ${mono}`; g.textAlign = 'center'; g.fillStyle = css('--muted');
+    const every = Math.max(1, Math.ceil(64 / w));
+    for (let j = 0; j < row.n; j += every) {
+      const x = (j + .5) * w;
+      g.fillRect(x - .5, H - STRIP_BOT, 1, 5);
+      g.fillText(PRIMES[row.i0 + j], Math.min(W - 26, Math.max(22, x)), H - 6);
+    }
+  });
+  ROWS.forEach(row => {
+    const a = PRIMES[row.i0], b = PRIMES[row.i0 + row.n - 1];
+    $('rowHead' + row.k).textContent = `${a}–${b} · ${row.n} primes · ` + (tone ? `${fmtHz(a * u)}–${fmtHz(b * u)} Hz` : row.k ? 'silent in Pulse mode' : 'up to 47 in Pulse mode');
+  });
+  if (hover != null) {
+    const p = PRIMES[hover], l = state.levels[hover];
+    $('stripHover').textContent = `${p} · ${tone ? fmtHz(p * u) + ' Hz' : 'stop #' + (hover + 1)} · level ${l}/${LEVELS}` +
+      (l ? ` (${(-(LEVELS - l) / LEVELS * DB_RANGE).toFixed(1)} dB)` : '');
+  } else $('stripHover').innerHTML = '&nbsp;';
+}
+
+/* ---------- audio ----------
+   Tone: one oscillator at the unit frequency with a PeriodicWave whose only non-zero harmonics are the primes,
+   so every stop stays phase-locked to the others and the waveform you hear is exactly the one drawn.
+   Pulse: one sine per stop at p × 40 Hz, gated by envelope pulses p times per cycle; scheduled ahead on the audio clock. */
+let ctx = null, master = null, toneOsc = null, toneGain = null, pulseVoices = [], playing = false, t0 = 0, timer = 0;
+function ensureAudio() {
+  if (ctx) return;
+  ctx = new (window.AudioContext || window.webkitAudioContext)();
+  const comp = ctx.createDynamicsCompressor(); comp.connect(ctx.destination);
+  master = ctx.createGain(); master.gain.value = 0; master.connect(comp);
+  toneGain = ctx.createGain(); toneGain.gain.value = 0; toneGain.connect(master);
+  toneOsc = ctx.createOscillator(); toneOsc.connect(toneGain); toneOsc.start();
+  pulseVoices = PRIMES.slice(0, PULSE_N).map(p => {
+    const osc = ctx.createOscillator(), env = ctx.createGain(), lvl = ctx.createGain();
+    env.gain.value = 0; lvl.gain.value = 0;
+    osc.connect(env).connect(lvl).connect(master); osc.start();
+    return { p, osc, env, lvl, next: 0 };
+  });
+}
+const FUND_AMP = 1;   // the fundamental, when on, sounds as loud as a fully drawn stop
+const totalAmp = () => state.levels.reduce((s, l) => s + amp(l), state.fund ? FUND_AMP : 0) || 1;
+const pulseTot = () => state.levels.slice(0, PULSE_N).reduce((s, l) => s + amp(l), 0) || 1;
+function retune() {
+  if (!ctx) return;
+  const t = ctx.currentTime, tot = totalAmp();
+  if (state.mode === 'tone') {
+    const size = PRIMES[N - 1] + 1, re = new Float32Array(size), im = new Float32Array(size);
+    PRIMES.forEach((p, i) => { const a = amp(state.levels[i]) / tot, ph = phaseOf(i); re[p] = a * Math.cos(ph); im[p] = -a * Math.sin(ph); });
+    if (state.fund) re[1] = FUND_AMP / tot;
+    toneOsc.setPeriodicWave(ctx.createPeriodicWave(re, im, { disableNormalization: true }));
+    toneOsc.frequency.setTargetAtTime(unit(), t, 0.02);
+    toneGain.gain.setTargetAtTime(0.9, t, 0.03);
+    pulseVoices.forEach(v => v.lvl.gain.setTargetAtTime(0, t, 0.03));
+  } else {
+    toneGain.gain.setTargetAtTime(0, t, 0.03);
+    pulseVoices.forEach((v, i) => {
+      v.osc.frequency.setTargetAtTime(v.p * CARRIER, t, 0.01);
+      v.lvl.gain.setTargetAtTime(0.7 * amp(state.levels[i]) / Math.sqrt(pulseTot()), t, 0.02);
+    });
+  }
+}
+// pulse scheduler: keep a cycle-phase origin t0, and for each stop the next beat index
+let lastUnit = null;
+function schedule() {
+  if (!playing || state.mode !== 'pulse') return;
+  const u = unit(), now = ctx.currentTime, ahead = now + 0.15;
+  if (u !== lastUnit) {   // keep the hand where it is when the tempo changes
+    if (lastUnit) { const ph = ((now - t0) * lastUnit) % 1; t0 = now - ph / u; }
+    lastUnit = u;
+    pulseVoices.forEach(v => v.next = Math.ceil(((now - t0) * u) * v.p));
+  }
+  pulseVoices.forEach((v, i) => {
+    for (;;) {
+      const t = t0 + v.next / (v.p * u);
+      if (t > ahead) break;
+      if (t >= now - 0.005 && state.levels[i]) {
+        const down = v.next % v.p === 0, dur = Math.min(0.06, 0.35 / (v.p * u));
+        v.env.gain.setValueAtTime(0, t);
+        v.env.gain.linearRampToValueAtTime(down ? 1 : 0.6, t + 0.003);
+        v.env.gain.setTargetAtTime(0, t + 0.004, dur / 3);
+      }
+      v.next++;
+    }
+  });
+}
+async function toggle() {
+  ensureAudio();
+  await ctx.resume();
+  playing = !playing;
+  const t = ctx.currentTime;
+  if (playing) { t0 = t + 0.05; lastUnit = null; retune(); master.gain.setTargetAtTime(0.7, t, 0.04); timer = setInterval(schedule, 25); schedule(); }
+  else { master.gain.setTargetAtTime(0, t, 0.04); clearInterval(timer); }
+  $('play').setAttribute('aria-pressed', playing); $('play').textContent = playing ? 'Stop' : 'Play';
+}
+$('play').addEventListener('click', toggle);
+
+/* ---------- readout ---------- */
+const fmtHz = f => f >= 100 ? f.toFixed(0) : f >= 10 ? f.toFixed(1).replace(/\.0$/, '') : f.toFixed(2).replace(/0+$/, '').replace(/\.$/, '');
+const gcd = (a, b) => b ? gcd(b, a % b) : a;
+function render() {
+  const tone = state.mode === 'tone', u = unit();
+  const on = PRIMES.filter((p, i) => state.levels[i] && (tone || i < PULSE_N));
+  const list = (xs, f) => xs.length > 8 ? xs.slice(0, 6).map(f).join(' + ') + ` + … + ${f(xs[xs.length - 1])}` : xs.map(f).join(' + ');
+  $('baseLabel').textContent = tone ? 'Unit frequency: the missing fundamental' : 'Pattern speed: whole cycles per second';
+  $('baseOut').textContent = tone ? `${fmtHz(u)} Hz · stop 2 = ${fmtHz(2 * u)} Hz` : `${fmtHz(u)} cycles/s · one cycle = ${fmtHz(1 / u)} s`;
+  $('baseTicks').querySelectorAll('button').forEach(b => b.classList.toggle('on', +b.dataset.u === u));
+  const prod = on.reduce((a, p) => a * p, 1);
+  if (!on.length) { $('bigLine').textContent = 'silence'; $('detail').textContent = 'Pull a drawbar down.'; }
+  else if (tone) {
+    $('bigLine').textContent = on.length === 1 ? `${fmtHz(on[0] * u)} Hz, a pure sine` : `${on.length} primes over a ${fmtHz(u)} Hz ${state.fund ? 'fundamental' : 'ghost'}`;
+    $('detail').textContent = `${list(on, p => fmtHz(p * u))} Hz · repeats every ${fmtHz(1000 / (on.length === 1 ? on[0] * u : u))} ms` +
+      (state.fund ? ` · plus the ${fmtHz(u)} Hz fundamental itself` : on.length > 1 ? ` · ${fmtHz(u)} Hz is not in the spectrum` : '');
+  } else {
+    $('bigLine').textContent = on.length === 1 ? `${on[0]} beats per cycle` : on.map(String).join(' : ') + ' polyrhythm';
+    if (state.levels.some((l, i) => l && i >= PULSE_N)) $('bigLine').textContent += ' (stops above 47 rest)';
+    const hits = on.reduce((s, p) => s + p, 0) - (on.length - 1);
+    $('detail').textContent = `${hits} distinct onsets per cycle, all ${on.length > 1 ? 'separate except the downbeat' : 'evenly spaced'} · ` +
+      `fastest stop ${fmtHz(on[on.length - 1] * u)}/s` + (on.length > 1 ? ` · a common grid would need ${prod.toLocaleString()} slots per cycle` : '');
+  }
+  const out = state.levels.filter(Boolean).length;
+  $('fund').setAttribute('aria-pressed', state.fund);
+  $('fund').textContent = `Fundamental: ${state.fund ? 'on' : 'off'}`;
+  $('fund').disabled = !tone;
+  $('reg').textContent = `${out} of ${N} stops out`;
+  drawStrips();
+  // difference tones between sounding stops: twins give 2 units, cousins 4 …
+  const diffs = new Map();
+  for (let a = 0; a < on.length; a++) for (let b = a + 1; b < on.length; b++) {
+    const d = on[b] - on[a]; if (!diffs.has(d)) diffs.set(d, []); diffs.get(d).push(`${on[a]}–${on[b]}`);
+  }
+  const ds = [...diffs.keys()].sort((a, b) => a - b).slice(0, 4);
+  $('pairs').textContent = on.length < 2 || on.length > 400 ? '' :
+    (tone ? 'Difference tones: ' : 'Gaps between stops: ') +
+    ds.map(d => `${tone ? fmtHz(d * u) + ' Hz' : d + ' units'} (${diffs.get(d).slice(0, 3).join(', ')}${diffs.get(d).length > 3 ? ' …' : ''})`).join(' · ') +
+    `. Every gap between odd primes is even, so with no 2 every difference tone is a multiple of ${tone ? fmtHz(2 * u) + ' Hz' : '2'}.`;
+  $('scopeCap').textContent = tone ? `${fmtHz(1000 / u)} ms` : `${fmtHz(1 / u)} s`;
+  drawScope();
+}
+let raf = 0;
+const update = () => { if (!raf) raf = requestAnimationFrame(() => { raf = 0; render(); }); };
+
+/* ---------- canvases ---------- */
+const css = name => getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+function fit(cv) {
+  const r = cv.getBoundingClientRect(), d = devicePixelRatio || 1;
+  if (cv.width !== Math.round(r.width * d) || cv.height !== Math.round(r.height * d)) { cv.width = Math.round(r.width * d); cv.height = Math.round(r.height * d); }
+  const g = cv.getContext('2d'); g.setTransform(d, 0, 0, d, 0, 0); return [g, r.width, r.height];
+}
+function drawScope() {
+  const [g, W, H] = fit($('scope')), tot = totalAmp(), mid = H / 2;
+  g.clearRect(0, 0, W, H);
+  g.strokeStyle = css('--line'); g.lineWidth = 1;
+  g.beginPath(); g.moveTo(0, mid); g.lineTo(W, mid); g.stroke();
+  // faint lines where each sounding prime completes a cycle
+  PRIMES.forEach((p, i) => { if (!state.levels[i] || p > 13) return;
+    g.globalAlpha = .35; for (let k = 1; k < p; k++) { const x = W * k / p; g.beginPath(); g.moveTo(x, mid - 4); g.lineTo(x, mid + 4); g.stroke(); } });
+  g.globalAlpha = 1;
+  // sample finely enough for the highest sounding stop (≥ 8 samples per its cycle)
+  const act = PRIMES.map((p, i) => [p, amp(state.levels[i]) / tot, phaseOf(i)]).filter(x => x[1]);
+  if (state.fund) act.unshift([1, FUND_AMP / tot, 0]);
+  const top = act.length ? act[act.length - 1][0] : 2;
+  const M = Math.max(400, Math.round(W * 2), top * 8), ys = new Float32Array(M + 1);
+  let peak = 1e-9, sq = 0;
+  for (let s = 0; s <= M; s++) {
+    const t = 2 * Math.PI * s / M; let y = 0;
+    for (const [p, a, ph] of act) y += a * Math.cos(p * t + ph);
+    ys[s] = y; peak = Math.max(peak, Math.abs(y)); sq += y * y;
+  }
+  const rms = Math.sqrt(sq / (M + 1));
+  g.strokeStyle = css('--accent'); g.lineWidth = M > W * 3 ? 1 : 1.5; g.beginPath();
+  const scale = (H / 2 - 8) / Math.max(peak, 1e-9);   // fill the height; crest factor says how peaky it is
+  for (let s = 0; s <= M; s++) { const x = W * s / M, y = mid - ys[s] * scale; s ? g.lineTo(x, y) : g.moveTo(x, y); }
+  g.stroke();
+  g.fillStyle = css('--muted'); g.font = `21px ${css('--mono')}`;
+  g.fillText(`crest ${(peak / Math.max(rms, 1e-9)).toFixed(2)}`, 6, 14);
+}
+
+const clockCv = $('clock');
+function drawClock(now) {
+  const [g, W] = fit(clockCv), c = W / 2, on = PRIMES.slice(0, PULSE_N).map((p, i) => [p, i]).filter(([, i]) => state.levels[i]);
+  g.clearRect(0, 0, W, W);
+  // hand phase: pulse mode follows the audio clock; tone mode runs 1 cycle per 4 s for viewing
+  let ph;
+  if (playing && state.mode === 'pulse' && ctx) ph = (((ctx.currentTime - t0) * unit()) % 1 + 1) % 1;
+  else ph = (now / 4000) % 1;
+  const rIn = W * .1, rOut = W * .47, n = Math.max(on.length, 1);
+  g.lineCap = 'round';
+  on.forEach(([p, i], k) => {
+    const r = rIn + (rOut - rIn) * (n === 1 ? 1 : k / (n - 1));
+    g.strokeStyle = css('--line'); g.lineWidth = 1;
+    g.beginPath(); g.arc(c, c, r, 0, 2 * Math.PI); g.stroke();
+    // how recently did this ring tick?
+    const since = ((ph * p) % 1) / p;   // fraction of a cycle since last tick
+    for (let j = 0; j < p; j++) {
+      const a = 2 * Math.PI * j / p - Math.PI / 2, lit = j === Math.floor(ph * p) % p ? Math.max(0, 1 - since * p * 3) : 0;
+      g.fillStyle = lit > 0 ? css('--hot') : (j === 0 ? css('--ink') : css('--muted'));
+      g.globalAlpha = lit > 0 ? .4 + .6 * lit : (j === 0 ? 1 : .7);
+      const rr = 2 + 3 * lit + amp(state.levels[i]) * 1.5;
+      g.beginPath(); g.arc(c + r * Math.cos(a), c + r * Math.sin(a), rr, 0, 2 * Math.PI); g.fill();
+    }
+    g.globalAlpha = 1;
+    g.fillStyle = css('--ink2'); g.font = `600 21px ${css('--mono')}`; g.textAlign = 'right';
+    g.fillText(p, c - 6, c - r + 4);
+  });
+  const a = 2 * Math.PI * ph - Math.PI / 2;
+  g.strokeStyle = css('--hot'); g.lineWidth = 2;
+  g.beginPath(); g.moveTo(c, c); g.lineTo(c + rOut * 1.04 * Math.cos(a), c + rOut * 1.04 * Math.sin(a)); g.stroke();
+  g.fillStyle = css('--hot'); g.beginPath(); g.arc(c, c, 4, 0, 2 * Math.PI); g.fill();
+  requestAnimationFrame(drawClock);
+}
+
+addEventListener('resize', update);
+syncSlider();
+render();
+requestAnimationFrame(drawClock);
+</script>
+</body>
+</html>
