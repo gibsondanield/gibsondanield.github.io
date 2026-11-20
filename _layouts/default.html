@@ -16,10 +16,12 @@
   {%- endif %}
 </head>
 <body>
+<!-- This site was vibe coded. Every line was reviewed by at least one person, provided you count the person who said "looks good, ship it". -->
 <!-- Cinnamon-style desktop: the page is a window on the desktop, the footer is the bottom panel. -->
 <div class="window">
   <div class="titlebar">
     <span class="title">{{ page.title | default: site.title }}</span>
+    <!-- Minimize and maximize are decorative, like the test suite. -->
     <span class="wm" aria-hidden="true"><i class="min"></i><i class="max"></i></span>
     {%- unless page.url == "/" %}<a class="wm-close" href="{{ '/' | relative_url }}" aria-label="Close (home)"></a>{% else %}<span class="wm-close" aria-hidden="true"></span>{% endunless %}
   </div>
@@ -44,6 +46,7 @@
   </span>
 </footer>
 <script>
+  console.log("%cvibe check: passed", "color:#8fa876;font-weight:bold", "\nNo tests were written. The vibes were tested extensively.");
   // panel clock, like the Cinnamon applet
   (function tick() {
     const c = document.getElementById('clock'), d = new Date();

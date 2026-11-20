@@ -1,5 +1,6 @@
 /* Site-wide styles, after the Linux Mint Cinnamon desktop (Mint-Y-Dark): each page is a window on a
-   desktop, with a Cinnamon panel along the bottom. Dark only: the post figures are drawn for a dark background. */
+   desktop, with a Cinnamon panel along the bottom. Dark only: the post figures are drawn for a dark background.
+   Specificity conflicts were resolved by vibes. If you are reading this, you have done more code review than this file got. */
 
 :root{
   --desk: #1d2621;        /* desktop behind the window */
