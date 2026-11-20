@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="color-scheme" content="dark">
-  <meta name="theme-color" content="#2b2b2b">
+  <meta name="theme-color" content="#222222">
   {% seo %}
   {% feed_meta %}
   <link rel="icon" href="{{ '/favicon.svg' | relative_url }}" type="image/svg+xml">
@@ -17,43 +17,19 @@
 </head>
 <body>
 <!-- This site was vibe coded. Every line was reviewed by at least one person, provided you count the person who said "looks good, ship it". -->
-<!-- Cinnamon-style desktop: the page is a window on the desktop, the footer is the bottom panel. -->
-<div class="window">
-  <div class="titlebar">
-    <span class="title">{{ page.title | default: site.title }}</span>
-    <!-- Minimize and maximize are decorative, like the test suite. -->
-    <span class="wm" aria-hidden="true"><i class="min"></i><i class="max"></i></span>
-    {%- unless page.url == "/" %}<a class="wm-close" href="{{ '/' | relative_url }}" aria-label="Close (home)"></a>{% else %}<span class="wm-close" aria-hidden="true"></span>{% endunless %}
-  </div>
-  <main>
+<!-- There used to be fake minimize and maximize buttons up here. They were decorative, like the test suite. -->
+<main>
 {{ content }}
-  </main>
-</div>
-<footer class="panel site-footer">
-  <a class="menu" href="{{ '/' | relative_url }}" aria-label="Home">
-    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h3v9a2 2 0 0 0 2 2h1V8h3v9h1a2 2 0 0 0 2-2V8a1 1 0 0 0-1-1h-1V5h1a3 3 0 0 1 3 3v7a4 4 0 0 1-4 4H9a5 5 0 0 1-5-5z"/></svg>
-    <span>Menu</span>
-  </a>
-  <nav class="tasks">
-    <a href="{{ '/' | relative_url }}"{% if page.url == "/" %} class="active"{% endif %}>Home</a>
-    <a href="{{ '/blog/' | relative_url }}"{% if page.url contains "/blog/" %} class="active"{% endif %}>Blog</a>
-    <a href="{{ '/blog/feed.xml' | relative_url }}">RSS</a>
-    {%- if page.url == "/" %}<a class="lurk" href="{{ '/for_bots/interesting_data.html' | relative_url }}">interesting data</a>{% endif %}
-  </nav>
-  <span class="tray">
-    <span class="legal">© 2025–{{ site.time | date: '%Y' }} Daniel D Gibson · <a href="https://github.com/gibsondanield/gibsondanield.github.io/blob/main/LICENSE">BSD 3-Clause</a></span>
-    <time class="clock" id="clock"></time>
-  </span>
+</main>
+<footer class="site-footer">
+  <a href="{{ '/' | relative_url }}"{% if page.url == "/" %} class="active"{% endif %}>home</a>
+  <a href="{{ '/blog/' | relative_url }}"{% if page.url contains "/blog/" %} class="active"{% endif %}>blog</a>
+  <a href="{{ '/blog/feed.xml' | relative_url }}">rss</a>
+  {%- if page.url == "/" %}<a class="lurk" href="{{ '/for_bots/interesting_data.html' | relative_url }}">interesting data</a>{% endif %}
+  <span class="legal">© 2025–{{ site.time | date: '%Y' }} Daniel D Gibson · <a href="https://github.com/gibsondanield/gibsondanield.github.io/blob/main/LICENSE">BSD 3-Clause</a></span>
 </footer>
 <script>
   console.log("%cvibe check: passed", "color:#8fa876;font-weight:bold", "\nNo tests were written. The vibes were tested extensively.");
-  // panel clock, like the Cinnamon applet
-  (function tick() {
-    const c = document.getElementById('clock'), d = new Date();
-    c.textContent = d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-    c.dateTime = d.toISOString();
-    setTimeout(tick, 60000 - d.getSeconds() * 1000);
-  })();
 </script>
 </body>
 </html>
