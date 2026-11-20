@@ -1,18 +1,21 @@
-/* Site-wide styles. Dark only: the post figures are drawn for a black background. */
+/* Site-wide styles, after the Linux Mint Cinnamon desktop (Mint-Y-Dark): each page is a window on a
+   desktop, with a Cinnamon panel along the bottom. Dark only: the post figures are drawn for a dark background. */
 
 :root{
-  --bg: #000;
-  --fg: #f4f3ee;          /* headings, emphasis */
-  --fg2: #c3c2b7;         /* body text */
-  --muted: #9a9a95;       /* bylines, captions, dates */
-  --rule: #2c2c2a;
-  --panel: #121211;
-  --link: #4da6ff;
-  --link-hover: #82c7ff;
-  --accent: #3987e5;
+  --desk: #1d2621;        /* desktop behind the window */
+  --bg: #222222;          /* window contents (Mint-Y-Dark view) */
+  --titlebar: #2f2f2f;
+  --fg: #f2f2f2;          /* headings, emphasis */
+  --fg2: #d3d3d3;         /* body text */
+  --muted: #9d9d9d;       /* bylines, captions, dates */
+  --rule: #353535;
+  --panel: #2b2b2b;       /* code blocks, asides, the bottom panel */
+  --link: #9ab87c;        /* Mint-Y green */
+  --link-hover: #b8d39c;
+  --accent: #8fa876;
 
-  --sans: system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans", "Helvetica Neue", Arial, sans-serif;
-  --mono: ui-monospace, "SF Mono", "JetBrains Mono", "Cascadia Code", Menlo, Consolas, "DejaVu Sans Mono", monospace;
+  --sans: "Ubuntu", "Noto Sans", system-ui, sans-serif;
+  --mono: "Ubuntu Mono", ui-monospace, "DejaVu Sans Mono", monospace;
   --measure: 42rem;
 }
 
@@ -21,19 +24,46 @@
 html{ -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
 
 body{
-  background: var(--bg);
+  background: radial-gradient(ellipse at 70% 0%, #2e3d33 0%, var(--desk) 55%, #141815 100%) fixed;
   color: var(--fg2);
   font-family: var(--sans);
   font-size: 1.0625rem;
   line-height: 1.7;
   margin: 0;
-  padding: 2.5rem clamp(1rem, 6vw, 5rem) 3rem;
+  padding: 2rem clamp(0.5rem, 4vw, 4rem) 5rem;   /* bottom room for the panel */
+  min-height: 100vh;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
 }
 
-/* Flush-left column: capped width, pinned to the left edge rather than centred. */
-main, .site-footer{ max-width: var(--measure); margin: 0; }
+/* ---------- window ---------- */
+
+.window{
+  max-width: calc(var(--measure) + 5rem);
+  background: var(--bg);
+  border: 1px solid #3a3a3a;
+  border-radius: 8px 8px 2px 2px;
+  box-shadow: 0 10px 40px rgba(0,0,0,.55), 0 0 0 1px rgba(0,0,0,.4);
+  overflow: hidden;
+}
+.titlebar{
+  display: flex; align-items: center; gap: .5rem;
+  height: 2.4rem; padding: 0 .7rem 0 1rem;
+  background: var(--titlebar);
+  border-bottom: 1px solid #1c1c1c;
+  color: var(--fg2); font-size: .9rem; font-weight: 500;
+  user-select: none;
+}
+.titlebar .title{ flex: 1; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding-left: 4.2rem; }
+.wm{ display: flex; gap: .45rem; }
+.wm i, .wm-close{ display: block; width: 1.05rem; height: 1.05rem; border-radius: 50%; background: #4a4a4a; position: relative; }
+.wm i::after{ content: ""; position: absolute; left: 28%; right: 28%; top: 47%; height: 2px; background: #bbb; }
+.wm i.max::after{ top: 28%; bottom: 28%; height: auto; background: none; border: 1.5px solid #bbb; }
+.wm-close{ background: var(--accent); margin-left: .45rem; }
+.wm-close::before, .wm-close::after{ content: ""; position: absolute; left: 22%; right: 22%; top: 46%; height: 2px; background: #1d2621; transform: rotate(45deg); }
+.wm-close::after{ transform: rotate(-45deg); }
+a.wm-close:hover{ background: var(--link-hover); }
+main{ padding: 1.5rem clamp(1rem, 4vw, 2.5rem) 2.5rem; }
 
 /* ---------- type ---------- */
 
@@ -53,7 +83,7 @@ a:focus-visible{ outline: 2px solid var(--link); outline-offset: 2px; border-rad
 /* Underline links inside running text so they don't rely on colour alone. */
 article p a, article li a, .note a{
   text-decoration: underline;
-  text-decoration-color: rgba(77,166,255,0.4);
+  text-decoration-color: rgba(154,184,124,0.45);
   text-decoration-thickness: 1px;
   text-underline-offset: 0.18em;
 }
@@ -129,18 +159,30 @@ table.tradeoffs td:first-child{ white-space: nowrap; }
 .entries .meta{ color: var(--muted); font-size: 0.875rem; font-variant-numeric: tabular-nums; margin-left: 0.5rem; white-space: nowrap; }
 .entries .desc{ display: block; color: var(--muted); font-size: 0.925rem; line-height: 1.55; margin-top: 0.2rem; }
 
-/* ---------- footer ---------- */
+/* ---------- bottom panel (Cinnamon) ---------- */
 
-.site-footer{
-  margin-top: 4rem;
-  padding-top: 1.25rem;
-  border-top: 1px solid var(--rule);
-  color: #666;
-  font-size: 0.875rem;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem 1.25rem;
+.panel{
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 10;
+  height: 2.6rem;
+  display: flex; align-items: stretch; gap: .25rem;
+  background: var(--panel);
+  border-top: 1px solid #3c3c3c;
+  box-shadow: 0 -2px 8px rgba(0,0,0,.35);
+  font-size: .875rem;
+  padding: 0 .5rem 0 0;
 }
-.site-footer a{ color: #777; }
-.site-footer a:hover{ color: var(--muted); }
-.site-footer .lurk, .site-footer .lurk:hover{ color: #222; }
+.panel a{ color: var(--fg2); text-decoration: none; }
+.panel a:hover{ color: var(--fg); text-decoration: none; background: rgba(255,255,255,.07); }
+.panel .menu{ display: flex; align-items: center; gap: .45rem; padding: 0 .9rem; font-weight: 500; }
+.panel .menu svg{ width: 1.3rem; height: 1.3rem; fill: var(--accent); }
+.panel .tasks{ display: flex; align-items: stretch; gap: .2rem; min-width: 0; flex: 1; overflow: hidden; }
+.panel .tasks a{ display: flex; align-items: center; padding: 0 1rem; border-bottom: 2px solid transparent; white-space: nowrap; }
+.panel .tasks a.active{ background: rgba(255,255,255,.06); border-bottom-color: var(--accent); color: var(--fg); }
+.panel .tasks .lurk, .panel .tasks .lurk:hover{ color: #353535; background: none; }
+.panel .tray{ display: flex; align-items: center; gap: 1rem; color: var(--muted); white-space: nowrap; }
+.panel .tray a{ color: var(--muted); }
+.panel .clock{ color: var(--fg); font-weight: 500; font-variant-numeric: tabular-nums; padding-left: .25rem; }
+@media (max-width: 640px){
+  .panel .legal, .panel .menu span{ display: none; }
+  .titlebar .title{ padding-left: 0; text-align: left; }
+}
