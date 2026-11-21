@@ -24,7 +24,6 @@
 <footer class="site-footer">
   <a href="{{ '/' | relative_url }}"{% if page.url == "/" %} class="active"{% endif %}>home</a>
   <a href="{{ '/blog/' | relative_url }}"{% if page.url contains "/blog/" %} class="active"{% endif %}>blog</a>
-  <a href="{{ '/blog/feed.xml' | relative_url }}">rss</a>
   {%- if page.url == "/" %}<a class="lurk" href="{{ '/for_bots/interesting_data.html' | relative_url }}">interesting data</a>{% endif %}
   <span class="legal">© 2025–{{ site.time | date: '%Y' }} Daniel D Gibson · <a href="https://github.com/gibsondanield/gibsondanield.github.io/blob/main/LICENSE">BSD 3-Clause</a></span>
 </footer>

@@ -36,12 +36,13 @@ body{
 
 main{ max-width: var(--measure); margin: 0 auto; }
 
-/* ---------- type ---------- */
+/* ---------- type ----------
+   One text size everywhere. Hierarchy comes from weight, colour and space, not size. */
 
-h1, h2, h3{ color: var(--fg); line-height: 1.25; font-weight: 650; letter-spacing: -0.015em; }
-h1{ font-size: clamp(1.75rem, 1.3rem + 2vw, 2.25rem); margin: 1.25rem 0 0.4rem; text-wrap: balance; }
-h2{ font-size: 1.35rem; margin: 2.75rem 0 0.6rem; text-wrap: balance; }
-h3{ font-size: 1.1rem; margin: 2rem 0 0.4rem; }
+h1, h2, h3{ font-size: 1em; color: var(--fg); line-height: 1.25; font-weight: 650; letter-spacing: -0.015em; }
+h1{ margin: 1.25rem 0 0.4rem; text-wrap: balance; }
+h2{ margin: 2.75rem 0 0.6rem; text-wrap: balance; }
+h3{ margin: 2rem 0 0.4rem; }
 
 p, li{ text-wrap: pretty; }
 strong{ color: var(--fg); font-weight: 600; }
@@ -60,7 +61,7 @@ article p a, article li a, .note a{
 }
 article p a:hover, article li a:hover, .note a:hover{ text-decoration-color: currentColor; }
 
-code, .math{ font-family: var(--mono); font-size: 0.88em; color: var(--fg); }
+code, .math{ font-family: var(--mono); color: var(--fg); }
 :not(pre) > code{ background: var(--panel); padding: 0.1em 0.3em; border-radius: 3px; }
 pre, .display{
   background: var(--panel);
@@ -71,23 +72,21 @@ pre, .display{
   overflow-x: auto;
   line-height: 1.5;
 }
-pre code{ font-size: 0.875rem; }
 .display{ display: block; white-space: pre; }
 
 hr{ border: 0; border-top: 1px solid var(--rule); margin: 3rem 0 1.5rem; }
 
 /* ---------- post furniture ---------- */
 
-.back{ font-size: 0.95rem; margin: 0 0 1.5rem; }
-.byline{ color: var(--muted); font-size: 0.95rem; margin: 0 0 2.25rem; }
-.note{ color: var(--muted); font-size: 0.9rem; }
+.back{ margin: 0 0 1.5rem; }
+.byline{ color: var(--muted); margin: 0 0 2.25rem; }
+.note{ color: var(--muted); }
 
 .preface, .closing{
   border-left: 3px solid var(--accent);
   background: var(--panel);
   border-radius: 0 6px 6px 0;
   padding: 0.9rem 1.15rem;
-  font-size: 0.975rem;
 }
 .preface{ margin: 0 0 1.5rem; }
 .closing{ margin: 2.5rem 0 1rem; }
@@ -95,10 +94,10 @@ hr{ border: 0; border-top: 1px solid var(--rule); margin: 3rem 0 1.5rem; }
 
 figure{ margin: 2.25rem 0; }
 figure img{ width: 100%; height: auto; display: block; }
-figcaption{ color: var(--muted); font-size: 0.9rem; line-height: 1.55; margin-top: 0.6rem; }
+figcaption{ color: var(--muted); line-height: 1.55; margin-top: 0.6rem; }
 
 .table-wrap{ overflow-x: auto; margin: 1.25rem 0; }
-table{ border-collapse: collapse; width: 100%; font-size: 0.925rem; line-height: 1.5; }
+table{ border-collapse: collapse; width: 100%; line-height: 1.5; }
 th, td{ padding: 0.45rem 0.7rem; border-bottom: 1px solid var(--rule); text-align: right; white-space: nowrap; }
 th:first-child, td:first-child{ text-align: left; }
 th{ color: var(--fg); font-weight: 600; }
@@ -111,10 +110,9 @@ table.tradeoffs td:first-child{ white-space: nowrap; }
 
 /* ---------- lists of things (home, blog index, sketches) ---------- */
 
-.tagline{ color: var(--muted); font-size: 1.1rem; margin: 0 0 2.5rem; }
+.tagline{ color: var(--muted); margin: 0 0 2.5rem; }
 .section-label{
   color: var(--muted);
-  font-size: 0.8rem;
   font-weight: 600;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -125,10 +123,10 @@ table.tradeoffs td:first-child{ white-space: nowrap; }
 .entries li{ padding: 0.7rem 0; border-bottom: 1px solid var(--rule); }
 .entries li:first-child{ border-top: 1px solid var(--rule); }
 .entries a, .byline a{ text-decoration: none; }
-.entries a{ font-size: 1.1rem; font-weight: 500; }
+.entries a{ font-weight: 500; }
 .entries a:hover, .byline a:hover{ text-decoration: underline; }
-.entries .meta{ color: var(--muted); font-size: 0.875rem; font-variant-numeric: tabular-nums; margin-left: 0.5rem; white-space: nowrap; }
-.entries .desc{ display: block; color: var(--muted); font-size: 0.925rem; line-height: 1.55; margin-top: 0.2rem; }
+.entries .meta{ color: var(--muted); font-variant-numeric: tabular-nums; margin-left: 0.5rem; white-space: nowrap; }
+.entries .desc{ display: block; color: var(--muted); line-height: 1.55; margin-top: 0.2rem; }
 
 /* ---------- footer ---------- */
 
@@ -136,7 +134,7 @@ table.tradeoffs td:first-child{ white-space: nowrap; }
   max-width: var(--measure); margin: 4rem auto 0; padding-top: 1rem;
   border-top: 1px solid var(--rule);
   display: flex; flex-wrap: wrap; gap: .4rem 1.1rem; align-items: baseline;
-  color: var(--muted); font-size: .875rem;
+  color: var(--muted);
 }
 .site-footer a{ color: var(--muted); }
 .site-footer a:hover, .site-footer a.active{ color: var(--fg); }
